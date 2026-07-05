@@ -1,17 +1,19 @@
-# v_meeting
+# REISUB Meeting
 
-A new Flutter project.
+REISUB Meeting is an open-source, modern video conferencing platform built with Flutter.
+This project is currently in the early stages of development.
 
 ## Getting Started
+The project is currently under construction. Stay tuned for future updates.
 
-This project is a starting point for a Flutter application.
+# REISUB Meeting
+REISUB Meeting, Flutter ile geliştirilmiş, açık kaynaklı bir video konferans platformudur.
+Bu proje şu anda geliştirilme aşamasındadır.
 
-A few resources to get you started if this is your first Flutter project:
+## Başlangıç
+Proje şu anda yapım aşamasındadır. Gelecek güncellemeler için takipte kalın.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### License / Lisans
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Bu proje MIT Lisansı ile lisanslanmıştır. Detaylar için LICENSE dosyasına bakınız.
