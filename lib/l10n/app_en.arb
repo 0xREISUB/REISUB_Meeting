@@ -1,0 +1,13 @@
+{
+  "@@locale": "en",
+  "joinMeeting": "Join Meeting",
+  "yourName": "Your Name",
+  "roomId": "Room ID",
+  "nameError": "You must enter a name",
+  "roomError": "Incomplete or invalid number",
+  "emptyErrorMsg": "Please enter your name and complete the 9-digit room number.",
+  "returnMainMenu": "Return to Main Menu",
+    "appSubtitle": "Open Source Meeting Platform",
+  "createRoom": "Create New Room",
+  "startMeeting": "Start Meeting"
+}

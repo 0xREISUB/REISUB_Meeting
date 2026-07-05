@@ -1,0 +1,13 @@
+{
+  "@@locale": "tr",
+  "joinMeeting": "Toplantıya Katıl",
+  "yourName": "Adın",
+  "roomId": "Oda ID",
+  "nameError": "Bir ad girmelisin",
+  "roomError": "Eksik veya hatalı numara",
+  "emptyErrorMsg": "Lütfen adınızı girin ve 9 haneli oda numarasını tamamlayın.",
+  "returnMainMenu": "Ana Menüye Dön",
+  "appSubtitle": "Açık Kaynak Toplantı Platformu",
+  "createRoom": "Yeni Oda Kur",
+  "startMeeting": "Toplantıyı Başlat"
+}
