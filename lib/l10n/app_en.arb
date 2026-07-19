@@ -7,7 +7,41 @@
   "roomError": "Incomplete or invalid number",
   "emptyErrorMsg": "Please enter your name and complete the 9-digit room number.",
   "returnMainMenu": "Return to Main Menu",
-    "appSubtitle": "Open Source Meeting Platform",
+  "appSubtitle": "Open Source Meeting Platform",
   "createRoom": "Create New Room",
-  "startMeeting": "Start Meeting"
+  "startMeeting": "Start Meeting",
+  "about": "About",
+  "developer": "Developer",
+  "technologies": "Technologies",
+  "licenses": "Licenses",
+  "contact": "Contact",
+  "madeWithFlutter": "Made with ❤️ using Flutter.",
+  "language": "Language",
+  "profile": "Profile",
+  "settings": "Settings",
+  "language": "Language",
+  "about": "About",
+  "logout": "Log Out",
+  "general": "General",
+  "meeting": "Meetings",
+  "application": "Application",
+  "deviceTest": "Device Test",
+
+  "darkTheme": "Dark Theme",
+  "notifications": "Notifications",
+  "comingSoon": "Coming Soon",
+
+  "startWithMic": "Start with microphone on",
+  "startWithCamera": "Start with camera on",
+  "mirrorCamera": "Mirror camera",
+  "noiseSuppression": "Noise suppression",
+  "highQualityVideo": "HD Video",
+
+  "testMicrophone": "Test Microphone",
+  "testCamera": "Test Camera",
+  "testSpeaker": "Test Speaker",
+
+  "version": "Version",
+  "checkForUpdates": "Check for Updates"
+
 }

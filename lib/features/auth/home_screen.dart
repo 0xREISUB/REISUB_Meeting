@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'join_screen.dart'; // Katılma ekranına gitmek için
 import 'create_screen.dart';
+import 'about.dart';
+import 'language_screen.dart';
+import 'settings.dart';
+
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -17,45 +21,119 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         actions: [
           // PROFİL RESMİ VE AÇILIR MENÜ
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: PopupMenuButton<int>(
-              tooltip: 'Profile Menu',
-              // Menünün tam yuvarlağın altında açılması için aşağı itiyoruz
-              offset: const Offset(0, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              // Profil resmi için yuvarlak avatar
-              icon: const CircleAvatar(
-                backgroundColor: Colors.deepPurpleAccent,
-                foregroundColor: Colors.white,
-                child: Icon(Icons.person),
-              ),
-              // 7 Adet Placeholder Sekmesi
-              itemBuilder: (context) {
-                return List.generate(7, (index) {
-                  return PopupMenuItem<int>(
-                    value: index,
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.space_dashboard_outlined,
-                          size: 20,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 12),
-                        Text('Placeholder ${index + 1}'),
-                      ],
-                    ),
-                  );
-                });
-              },
-              onSelected: (value) {
-                print('Seçilen sekme: Placeholder ${value + 1}');
-              },
-            ),
+Padding(
+  padding: const EdgeInsets.only(right: 16.0),
+  child: PopupMenuButton<int>(
+    tooltip: 'Profile Menu',
+    offset: const Offset(0, 50),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    icon: const CircleAvatar(
+      backgroundColor: Colors.deepPurpleAccent,
+      foregroundColor: Colors.white,
+      child: Icon(Icons.person),
+    ),
+    itemBuilder: (context) {
+      return [
+         PopupMenuItem<int>(
+          value: 0,
+          child: Row(
+            children: [
+              Icon(Icons.person_outline, size: 20),
+              SizedBox(width: 12),
+              Text(l10n.profile),
+            ],
           ),
+        ),
+         PopupMenuItem<int>(
+          value: 1,
+          child: Row(
+            children: [
+              Icon(Icons.settings_outlined, size: 20),
+              SizedBox(width: 12),
+              Text(l10n.settings),
+            ],
+          ),
+        ),
+         PopupMenuItem<int>(
+          value: 2,
+          child: Row(
+            children: [
+              Icon(Icons.language_outlined, size: 20),
+              SizedBox(width: 12),
+              Text(l10n.language),
+            ],
+          ),
+        ),
+         PopupMenuItem<int>(
+          value: 3,
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, size: 20),
+              SizedBox(width: 12),
+              Text(l10n.about),
+            ],
+          ),
+        ),
+         PopupMenuItem<int>(
+          value: 4,
+          child: Row(
+            children: [
+              Icon(
+                Icons.logout,
+                size: 20,
+                color: Colors.red,
+              ),
+              SizedBox(width: 12),
+              Text(
+                l10n.logout,
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ];
+    },
+    onSelected: (value) {
+      switch (value) {
+        case 0:
+          print('Profil');
+          break;
+        case 1:
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const SettingsScreen(),
+            ),
+          );
+          break;
+        case 2:
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const LanguageScreen(),
+            ),
+          );
+          break;
+        case 3:
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AboutScreen(),
+            ),
+          );
+          break;
+        case 4:
+          print('Çıkış Yap');
+          break;
+      }
+    },
+  ),
+),
         ],
       ),
       body: Center(

@@ -157,6 +157,168 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Toplantıyı Başlat'**
   String get startMeeting;
+
+  /// No description provided for @about.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hakkında'**
+  String get about;
+
+  /// No description provided for @developer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geliştirici'**
+  String get developer;
+
+  /// No description provided for @technologies.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanılan Teknolojiler'**
+  String get technologies;
+
+  /// No description provided for @licenses.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lisanslar'**
+  String get licenses;
+
+  /// No description provided for @contact.
+  ///
+  /// In tr, this message translates to:
+  /// **'İletişim'**
+  String get contact;
+
+  /// No description provided for @madeWithFlutter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Flutter ile ❤️ kullanılarak geliştirildi.'**
+  String get madeWithFlutter;
+
+  /// No description provided for @language.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dil'**
+  String get language;
+
+  /// No description provided for @profile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil'**
+  String get profile;
+
+  /// No description provided for @settings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarlar'**
+  String get settings;
+
+  /// No description provided for @logout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çıkış Yap'**
+  String get logout;
+
+  /// No description provided for @general.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genel'**
+  String get general;
+
+  /// No description provided for @meeting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplantılar'**
+  String get meeting;
+
+  /// No description provided for @application.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama'**
+  String get application;
+
+  /// No description provided for @deviceTest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihaz Testi'**
+  String get deviceTest;
+
+  /// No description provided for @darkTheme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koyu Tema'**
+  String get darkTheme;
+
+  /// No description provided for @notifications.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirimler'**
+  String get notifications;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yakında'**
+  String get comingSoon;
+
+  /// No description provided for @startWithMic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofon açık başlat'**
+  String get startWithMic;
+
+  /// No description provided for @startWithCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamera açık başlat'**
+  String get startWithCamera;
+
+  /// No description provided for @mirrorCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamerayı aynala'**
+  String get mirrorCamera;
+
+  /// No description provided for @noiseSuppression.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gürültü engelleme'**
+  String get noiseSuppression;
+
+  /// No description provided for @highQualityVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'HD Video'**
+  String get highQualityVideo;
+
+  /// No description provided for @testMicrophone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofonu Test Et'**
+  String get testMicrophone;
+
+  /// No description provided for @testCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamerayı Test Et'**
+  String get testCamera;
+
+  /// No description provided for @testSpeaker.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hoparlörü Test Et'**
+  String get testSpeaker;
+
+  /// No description provided for @version.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürüm'**
+  String get version;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncellemeleri Kontrol Et'**
+  String get checkForUpdates;
 }
 
 class _AppLocalizationsDelegate

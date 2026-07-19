@@ -9,5 +9,38 @@
   "returnMainMenu": "Ana Menüye Dön",
   "appSubtitle": "Açık Kaynak Toplantı Platformu",
   "createRoom": "Yeni Oda Kur",
-  "startMeeting": "Toplantıyı Başlat"
+  "startMeeting": "Toplantıyı Başlat",
+  "about": "Hakkında",
+  "developer": "Geliştirici",
+  "technologies": "Kullanılan Teknolojiler",
+  "licenses": "Lisanslar",
+  "contact": "İletişim",
+  "madeWithFlutter": "Flutter ile ❤️ kullanılarak geliştirildi.",
+  "language": "Dil",
+  "profile": "Profil",
+  "settings": "Ayarlar",
+  "language": "Dil",
+  "about": "Hakkında",
+  "logout": "Çıkış Yap",
+  "general": "Genel",
+  "meeting": "Toplantılar",
+  "application": "Uygulama",
+  "deviceTest": "Cihaz Testi",
+
+  "darkTheme": "Koyu Tema",
+  "notifications": "Bildirimler",
+  "comingSoon": "Yakında",
+
+  "startWithMic": "Mikrofon açık başlat",
+  "startWithCamera": "Kamera açık başlat",
+  "mirrorCamera": "Kamerayı aynala",
+  "noiseSuppression": "Gürültü engelleme",
+  "highQualityVideo": "HD Video",
+
+  "testMicrophone": "Mikrofonu Test Et",
+  "testCamera": "Kamerayı Test Et",
+  "testSpeaker": "Hoparlörü Test Et",
+
+  "version": "Sürüm",
+  "checkForUpdates": "Güncellemeleri Kontrol Et"
 }
