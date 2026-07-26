@@ -6,6 +6,8 @@ import 'create_screen.dart';
 import 'about.dart';
 import 'language_screen.dart';
 import 'settings.dart';
+import 'meeting.dart';
+
 
 
 class HomeScreen extends ConsumerWidget {
@@ -227,6 +229,17 @@ Padding(
                       ),
                     );
                   },
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MeetingScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Meeting Screen Test'),
                 ),
               ],
             ),
