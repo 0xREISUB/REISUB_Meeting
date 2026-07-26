@@ -19,8 +19,6 @@
   "language": "Dil",
   "profile": "Profil",
   "settings": "Ayarlar",
-  "language": "Dil",
-  "about": "Hakkında",
   "logout": "Çıkış Yap",
   "general": "Genel",
   "meeting": "Toplantılar",
@@ -40,7 +38,11 @@
   "testMicrophone": "Mikrofonu Test Et",
   "testCamera": "Kamerayı Test Et",
   "testSpeaker": "Hoparlörü Test Et",
-
+  "serverSettings": "Sunucu Ayarları",
+  "serverAddress": "Sunucu Adresi / IP",
+  "serverPort": "Sunucu Portu",
+  "saveServerSettings": "Sunucu Ayarlarını Kaydet",
+  "serverSettingsHint": "Örnek: 192.168.1.10 : 3000",
   "version": "Sürüm",
   "checkForUpdates": "Güncellemeleri Kontrol Et"
 }

@@ -40,6 +40,11 @@
   "testMicrophone": "Test Microphone",
   "testCamera": "Test Camera",
   "testSpeaker": "Test Speaker",
+    "serverSettings": "Server Settings",
+  "serverAddress": "Server Address / IP",
+  "serverPort": "Server Port",
+  "saveServerSettings": "Save Server Settings",
+  "serverSettingsHint": "Example: 192.168.1.10 : 3000",
 
   "version": "Version",
   "checkForUpdates": "Check for Updates"

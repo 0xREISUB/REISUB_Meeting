@@ -308,6 +308,36 @@ abstract class AppLocalizations {
   /// **'Hoparlörü Test Et'**
   String get testSpeaker;
 
+  /// No description provided for @serverSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Ayarları'**
+  String get serverSettings;
+
+  /// No description provided for @serverAddress.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Adresi / IP'**
+  String get serverAddress;
+
+  /// No description provided for @serverPort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Portu'**
+  String get serverPort;
+
+  /// No description provided for @saveServerSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Ayarlarını Kaydet'**
+  String get saveServerSettings;
+
+  /// No description provided for @serverSettingsHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örnek: 192.168.1.10 : 3000'**
+  String get serverSettingsHint;
+
   /// No description provided for @version.
   ///
   /// In tr, this message translates to:

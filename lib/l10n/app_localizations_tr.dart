@@ -115,6 +115,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get testSpeaker => 'Hoparlörü Test Et';
 
   @override
+  String get serverSettings => 'Sunucu Ayarları';
+
+  @override
+  String get serverAddress => 'Sunucu Adresi / IP';
+
+  @override
+  String get serverPort => 'Sunucu Portu';
+
+  @override
+  String get saveServerSettings => 'Sunucu Ayarlarını Kaydet';
+
+  @override
+  String get serverSettingsHint => 'Örnek: 192.168.1.10 : 3000';
+
+  @override
   String get version => 'Sürüm';
 
   @override

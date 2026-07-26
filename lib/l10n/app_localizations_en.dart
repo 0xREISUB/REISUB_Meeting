@@ -115,6 +115,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get testSpeaker => 'Test Speaker';
 
   @override
+  String get serverSettings => 'Server Settings';
+
+  @override
+  String get serverAddress => 'Server Address / IP';
+
+  @override
+  String get serverPort => 'Server Port';
+
+  @override
+  String get saveServerSettings => 'Save Server Settings';
+
+  @override
+  String get serverSettingsHint => 'Example: 192.168.1.10 : 3000';
+
+  @override
   String get version => 'Version';
 
   @override
