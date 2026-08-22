@@ -349,6 +349,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Güncellemeleri Kontrol Et'**
   String get checkForUpdates;
+
+  /// No description provided for @chatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sohbet'**
+  String get chatTitle;
+
+  /// No description provided for @chatMessage1.
+  ///
+  /// In tr, this message translates to:
+  /// **'Selam, sesim geliyor mu?'**
+  String get chatMessage1;
+
+  /// No description provided for @chatMessage2.
+  ///
+  /// In tr, this message translates to:
+  /// **'Evet, net geliyor. Görüntü de gayet iyi.'**
+  String get chatMessage2;
+
+  /// No description provided for @messageHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mesaj yaz...'**
+  String get messageHint;
+
+  /// No description provided for @mainVideoLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana Video Akışı'**
+  String get mainVideoLabel;
+
+  /// No description provided for @speakerLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşmacı'**
+  String get speakerLabel;
+
+  /// No description provided for @membersTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üyeler'**
+  String get membersTitle;
+
+  /// No description provided for @membersHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kişi katılıyor · Sayfa {current}/{total}'**
+  String membersHeader(Object count, Object current, Object total);
+
+  /// No description provided for @memberCountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} üye'**
+  String memberCountLabel(Object count);
+
+  /// No description provided for @screenCountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ekran'**
+  String screenCountLabel(Object count);
+
+  /// No description provided for @userName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanıcı {number}'**
+  String userName(Object number);
+
+  /// No description provided for @liveBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'CANLI'**
+  String get liveBadge;
 }
 
 class _AppLocalizationsDelegate

@@ -44,5 +44,18 @@
   "saveServerSettings": "Sunucu Ayarlarını Kaydet",
   "serverSettingsHint": "Örnek: 192.168.1.10 : 3000",
   "version": "Sürüm",
-  "checkForUpdates": "Güncellemeleri Kontrol Et"
+  "checkForUpdates": "Güncellemeleri Kontrol Et",
+
+  "chatTitle": "Sohbet",
+  "chatMessage1": "Selam, sesim geliyor mu?",
+  "chatMessage2": "Evet, net geliyor. Görüntü de gayet iyi.",
+  "messageHint": "Mesaj yaz...",
+  "mainVideoLabel": "Ana Video Akışı",
+  "speakerLabel": "Konuşmacı",
+  "membersTitle": "Üyeler",
+  "membersHeader": "{count} kişi katılıyor · Sayfa {current}/{total}",
+  "memberCountLabel": "{count} üye",
+  "screenCountLabel": "{count} ekran",
+  "userName": "Kullanıcı {number}",
+  "liveBadge": "CANLI"
 }

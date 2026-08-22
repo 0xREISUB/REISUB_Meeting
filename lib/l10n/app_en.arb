@@ -47,6 +47,18 @@
   "serverSettingsHint": "Example: 192.168.1.10 : 3000",
 
   "version": "Version",
-  "checkForUpdates": "Check for Updates"
+  "checkForUpdates": "Check for Updates",
 
+  "chatTitle": "Chat",
+  "chatMessage1": "Hey, can you hear me?",
+  "chatMessage2": "Yes, it's clear. The video looks great too.",
+  "messageHint": "Type a message...",
+  "mainVideoLabel": "Main Video Stream",
+  "speakerLabel": "Speaker",
+  "membersTitle": "Members",
+  "membersHeader": "{count} people attending · Page {current}/{total}",
+  "memberCountLabel": "{count} members",
+  "screenCountLabel": "{count} screens",
+  "userName": "User {number}",
+  "liveBadge": "LIVE"
 }

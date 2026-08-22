@@ -134,4 +134,48 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get checkForUpdates => 'Güncellemeleri Kontrol Et';
+
+  @override
+  String get chatTitle => 'Sohbet';
+
+  @override
+  String get chatMessage1 => 'Selam, sesim geliyor mu?';
+
+  @override
+  String get chatMessage2 => 'Evet, net geliyor. Görüntü de gayet iyi.';
+
+  @override
+  String get messageHint => 'Mesaj yaz...';
+
+  @override
+  String get mainVideoLabel => 'Ana Video Akışı';
+
+  @override
+  String get speakerLabel => 'Konuşmacı';
+
+  @override
+  String get membersTitle => 'Üyeler';
+
+  @override
+  String membersHeader(Object count, Object current, Object total) {
+    return '$count kişi katılıyor · Sayfa $current/$total';
+  }
+
+  @override
+  String memberCountLabel(Object count) {
+    return '$count üye';
+  }
+
+  @override
+  String screenCountLabel(Object count) {
+    return '$count ekran';
+  }
+
+  @override
+  String userName(Object number) {
+    return 'Kullanıcı $number';
+  }
+
+  @override
+  String get liveBadge => 'CANLI';
 }

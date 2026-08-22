@@ -134,4 +134,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkForUpdates => 'Check for Updates';
+
+  @override
+  String get chatTitle => 'Chat';
+
+  @override
+  String get chatMessage1 => 'Hey, can you hear me?';
+
+  @override
+  String get chatMessage2 => 'Yes, it\'s clear. The video looks great too.';
+
+  @override
+  String get messageHint => 'Type a message...';
+
+  @override
+  String get mainVideoLabel => 'Main Video Stream';
+
+  @override
+  String get speakerLabel => 'Speaker';
+
+  @override
+  String get membersTitle => 'Members';
+
+  @override
+  String membersHeader(Object count, Object current, Object total) {
+    return '$count people attending · Page $current/$total';
+  }
+
+  @override
+  String memberCountLabel(Object count) {
+    return '$count members';
+  }
+
+  @override
+  String screenCountLabel(Object count) {
+    return '$count screens';
+  }
+
+  @override
+  String userName(Object number) {
+    return 'User $number';
+  }
+
+  @override
+  String get liveBadge => 'LIVE';
 }
