@@ -218,6 +218,10 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 ),
               ),
 
+
+
+
+
               // ALT KONTROL PANELİ (Yüzen Kapsül)
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
@@ -253,6 +257,16 @@ class _MeetingScreenState extends State<MeetingScreen> {
                           isActive: _isCameraEnabled,
                           onTap: () => setState(() => _isCameraEnabled = !_isCameraEnabled),
                         ),
+                        const SizedBox(width: 16),
+                        _ControlButton(
+                          icon: Icons.people_rounded,
+                          isActive: true,
+                          onTap: () {
+                            // Katılımcılar listesi açılacak
+                          },
+                        ),
+
+
                         const SizedBox(width: 16),
                         _ControlButton(
                           icon: Icons.chat_bubble_rounded,
