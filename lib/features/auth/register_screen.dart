@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:v_meeting/l10n/app_localizations.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,10 +16,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordConfirmController = TextEditingController();
 
 void _handleRegister() async {
+    final l10n = AppLocalizations.of(context);
+
     if (_passwordController.text != _passwordConfirmController.text) {
+      if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Şifreler eşleşmiyor!')),
+          SnackBar(content: Text(l10n?.passwordsNotMatch ?? 'Şifreler eşleşmiyor!')),
       );
+    }
       return;
     }
 
@@ -33,22 +39,29 @@ void _handleRegister() async {
       );
 
       if (response.statusCode == 200) {
+        if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kayıt başarılı! Giriş yapabilirsiniz.')),
+            SnackBar(content: Text(l10n?.registerSuccess ?? 'Kayıt başarılı! Giriş yapabilirsiniz.')),
         );
         Navigator.pop(context); // Login ekranına dön
       }
+      }
     } on DioException catch (e) {
       // Go sunucumuzdan dönen hata mesajını (örn: "Bu nick kullanımda") ekrana basıyoruz
-      final errorMessage = e.response?.data['error'] ?? 'Bağlantı hatası!';
+      final errorMessage =
+          e.response?.data['error'] ?? (l10n?.connectionError ?? 'Bağlantı hatası!');
+      if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
     }
   }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -63,9 +76,9 @@ void _handleRegister() async {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Yeni Hesap Oluştur',
-                  style: TextStyle(
+                Text(
+                  l10n.createAccount,
+                  style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
@@ -75,7 +88,7 @@ void _handleRegister() async {
                 TextField(
                   controller: _nickController,
                   decoration: InputDecoration(
-                    labelText: 'Kullanıcı Adı (Nick)',
+                    labelText: l10n.nickname,
                     prefixIcon: const Icon(Icons.person),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -87,7 +100,7 @@ void _handleRegister() async {
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Şifre',
+                    labelText: l10n.password,
                     prefixIcon: const Icon(Icons.lock),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -99,7 +112,7 @@ void _handleRegister() async {
                   controller: _passwordConfirmController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Şifreyi Tekrar Girin',
+                    labelText: l10n.confirmPassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -117,7 +130,7 @@ void _handleRegister() async {
                     ),
                   ),
                   onPressed: _handleRegister,
-                  child: const Text('Kayıt Ol', style: TextStyle(fontSize: 18)),
+                  child: Text(l10n.register, style: const TextStyle(fontSize: 18)),
                 ),
               ],
             ),

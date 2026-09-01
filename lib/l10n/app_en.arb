@@ -60,5 +60,17 @@
   "memberCountLabel": "{count} members",
   "screenCountLabel": "{count} screens",
   "userName": "User {number}",
-  "liveBadge": "LIVE"
+  "liveBadge": "LIVE",
+
+  "welcome": "Welcome",
+  "nickname": "Username (Nick)",
+  "password": "Password",
+  "login": "Log In",
+  "noAccountRegister": "Don't have an account? Register",
+  "createAccount": "Create New Account",
+  "confirmPassword": "Re-enter Password",
+  "register": "Register",
+  "passwordsNotMatch": "Passwords don't match!",
+  "registerSuccess": "Registration successful! You can log in now.",
+  "connectionError": "Connection error!"
 }

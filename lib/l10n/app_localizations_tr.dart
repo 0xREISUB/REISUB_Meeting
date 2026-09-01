@@ -178,4 +178,37 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get liveBadge => 'CANLI';
+
+  @override
+  String get welcome => 'Hoş Geldiniz';
+
+  @override
+  String get nickname => 'Kullanıcı Adı (Nick)';
+
+  @override
+  String get password => 'Şifre';
+
+  @override
+  String get login => 'Giriş Yap';
+
+  @override
+  String get noAccountRegister => 'Hesabın yok mu? Kayıt Ol';
+
+  @override
+  String get createAccount => 'Yeni Hesap Oluştur';
+
+  @override
+  String get confirmPassword => 'Şifreyi Tekrar Girin';
+
+  @override
+  String get register => 'Kayıt Ol';
+
+  @override
+  String get passwordsNotMatch => 'Şifreler eşleşmiyor!';
+
+  @override
+  String get registerSuccess => 'Kayıt başarılı! Giriş yapabilirsiniz.';
+
+  @override
+  String get connectionError => 'Bağlantı hatası!';
 }

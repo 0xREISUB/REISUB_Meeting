@@ -421,6 +421,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'CANLI'**
   String get liveBadge;
+
+  /// No description provided for @welcome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hoş Geldiniz'**
+  String get welcome;
+
+  /// No description provided for @nickname.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanıcı Adı (Nick)'**
+  String get nickname;
+
+  /// No description provided for @password.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifre'**
+  String get password;
+
+  /// No description provided for @login.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giriş Yap'**
+  String get login;
+
+  /// No description provided for @noAccountRegister.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabın yok mu? Kayıt Ol'**
+  String get noAccountRegister;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Hesap Oluştur'**
+  String get createAccount;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifreyi Tekrar Girin'**
+  String get confirmPassword;
+
+  /// No description provided for @register.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt Ol'**
+  String get register;
+
+  /// No description provided for @passwordsNotMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifreler eşleşmiyor!'**
+  String get passwordsNotMatch;
+
+  /// No description provided for @registerSuccess.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt başarılı! Giriş yapabilirsiniz.'**
+  String get registerSuccess;
+
+  /// No description provided for @connectionError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı hatası!'**
+  String get connectionError;
 }
 
 class _AppLocalizationsDelegate

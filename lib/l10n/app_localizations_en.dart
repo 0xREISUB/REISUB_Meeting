@@ -178,4 +178,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveBadge => 'LIVE';
+
+  @override
+  String get welcome => 'Welcome';
+
+  @override
+  String get nickname => 'Username (Nick)';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get login => 'Log In';
+
+  @override
+  String get noAccountRegister => 'Don\'t have an account? Register';
+
+  @override
+  String get createAccount => 'Create New Account';
+
+  @override
+  String get confirmPassword => 'Re-enter Password';
+
+  @override
+  String get register => 'Register';
+
+  @override
+  String get passwordsNotMatch => 'Passwords don\'t match!';
+
+  @override
+  String get registerSuccess => 'Registration successful! You can log in now.';
+
+  @override
+  String get connectionError => 'Connection error!';
 }

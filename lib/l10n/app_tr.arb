@@ -57,5 +57,17 @@
   "memberCountLabel": "{count} üye",
   "screenCountLabel": "{count} ekran",
   "userName": "Kullanıcı {number}",
-  "liveBadge": "CANLI"
+  "liveBadge": "CANLI",
+
+  "welcome": "Hoş Geldiniz",
+  "nickname": "Kullanıcı Adı (Nick)",
+  "password": "Şifre",
+  "login": "Giriş Yap",
+  "noAccountRegister": "Hesabın yok mu? Kayıt Ol",
+  "createAccount": "Yeni Hesap Oluştur",
+  "confirmPassword": "Şifreyi Tekrar Girin",
+  "register": "Kayıt Ol",
+  "passwordsNotMatch": "Şifreler eşleşmiyor!",
+  "registerSuccess": "Kayıt başarılı! Giriş yapabilirsiniz.",
+  "connectionError": "Bağlantı hatası!"
 }

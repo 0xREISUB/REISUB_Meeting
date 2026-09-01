@@ -3,6 +3,7 @@ import 'package:v_meeting/features/auth/register_screen.dart';
 import 'home_screen.dart'; // Giriş başarılı olunca yönlendirilecek sayfa
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
+import 'package:v_meeting/l10n/app_localizations.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -44,15 +45,21 @@ void _handleLogin() async {
         }
       }
     } on DioException catch (e) {
-      final errorMessage = e.response?.data['error'] ?? 'Bağlantı hatası!';
+      final l10n = AppLocalizations.of(context);
+      final errorMessage =
+          e.response?.data['error'] ?? (l10n?.connectionError ?? 'Bağlantı hatası!');
+      if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
     }
   }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -69,9 +76,9 @@ void _handleLogin() async {
                   color: Colors.deepPurpleAccent,
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Hoş Geldiniz',
-                  style: TextStyle(
+                Text(
+                  l10n.welcome,
+                  style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
@@ -81,7 +88,7 @@ void _handleLogin() async {
                 TextField(
                   controller: _nickController,
                   decoration: InputDecoration(
-                    labelText: 'Kullanıcı Adı (Nick)',
+                    labelText: l10n.nickname,
                     prefixIcon: const Icon(Icons.person),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -93,7 +100,7 @@ void _handleLogin() async {
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Şifre',
+                    labelText: l10n.password,
                     prefixIcon: const Icon(Icons.lock),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -111,7 +118,7 @@ void _handleLogin() async {
                     ),
                   ),
                   onPressed: _handleLogin,
-                  child: const Text('Giriş Yap', style: TextStyle(fontSize: 18)),
+                  child: Text(l10n.login, style: const TextStyle(fontSize: 18)),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
@@ -121,7 +128,7 @@ void _handleLogin() async {
                       MaterialPageRoute(builder: (context) => const RegisterScreen()),
                     );
                   },
-                  child: const Text('Hesabın yok mu? Kayıt Ol'),
+                  child: Text(l10n.noAccountRegister),
                 ),
               ],
             ),
