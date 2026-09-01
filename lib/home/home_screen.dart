@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:v_meeting/features/auth/login_screen.dart';
+import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'join_screen.dart'; // Katılma ekranına gitmek için
-import 'create_screen.dart';
-import 'about.dart';
-import 'language_screen.dart';
-import 'settings.dart';
-import 'meeting.dart';
+import 'package:v_meeting/meeting/create_screen.dart';
+import 'package:v_meeting/meeting/join_screen.dart';
+import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/settings/about_screen.dart';
+import 'package:v_meeting/settings/language_screen.dart';
+import 'package:v_meeting/settings/settings_screen.dart';
 
 
 

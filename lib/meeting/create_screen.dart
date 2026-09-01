@@ -1,9 +1,8 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'home_screen.dart';
+import 'package:v_meeting/home/home_screen.dart';
 
 class CreateScreen extends ConsumerStatefulWidget {
   const CreateScreen({super.key});
@@ -60,7 +59,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  l10n.nameError, // Gerçek dil paketinden
+                  l10n.nameError, // Ger├ğek dil paketinden
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
@@ -77,12 +76,12 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
     }
 
     final newRoomId = _generateRoomId();
-    print('Toplantı Başlatılıyor... İsim: $name, Oda: $newRoomId');
+    print('Toplant─▒ Ba┼şlat─▒l─▒yor... ─░sim: $name, Oda: $newRoomId');
   }
 
   @override
   Widget build(BuildContext context) {
-    // Gerçek dil paketini kullanıyoruz
+    // Ger├ğek dil paketini kullan─▒yoruz
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:v_meeting/features/auth/register_screen.dart';
-import 'home_screen.dart'; // Giriş başarılı olunca yönlendirilecek sayfa
+import 'package:v_meeting/auth/register_screen.dart';
+import 'package:v_meeting/home/home_screen.dart'; // Giriş başarılı olunca yönlendirilecek sayfa
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';

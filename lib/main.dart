@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'features/auth/home_screen.dart'; // HomeScreen import edildi
+import 'home/home_screen.dart'; // HomeScreen import edildi
 
-// GLOBAL DİL DURUMU: Varsayılan olarak Türkçe başlatıyoruz
+// GLOBAL DÄ°L DURUMU: VarsayÄ±lan olarak TÃ¼rkÃ§e baÅŸlatÄ±yoruz
 final localeProvider = StateProvider<Locale>((ref) => const Locale('tr'));
 
 void main() {
   runApp(
-    // Riverpod'u projeye dahil etmek için en dıştan ProviderScope ile sarıyoruz
+    // Riverpod'u projeye dahil etmek iÃ§in en dÄ±ÅŸtan ProviderScope ile sarÄ±yoruz
     const ProviderScope(child: VMeetingApp()),
   );
 }
@@ -19,13 +19,13 @@ class VMeetingApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Riverpod'daki anlık dil durumunu dinliyoruz
+    // Riverpod'daki anlÄ±k dil durumunu dinliyoruz
     final currentLocale = ref.watch(localeProvider);
 
     return MaterialApp(
       title: 'REISUB Meeting',
       debugShowCheckedModeBanner: false,
-      locale: currentLocale, // Dili buraya bağlıyoruz
+      locale: currentLocale, // Dili buraya baÄŸlÄ±yoruz
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
@@ -35,7 +35,7 @@ class VMeetingApp extends ConsumerWidget {
         ),
         useMaterial3: true,
       ),
-      // Artık uygulamayı doğrudan Ana Menü ile başlatıyoruz
+      // ArtÄ±k uygulamayÄ± doÄŸrudan Ana MenÃ¼ ile baÅŸlatÄ±yoruz
       home: const HomeScreen(),
     );
   }

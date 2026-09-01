@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'home_screen.dart';
+import 'package:v_meeting/home/home_screen.dart';
 
 class JoinScreen extends StatefulWidget {
   const JoinScreen({super.key});
