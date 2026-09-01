@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/features/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'join_screen.dart'; // Katılma ekranına gitmek için
 import 'create_screen.dart';
@@ -130,7 +131,13 @@ Padding(
           );
           break;
         case 4:
-          print('Çıkış Yap');
+          // TODO: Go backend'ine logout isteği atıp token'ı yerelden sil
+          print('Çıkış Yapıldı');
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false, // Tüm geçmişi siler ki geri tuşuyla anasayfaya dönülmesin
+          );
           break;
       }
     },
