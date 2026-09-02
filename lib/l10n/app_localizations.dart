@@ -1,0 +1,524 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_tr.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('tr'),
+  ];
+
+  /// No description provided for @joinMeeting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplantıya Katıl'**
+  String get joinMeeting;
+
+  /// No description provided for @yourName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adın'**
+  String get yourName;
+
+  /// No description provided for @roomId.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oda ID'**
+  String get roomId;
+
+  /// No description provided for @nameError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir ad girmelisin'**
+  String get nameError;
+
+  /// No description provided for @roomError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eksik veya hatalı numara'**
+  String get roomError;
+
+  /// No description provided for @emptyErrorMsg.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lütfen adınızı girin ve 9 haneli oda numarasını tamamlayın.'**
+  String get emptyErrorMsg;
+
+  /// No description provided for @returnMainMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana Menüye Dön'**
+  String get returnMainMenu;
+
+  /// No description provided for @appSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık Kaynak Toplantı Platformu'**
+  String get appSubtitle;
+
+  /// No description provided for @createRoom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Oda Kur'**
+  String get createRoom;
+
+  /// No description provided for @startMeeting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplantıyı Başlat'**
+  String get startMeeting;
+
+  /// No description provided for @about.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hakkında'**
+  String get about;
+
+  /// No description provided for @developer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geliştirici'**
+  String get developer;
+
+  /// No description provided for @technologies.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanılan Teknolojiler'**
+  String get technologies;
+
+  /// No description provided for @licenses.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lisanslar'**
+  String get licenses;
+
+  /// No description provided for @contact.
+  ///
+  /// In tr, this message translates to:
+  /// **'İletişim'**
+  String get contact;
+
+  /// No description provided for @madeWithFlutter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Flutter ile ❤️ kullanılarak geliştirildi.'**
+  String get madeWithFlutter;
+
+  /// No description provided for @language.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dil'**
+  String get language;
+
+  /// No description provided for @profile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil'**
+  String get profile;
+
+  /// No description provided for @settings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarlar'**
+  String get settings;
+
+  /// No description provided for @logout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çıkış Yap'**
+  String get logout;
+
+  /// No description provided for @general.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genel'**
+  String get general;
+
+  /// No description provided for @meeting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplantılar'**
+  String get meeting;
+
+  /// No description provided for @application.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama'**
+  String get application;
+
+  /// No description provided for @deviceTest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihaz Testi'**
+  String get deviceTest;
+
+  /// No description provided for @darkTheme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koyu Tema'**
+  String get darkTheme;
+
+  /// No description provided for @notifications.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirimler'**
+  String get notifications;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yakında'**
+  String get comingSoon;
+
+  /// No description provided for @startWithMic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofon açık başlat'**
+  String get startWithMic;
+
+  /// No description provided for @startWithCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamera açık başlat'**
+  String get startWithCamera;
+
+  /// No description provided for @mirrorCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamerayı aynala'**
+  String get mirrorCamera;
+
+  /// No description provided for @noiseSuppression.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gürültü engelleme'**
+  String get noiseSuppression;
+
+  /// No description provided for @highQualityVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'HD Video'**
+  String get highQualityVideo;
+
+  /// No description provided for @testMicrophone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofonu Test Et'**
+  String get testMicrophone;
+
+  /// No description provided for @testCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamerayı Test Et'**
+  String get testCamera;
+
+  /// No description provided for @testSpeaker.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hoparlörü Test Et'**
+  String get testSpeaker;
+
+  /// No description provided for @serverSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Ayarları'**
+  String get serverSettings;
+
+  /// No description provided for @serverAddress.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Adresi / IP'**
+  String get serverAddress;
+
+  /// No description provided for @serverPort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Portu'**
+  String get serverPort;
+
+  /// No description provided for @saveServerSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunucu Ayarlarını Kaydet'**
+  String get saveServerSettings;
+
+  /// No description provided for @serverSettingsHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örnek: 192.168.1.10 : 3000'**
+  String get serverSettingsHint;
+
+  /// No description provided for @version.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürüm'**
+  String get version;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncellemeleri Kontrol Et'**
+  String get checkForUpdates;
+
+  /// No description provided for @chatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sohbet'**
+  String get chatTitle;
+
+  /// No description provided for @chatMessage1.
+  ///
+  /// In tr, this message translates to:
+  /// **'Selam, sesim geliyor mu?'**
+  String get chatMessage1;
+
+  /// No description provided for @chatMessage2.
+  ///
+  /// In tr, this message translates to:
+  /// **'Evet, net geliyor. Görüntü de gayet iyi.'**
+  String get chatMessage2;
+
+  /// No description provided for @messageHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mesaj yaz...'**
+  String get messageHint;
+
+  /// No description provided for @mainVideoLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana Video Akışı'**
+  String get mainVideoLabel;
+
+  /// No description provided for @speakerLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşmacı'**
+  String get speakerLabel;
+
+  /// No description provided for @membersTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üyeler'**
+  String get membersTitle;
+
+  /// No description provided for @membersHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kişi katılıyor · Sayfa {current}/{total}'**
+  String membersHeader(Object count, Object current, Object total);
+
+  /// No description provided for @memberCountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} üye'**
+  String memberCountLabel(Object count);
+
+  /// No description provided for @screenCountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ekran'**
+  String screenCountLabel(Object count);
+
+  /// No description provided for @userName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanıcı {number}'**
+  String userName(Object number);
+
+  /// No description provided for @liveBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'CANLI'**
+  String get liveBadge;
+
+  /// No description provided for @welcome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hoş Geldiniz'**
+  String get welcome;
+
+  /// No description provided for @nickname.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanıcı Adı (Nick)'**
+  String get nickname;
+
+  /// No description provided for @password.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifre'**
+  String get password;
+
+  /// No description provided for @login.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giriş Yap'**
+  String get login;
+
+  /// No description provided for @noAccountRegister.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabın yok mu? Kayıt Ol'**
+  String get noAccountRegister;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Hesap Oluştur'**
+  String get createAccount;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifreyi Tekrar Girin'**
+  String get confirmPassword;
+
+  /// No description provided for @register.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt Ol'**
+  String get register;
+
+  /// No description provided for @passwordsNotMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifreler eşleşmiyor!'**
+  String get passwordsNotMatch;
+
+  /// No description provided for @registerSuccess.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt başarılı! Giriş yapabilirsiniz.'**
+  String get registerSuccess;
+
+  /// No description provided for @connectionError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı hatası!'**
+  String get connectionError;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'tr'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'tr':
+      return AppLocalizationsTr();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

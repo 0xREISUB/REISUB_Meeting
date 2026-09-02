@@ -1,0 +1,214 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get joinMeeting => 'Join Meeting';
+
+  @override
+  String get yourName => 'Your Name';
+
+  @override
+  String get roomId => 'Room ID';
+
+  @override
+  String get nameError => 'You must enter a name';
+
+  @override
+  String get roomError => 'Incomplete or invalid number';
+
+  @override
+  String get emptyErrorMsg =>
+      'Please enter your name and complete the 9-digit room number.';
+
+  @override
+  String get returnMainMenu => 'Return to Main Menu';
+
+  @override
+  String get appSubtitle => 'Open Source Meeting Platform';
+
+  @override
+  String get createRoom => 'Create New Room';
+
+  @override
+  String get startMeeting => 'Start Meeting';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get developer => 'Developer';
+
+  @override
+  String get technologies => 'Technologies';
+
+  @override
+  String get licenses => 'Licenses';
+
+  @override
+  String get contact => 'Contact';
+
+  @override
+  String get madeWithFlutter => 'Made with ❤️ using Flutter.';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get logout => 'Log Out';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get meeting => 'Meetings';
+
+  @override
+  String get application => 'Application';
+
+  @override
+  String get deviceTest => 'Device Test';
+
+  @override
+  String get darkTheme => 'Dark Theme';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get comingSoon => 'Coming Soon';
+
+  @override
+  String get startWithMic => 'Start with microphone on';
+
+  @override
+  String get startWithCamera => 'Start with camera on';
+
+  @override
+  String get mirrorCamera => 'Mirror camera';
+
+  @override
+  String get noiseSuppression => 'Noise suppression';
+
+  @override
+  String get highQualityVideo => 'HD Video';
+
+  @override
+  String get testMicrophone => 'Test Microphone';
+
+  @override
+  String get testCamera => 'Test Camera';
+
+  @override
+  String get testSpeaker => 'Test Speaker';
+
+  @override
+  String get serverSettings => 'Server Settings';
+
+  @override
+  String get serverAddress => 'Server Address / IP';
+
+  @override
+  String get serverPort => 'Server Port';
+
+  @override
+  String get saveServerSettings => 'Save Server Settings';
+
+  @override
+  String get serverSettingsHint => 'Example: 192.168.1.10 : 3000';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get checkForUpdates => 'Check for Updates';
+
+  @override
+  String get chatTitle => 'Chat';
+
+  @override
+  String get chatMessage1 => 'Hey, can you hear me?';
+
+  @override
+  String get chatMessage2 => 'Yes, it\'s clear. The video looks great too.';
+
+  @override
+  String get messageHint => 'Type a message...';
+
+  @override
+  String get mainVideoLabel => 'Main Video Stream';
+
+  @override
+  String get speakerLabel => 'Speaker';
+
+  @override
+  String get membersTitle => 'Members';
+
+  @override
+  String membersHeader(Object count, Object current, Object total) {
+    return '$count people attending · Page $current/$total';
+  }
+
+  @override
+  String memberCountLabel(Object count) {
+    return '$count members';
+  }
+
+  @override
+  String screenCountLabel(Object count) {
+    return '$count screens';
+  }
+
+  @override
+  String userName(Object number) {
+    return 'User $number';
+  }
+
+  @override
+  String get liveBadge => 'LIVE';
+
+  @override
+  String get welcome => 'Welcome';
+
+  @override
+  String get nickname => 'Username (Nick)';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get login => 'Log In';
+
+  @override
+  String get noAccountRegister => 'Don\'t have an account? Register';
+
+  @override
+  String get createAccount => 'Create New Account';
+
+  @override
+  String get confirmPassword => 'Re-enter Password';
+
+  @override
+  String get register => 'Register';
+
+  @override
+  String get passwordsNotMatch => 'Passwords don\'t match!';
+
+  @override
+  String get registerSuccess => 'Registration successful! You can log in now.';
+
+  @override
+  String get connectionError => 'Connection error!';
+}

@@ -1,0 +1,258 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/auth/login_screen.dart';
+import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/meeting/create_screen.dart';
+import 'package:v_meeting/meeting/join_screen.dart';
+import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/settings/about_screen.dart';
+import 'package:v_meeting/settings/language_screen.dart';
+import 'package:v_meeting/settings/settings_screen.dart';
+
+
+
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          // PROFİL RESMİ VE AÇILIR MENÜ
+Padding(
+  padding: const EdgeInsets.only(right: 16.0),
+  child: PopupMenuButton<int>(
+    tooltip: 'Profile Menu',
+    offset: const Offset(0, 50),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    icon: const CircleAvatar(
+      backgroundColor: Colors.deepPurpleAccent,
+      foregroundColor: Colors.white,
+      child: Icon(Icons.person),
+    ),
+    itemBuilder: (context) {
+      return [
+         PopupMenuItem<int>(
+          value: 0,
+          child: Row(
+            children: [
+              Icon(Icons.person_outline, size: 20),
+              SizedBox(width: 12),
+              Text(l10n.profile),
+            ],
+          ),
+        ),
+         PopupMenuItem<int>(
+          value: 1,
+          child: Row(
+            children: [
+              Icon(Icons.settings_outlined, size: 20),
+              SizedBox(width: 12),
+              Text(l10n.settings),
+            ],
+          ),
+        ),
+         PopupMenuItem<int>(
+          value: 2,
+          child: Row(
+            children: [
+              Icon(Icons.language_outlined, size: 20),
+              SizedBox(width: 12),
+              Text(l10n.language),
+            ],
+          ),
+        ),
+         PopupMenuItem<int>(
+          value: 3,
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, size: 20),
+              SizedBox(width: 12),
+              Text(l10n.about),
+            ],
+          ),
+        ),
+         PopupMenuItem<int>(
+          value: 4,
+          child: Row(
+            children: [
+              Icon(
+                Icons.logout,
+                size: 20,
+                color: Colors.red,
+              ),
+              SizedBox(width: 12),
+              Text(
+                l10n.logout,
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ];
+    },
+    onSelected: (value) {
+      switch (value) {
+        case 0:
+          print('Profil');
+          break;
+        case 1:
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const SettingsScreen(),
+            ),
+          );
+          break;
+        case 2:
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const LanguageScreen(),
+            ),
+          );
+          break;
+        case 3:
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AboutScreen(),
+            ),
+          );
+          break;
+        case 4:
+          // TODO: Go backend'ine logout isteği atıp token'ı yerelden sil
+          print('Çıkış Yapıldı');
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false, // Tüm geçmişi siler ki geri tuşuyla anasayfaya dönülmesin
+          );
+          break;
+      }
+    },
+  ),
+),
+        ],
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // LOGO
+                const Icon(
+                  Icons.video_chat_rounded,
+                  size: 100,
+                  color: Colors.deepPurpleAccent,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'REISUB Meeting',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                // AÇIK KAYNAK ALT BAŞLIĞI
+                Text(
+                  l10n.appSubtitle,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 60),
+
+                // ODA KUR BUTONU
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    backgroundColor: Colors.deepPurpleAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_box, size: 24),
+                  label: Text(
+                    l10n.createRoom,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CreateScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // ODAYA KATIL BUTONU
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    foregroundColor: Colors.deepPurpleAccent,
+                    side: const BorderSide(
+                      color: Colors.deepPurpleAccent,
+                      width: 2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.login, size: 24),
+                  label: Text(
+                    l10n.joinMeeting,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const JoinScreen(),
+                      ),
+                    );
+                  },
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MeetingScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Meeting Screen Test'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
