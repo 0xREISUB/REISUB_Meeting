@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/auth/server_config.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -10,14 +11,39 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final TextEditingController _serverHostController =
-      TextEditingController(text: '192.168.1.10');
-  final TextEditingController _serverPortController =
-      TextEditingController(text: '3000');
+  final TextEditingController _serverHostController = TextEditingController(
+    text: '192.168.1.10',
+  );
+  final TextEditingController _serverPortController = TextEditingController(
+    text: '3000',
+  );
 
   bool startWithMic = true;
   bool startWithCamera = true;
   bool mirrorCamera = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadServerSettings();
+  }
+
+  Future<void> _loadServerSettings() async {
+    final savedUrl = await ServerConfig.readUrl();
+    if (!mounted || savedUrl == null) {
+      return;
+    }
+
+    final uri = Uri.tryParse(savedUrl);
+    if (uri == null || uri.host.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _serverHostController.text = uri.host;
+      _serverPortController.text = (uri.hasPort ? uri.port : 8080).toString();
+    });
+  }
 
   @override
   void dispose() {
@@ -26,7 +52,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
-  void _saveServerSettings() {
+  Future<void> _saveServerSettings() async {
     final host = _serverHostController.text.trim();
     final port = int.tryParse(_serverPortController.text.trim());
 
@@ -39,15 +65,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
 
-    // Şimdilik placeholder.
-    // Burada ileride shared_preferences ile kaydedebilir,
-    // API client için baseUrl oluşturabilirsin.
-    // Örnek: http://$host:$port
+    final address = host.startsWith('http://') || host.startsWith('https://')
+        ? host
+        : 'http://$host';
+    final uri = Uri.tryParse(address);
+    if (uri == null || uri.host.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lütfen geçerli bir sunucu adresi girin.'),
+        ),
+      );
+      return;
+    }
+
+    await ServerConfig.saveUrl('${uri.scheme}://${uri.host}:$port');
+    if (!mounted) {
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sunucu ayarları kaydedildi: $host:$port'),
-      ),
+      SnackBar(content: Text('Sunucu ayarları kaydedildi: $host:$port')),
     );
   }
 
@@ -57,10 +94,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settings),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.settings), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),
         children: [
@@ -239,9 +273,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ServerConfig {
   static const _serverUrlKey = 'server_url';
+  static const _authTokenKey = 'auth_token';
 
   static String normalizeUrl(String value) {
     var url = value.trim();
@@ -26,5 +27,24 @@ class ServerConfig {
       return null;
     }
     return normalizeUrl(url);
+  }
+
+  static Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_authTokenKey, token);
+  }
+
+  static Future<String?> readToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_authTokenKey);
+    if (token == null || token.trim().isEmpty) {
+      return null;
+    }
+    return token;
+  }
+
+  static Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_authTokenKey);
   }
 }

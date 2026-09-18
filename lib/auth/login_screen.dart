@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:v_meeting/auth/register_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/home/home_screen.dart'; // Giriş başarılı olunca yönlendirilecek sayfa
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,14 +16,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _nickController = TextEditingController();
   final _passwordController = TextEditingController();
 
-void _handleLogin() async {
+  void _handleLogin() async {
     final l10n = AppLocalizations.of(context);
     try {
       final serverUrl = await ServerConfig.readUrl();
       if (serverUrl == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n?.connectionError ?? 'Bağlantı hatası!')),
+            SnackBar(
+              content: Text(l10n?.connectionError ?? 'Bağlantı hatası!'),
+            ),
           );
         }
         return;
@@ -41,11 +41,13 @@ void _handleLogin() async {
 
       if (response.statusCode == 200) {
         // 1. Go'dan gelen tokeni al
-        final token = response.data['token'];
-        
+        final token = response.data['token'] as String?;
+        if (token == null || token.isEmpty) {
+          throw const FormatException('Missing authentication token');
+        }
+
         // 2. Tokeni cihaz hafızasına kaydet (Beni hatırla mantığı)
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
+        await ServerConfig.saveToken(token);
 
         // 3. Ana sayfaya yönlendir
         if (mounted) {
@@ -57,13 +59,23 @@ void _handleLogin() async {
       }
     } on DioException catch (e) {
       final errorMessage =
-          e.response?.data['error'] ?? (l10n?.connectionError ?? 'Bağlantı hatası!');
+          e.response?.data['error'] ??
+          (l10n?.connectionError ?? 'Bağlantı hatası!');
       if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
+      }
+    } on FormatException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n?.connectionError ?? 'Bağlantı hatası!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
-  }
   }
 
   @override
@@ -135,7 +147,9 @@ void _handleLogin() async {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterScreen(),
+                      ),
                     );
                   },
                   child: Text(l10n.noAccountRegister),
