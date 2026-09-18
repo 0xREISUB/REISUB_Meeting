@@ -127,7 +127,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveServerSettings => 'Save Server Settings';
 
   @override
-  String get serverSettingsHint => 'Example: 192.168.1.10 : 3000';
+  String get serverSettingsHint => 'Example: meeting.example.com';
 
   @override
   String get version => 'Version';

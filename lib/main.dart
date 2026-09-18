@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'home/home_screen.dart'; // HomeScreen import edildi
+import 'auth/host_screen.dart';
 
 // GLOBAL DÄ°L DURUMU: VarsayÄ±lan olarak TÃ¼rkÃ§e baÅŸlatÄ±yoruz
 final localeProvider = StateProvider<Locale>((ref) => const Locale('tr'));
@@ -35,8 +35,7 @@ class VMeetingApp extends ConsumerWidget {
         ),
         useMaterial3: true,
       ),
-      // ArtÄ±k uygulamayÄ± doÄŸrudan Ana MenÃ¼ ile baÅŸlatÄ±yoruz
-      home: const HomeScreen(),
+      home: const HostScreen(),
     );
   }
 }

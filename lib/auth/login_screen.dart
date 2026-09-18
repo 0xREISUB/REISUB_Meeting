@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:v_meeting/auth/register_screen.dart';
+import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/home/home_screen.dart'; // Giriş başarılı olunca yönlendirilecek sayfa
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
@@ -18,10 +19,20 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
 void _handleLogin() async {
+    final l10n = AppLocalizations.of(context);
     try {
+      final serverUrl = await ServerConfig.readUrl();
+      if (serverUrl == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n?.connectionError ?? 'Bağlantı hatası!')),
+          );
+        }
+        return;
+      }
       final dio = Dio();
       final response = await dio.post(
-        'http://127.0.0.1:8080/login',
+        '$serverUrl/login',
         data: {
           'nick': _nickController.text,
           'password': _passwordController.text,
@@ -45,7 +56,6 @@ void _handleLogin() async {
         }
       }
     } on DioException catch (e) {
-      final l10n = AppLocalizations.of(context);
       final errorMessage =
           e.response?.data['error'] ?? (l10n?.connectionError ?? 'Bağlantı hatası!');
       if (mounted) {

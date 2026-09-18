@@ -10,18 +10,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod importu ekl
 import 'package:v_meeting/main.dart';
 
 void main() {
-  testWidgets('app builds and shows home screen', (WidgetTester tester) async {
+  testWidgets('app builds and shows host screen', (WidgetTester tester) async {
     // Uygulamayı Riverpod state'lerinin çalışabilmesi için ProviderScope ile sarıyoruz
     await tester.pumpWidget(const ProviderScope(child: VMeetingApp()));
 
-    // İlk açılışın HomeScreen olduğunu doğrulamak için ekrandaki elementleri arıyoruz
-    // 1. Uygulama adının ekranda olduğunu doğrula
-    expect(find.text('v_meeting'), findsOneWidget);
-
-    // 2. Oda Kur butonunun ekranda olduğunu doğrula
-    expect(find.text('Yeni Oda Kur'), findsOneWidget);
-
-    // 3. Toplantıya Katıl butonunun ekranda olduğunu doğrula
-    expect(find.text('Toplantıya Katıl'), findsOneWidget);
+    expect(find.text('Sunucu Ayarları'), findsOneWidget);
+    expect(find.text('Sunucu Adresi / IP'), findsOneWidget);
   });
 }
