@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
 
@@ -21,6 +23,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool startWithMic = true;
   bool startWithCamera = true;
   bool mirrorCamera = false;
+  bool _isSavingServerSettings = false;
 
   @override
   void initState() {
@@ -53,6 +56,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _saveServerSettings() async {
+    if (_isSavingServerSettings) {
+      return;
+    }
+
     final host = _serverHostController.text.trim();
     final port = int.tryParse(_serverPortController.text.trim());
 
@@ -78,14 +85,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
 
-    await ServerConfig.saveUrl('${uri.scheme}://${uri.host}:$port');
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Sunucu ayarları kaydedildi: $host:$port')),
+    final newUrl = ServerConfig.normalizeUrl(
+      '${uri.scheme}://${uri.host}:$port',
     );
+    final currentUrl = await ServerConfig.readUrl();
+
+    setState(() => _isSavingServerSettings = true);
+    try {
+      final response = await Dio().get<Map<String, dynamic>>('$newUrl/ping');
+      final pingResponse = response.data;
+      if (response.statusCode != 200 ||
+          pingResponse?['message'] != 'pong' ||
+          pingResponse?['status'] != 'active') {
+        throw const FormatException('Invalid server response');
+      }
+
+      await ServerConfig.saveUrl(newUrl);
+      if (!mounted) {
+        return;
+      }
+
+      final serverChanged =
+          currentUrl != null && ServerConfig.normalizeUrl(currentUrl) != newUrl;
+      if (serverChanged) {
+        await ServerConfig.clearToken();
+        if (!mounted) {
+          return;
+        }
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sunucu ayarları kaydedildi: $host:$port')),
+      );
+    } on DioException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.connectionError),
+          ),
+        );
+      }
+    } on FormatException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.connectionError),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingServerSettings = false);
+      }
+    }
   }
 
   @override
@@ -199,8 +257,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _saveServerSettings,
-                        icon: const Icon(Icons.save),
+                        onPressed: _isSavingServerSettings
+                            ? null
+                            : _saveServerSettings,
+                        icon: _isSavingServerSettings
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.save),
                         label: Text(l10n.saveServerSettings),
                       ),
                     ),
