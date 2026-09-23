@@ -1,22 +1,91 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:livekit_client/livekit_client.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/meeting/meeting_api.dart';
 
 class MeetingScreen extends StatefulWidget {
   /// Toplam katılımcı (üye) sayısı. Bu değer kadar kutu oluşturulur ve
   /// sağ kaydırma (sayfa) sayısı da bu değere göre hesaplanır.
   final int totalMembers;
+  final RoomCredentials? credentials;
 
-  const MeetingScreen({super.key, this.totalMembers = 19});
+  const MeetingScreen({
+    super.key,
+    this.totalMembers = 19,
+    this.credentials,
+  });
 
   @override
   State<MeetingScreen> createState() => _MeetingScreenState();
 }
 
 class _MeetingScreenState extends State<MeetingScreen> {
+  late final Room _room;
   bool _isMicEnabled = true;
   bool _isCameraEnabled = true;
   bool _showControls =
       true; // Ekrana tıklayınca kontrolleri gizleyip göstermek için
+  bool _isConnecting = true;
+  String? _connectionError;
+
+  @override
+  void initState() {
+    super.initState();
+    _room = Room();
+    _room.addListener(_onRoomChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _connectToRoom());
+  }
+
+  Future<void> _connectToRoom() async {
+    final credentials = widget.credentials;
+    if (credentials == null) {
+      setState(() {
+        _isConnecting = false;
+        _connectionError = 'Toplantı bilgileri bulunamadı';
+      });
+      return;
+    }
+
+    try {
+      await _room.connect(credentials.liveKitUrl, credentials.token);
+      await _room.localParticipant?.setMicrophoneEnabled(_isMicEnabled);
+      await _room.localParticipant?.setCameraEnabled(_isCameraEnabled);
+      if (mounted) setState(() => _isConnecting = false);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+          _connectionError = 'Toplantıya bağlanılamadı: $error';
+        });
+      }
+    }
+  }
+
+  void _onRoomChanged() {
+    if (mounted) setState(() {});
+  }
+
+  VideoTrack? _firstVideoTrack(Iterable<TrackPublication> publications) {
+    for (final publication in publications) {
+      final track = publication.track;
+      if (track is VideoTrack && !publication.muted) return track;
+    }
+    return null;
+  }
+
+  Future<void> _toggleMicrophone() async {
+    final enabled = !_isMicEnabled;
+    setState(() => _isMicEnabled = enabled);
+    await _room.localParticipant?.setMicrophoneEnabled(enabled);
+  }
+
+  Future<void> _toggleCamera() async {
+    final enabled = !_isCameraEnabled;
+    setState(() => _isCameraEnabled = enabled);
+    await _room.localParticipant?.setCameraEnabled(enabled);
+  }
 
   void _toggleControls() {
     setState(() {
@@ -133,7 +202,15 @@ class _MeetingScreenState extends State<MeetingScreen> {
   }
 
   void _handleLeaveOrEndMeeting() {
+    unawaited(_room.disconnect());
     Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    _room.removeListener(_onRoomChanged);
+    unawaited(_room.dispose());
+    super.dispose();
   }
 
   void _openMembersScreen() {
@@ -153,6 +230,9 @@ class _MeetingScreenState extends State<MeetingScreen> {
     const surface = Color(0xFF1C1C1E); // Koyu gri yüzeyler
     final isDesktop =
         MediaQuery.of(context).size.width > 800; // Basit responsive kontrolü
+    final localTrack = _firstVideoTrack(
+      _room.localParticipant?.videoTrackPublications ?? const [],
+    );
 
     return Scaffold(
       backgroundColor: bg,
@@ -178,31 +258,42 @@ class _MeetingScreenState extends State<MeetingScreen> {
                         ),
                         child: Stack(
                           children: [
-                            Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 40,
-                                    backgroundColor: Color(0xFF2C2C2E),
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: Colors.white54,
+                            if (localTrack != null)
+                              Positioned.fill(
+                                child: VideoTrackRenderer(
+                                  localTrack,
+                                  fit: VideoViewFit.cover,
+                                  mirrorMode: VideoViewMirrorMode.mirror,
+                                ),
+                              )
+                            else
+                              Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const CircleAvatar(
+                                      radius: 40,
+                                      backgroundColor: Color(0xFF2C2C2E),
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 40,
+                                        color: Colors.white54,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    l10n.mainVideoLabel,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white70,
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      _isConnecting
+                                          ? 'Bağlanıyor...'
+                                          : l10n.mainVideoLabel,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white70,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
                             // Sol alt isim etiketi
                             Positioned(
                               left: 16,
@@ -294,8 +385,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                                 ? Icons.mic_rounded
                                 : Icons.mic_off_rounded,
                             isActive: _isMicEnabled,
-                            onTap: () =>
-                                setState(() => _isMicEnabled = !_isMicEnabled),
+                            onTap: _toggleMicrophone,
                           ),
                           const SizedBox(width: 16),
                           _ControlButton(
@@ -303,9 +393,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                                 ? Icons.videocam_rounded
                                 : Icons.videocam_off_rounded,
                             isActive: _isCameraEnabled,
-                            onTap: () => setState(
-                              () => _isCameraEnabled = !_isCameraEnabled,
-                            ),
+                            onTap: _toggleCamera,
                           ),
                           const SizedBox(width: 16),
                           _ControlButton(
@@ -347,6 +435,25 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   ),
                 ),
               ),
+
+              if (_connectionError != null)
+                Positioned(
+                  top: 16,
+                  left: 24,
+                  right: 24,
+                  child: Material(
+                    color: Colors.red.shade700,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        _connectionError!,
+                        style: const TextStyle(color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
