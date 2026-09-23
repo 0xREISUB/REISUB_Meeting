@@ -335,7 +335,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverSettingsHint.
   ///
   /// In tr, this message translates to:
-  /// **'Örnek: 192.168.1.10 : 3000'**
+  /// **'Örnek: meeting.example.com'**
   String get serverSettingsHint;
 
   /// No description provided for @version.

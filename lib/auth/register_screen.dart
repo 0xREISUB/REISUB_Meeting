@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/auth/server_config.dart';
 
 
 class RegisterScreen extends StatefulWidget {
@@ -28,10 +29,18 @@ void _handleRegister() async {
     }
 
     try {
+      final serverUrl = await ServerConfig.readUrl();
+      if (serverUrl == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n?.connectionError ?? 'Bağlantı hatası!')),
+          );
+        }
+        return;
+      }
       final dio = Dio();
-      // Windows'ta test ettiğin için 127.0.0.1 kullanıyoruz
       final response = await dio.post(
-        'http://127.0.0.1:8080/register',
+        '$serverUrl/register',
         data: {
           'nick': _nickController.text,
           'password': _passwordController.text,

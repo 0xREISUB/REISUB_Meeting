@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/auth/server_config.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -10,14 +13,40 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final TextEditingController _serverHostController =
-      TextEditingController(text: '192.168.1.10');
-  final TextEditingController _serverPortController =
-      TextEditingController(text: '3000');
+  final TextEditingController _serverHostController = TextEditingController(
+    text: '192.168.1.10',
+  );
+  final TextEditingController _serverPortController = TextEditingController(
+    text: '3000',
+  );
 
   bool startWithMic = true;
   bool startWithCamera = true;
   bool mirrorCamera = false;
+  bool _isSavingServerSettings = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadServerSettings();
+  }
+
+  Future<void> _loadServerSettings() async {
+    final savedUrl = await ServerConfig.readUrl();
+    if (!mounted || savedUrl == null) {
+      return;
+    }
+
+    final uri = Uri.tryParse(savedUrl);
+    if (uri == null || uri.host.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _serverHostController.text = uri.host;
+      _serverPortController.text = (uri.hasPort ? uri.port : 8080).toString();
+    });
+  }
 
   @override
   void dispose() {
@@ -26,7 +55,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
-  void _saveServerSettings() {
+  Future<void> _saveServerSettings() async {
+    if (_isSavingServerSettings) {
+      return;
+    }
+
     final host = _serverHostController.text.trim();
     final port = int.tryParse(_serverPortController.text.trim());
 
@@ -39,16 +72,78 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
 
-    // Şimdilik placeholder.
-    // Burada ileride shared_preferences ile kaydedebilir,
-    // API client için baseUrl oluşturabilirsin.
-    // Örnek: http://$host:$port
+    final address = host.startsWith('http://') || host.startsWith('https://')
+        ? host
+        : 'http://$host';
+    final uri = Uri.tryParse(address);
+    if (uri == null || uri.host.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lütfen geçerli bir sunucu adresi girin.'),
+        ),
+      );
+      return;
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sunucu ayarları kaydedildi: $host:$port'),
-      ),
+    final newUrl = ServerConfig.normalizeUrl(
+      '${uri.scheme}://${uri.host}:$port',
     );
+    final currentUrl = await ServerConfig.readUrl();
+
+    setState(() => _isSavingServerSettings = true);
+    try {
+      final response = await Dio().get<Map<String, dynamic>>('$newUrl/ping');
+      final pingResponse = response.data;
+      if (response.statusCode != 200 ||
+          pingResponse?['message'] != 'pong' ||
+          pingResponse?['status'] != 'active') {
+        throw const FormatException('Invalid server response');
+      }
+
+      await ServerConfig.saveUrl(newUrl);
+      if (!mounted) {
+        return;
+      }
+
+      final serverChanged =
+          currentUrl != null && ServerConfig.normalizeUrl(currentUrl) != newUrl;
+      if (serverChanged) {
+        await ServerConfig.clearToken();
+        if (!mounted) {
+          return;
+        }
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sunucu ayarları kaydedildi: $host:$port')),
+      );
+    } on DioException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.connectionError),
+          ),
+        );
+      }
+    } on FormatException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.connectionError),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingServerSettings = false);
+      }
+    }
   }
 
   @override
@@ -57,10 +152,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settings),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.settings), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),
         children: [
@@ -165,8 +257,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _saveServerSettings,
-                        icon: const Icon(Icons.save),
+                        onPressed: _isSavingServerSettings
+                            ? null
+                            : _saveServerSettings,
+                        icon: _isSavingServerSettings
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.save),
                         label: Text(l10n.saveServerSettings),
                       ),
                     ),
@@ -239,9 +341,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }
