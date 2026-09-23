@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
@@ -42,6 +43,21 @@ class _MeetingScreenState extends State<MeetingScreen> {
         _isConnecting = false;
         _connectionError = 'Toplantı bilgileri bulunamadı';
       });
+      return;
+    }
+
+    if (kIsWeb &&
+        Uri.base.scheme != 'https' &&
+        Uri.base.host != 'localhost' &&
+        Uri.base.host != '127.0.0.1') {
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+          _connectionError =
+              'Telefon tarayıcısında kamera ve mikrofon için HTTPS gerekir. '
+              'Uygulamayı güvenli bir HTTPS adresinden açın.';
+        });
+      }
       return;
     }
 
