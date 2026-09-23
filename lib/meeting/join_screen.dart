@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
+import 'package:v_meeting/meeting/meeting_api.dart';
+import 'package:v_meeting/meeting/meeting_screen.dart';
 
 class JoinScreen extends StatefulWidget {
   const JoinScreen({super.key});
@@ -19,6 +21,7 @@ class _JoinScreenState extends State<JoinScreen> {
 
   bool _isNameError = false;
   bool _isRoomError = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -44,13 +47,13 @@ class _JoinScreenState extends State<JoinScreen> {
     }
   }
 
-  void _joinMeeting() {
+  Future<void> _joinMeeting() async {
     final name = _nameController.text.trim();
     final room = _roomController.text.trim();
 
     setState(() {
       _isNameError = name.isEmpty;
-      _isRoomError = room.length < 11;
+      _isRoomError = !RegExp(r'^\d{3}-\d{3}-\d{3}$').hasMatch(room);
     });
 
     if (_isNameError || _isRoomError) {
@@ -90,7 +93,28 @@ class _JoinScreenState extends State<JoinScreen> {
       return;
     }
 
-    print('Katılınıyor... Ad: $name, Oda: $room');
+    setState(() => _isSubmitting = true);
+    try {
+      final credentials = await MeetingApi().joinRoom(
+        roomId: room,
+        name: name,
+      );
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MeetingScreen(credentials: credentials),
+        ),
+      );
+    } on MeetingApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -177,7 +201,8 @@ class _JoinScreenState extends State<JoinScreen> {
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _joinMeeting(),
                       onChanged: (val) {
-                        if (_isRoomError && val.length == 11) {
+                        if (_isRoomError &&
+                          RegExp(r'^\d{3}-\d{3}-\d{3}$').hasMatch(val)) {
                           setState(() => _isRoomError = false);
                         }
                       },
@@ -216,9 +241,9 @@ class _JoinScreenState extends State<JoinScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: _joinMeeting,
+                      onPressed: _isSubmitting ? null : _joinMeeting,
                       child: Text(
-                        l10n.joinMeeting, // Dil paketinden
+                        _isSubmitting ? 'Bağlanıyor...' : l10n.joinMeeting,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

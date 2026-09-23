@@ -127,7 +127,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get saveServerSettings => 'Sunucu Ayarlarını Kaydet';
 
   @override
-  String get serverSettingsHint => 'Örnek: 192.168.1.10 : 3000';
+  String get serverSettingsHint => 'Örnek: meeting.example.com';
 
   @override
   String get version => 'Sürüm';

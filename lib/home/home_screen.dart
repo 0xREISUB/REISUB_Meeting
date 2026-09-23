@@ -8,8 +8,7 @@ import 'package:v_meeting/meeting/meeting_screen.dart';
 import 'package:v_meeting/settings/about_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
 import 'package:v_meeting/settings/settings_screen.dart';
-
-
+import 'package:v_meeting/auth/server_config.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -24,125 +23,122 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         actions: [
           // PROFİL RESMİ VE AÇILIR MENÜ
-Padding(
-  padding: const EdgeInsets.only(right: 16.0),
-  child: PopupMenuButton<int>(
-    tooltip: 'Profile Menu',
-    offset: const Offset(0, 50),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    icon: const CircleAvatar(
-      backgroundColor: Colors.deepPurpleAccent,
-      foregroundColor: Colors.white,
-      child: Icon(Icons.person),
-    ),
-    itemBuilder: (context) {
-      return [
-         PopupMenuItem<int>(
-          value: 0,
-          child: Row(
-            children: [
-              Icon(Icons.person_outline, size: 20),
-              SizedBox(width: 12),
-              Text(l10n.profile),
-            ],
-          ),
-        ),
-         PopupMenuItem<int>(
-          value: 1,
-          child: Row(
-            children: [
-              Icon(Icons.settings_outlined, size: 20),
-              SizedBox(width: 12),
-              Text(l10n.settings),
-            ],
-          ),
-        ),
-         PopupMenuItem<int>(
-          value: 2,
-          child: Row(
-            children: [
-              Icon(Icons.language_outlined, size: 20),
-              SizedBox(width: 12),
-              Text(l10n.language),
-            ],
-          ),
-        ),
-         PopupMenuItem<int>(
-          value: 3,
-          child: Row(
-            children: [
-              Icon(Icons.info_outline, size: 20),
-              SizedBox(width: 12),
-              Text(l10n.about),
-            ],
-          ),
-        ),
-         PopupMenuItem<int>(
-          value: 4,
-          child: Row(
-            children: [
-              Icon(
-                Icons.logout,
-                size: 20,
-                color: Colors.red,
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: PopupMenuButton<int>(
+              tooltip: 'Profile Menu',
+              offset: const Offset(0, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              SizedBox(width: 12),
-              Text(
-                l10n.logout,
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
+              icon: const CircleAvatar(
+                backgroundColor: Colors.deepPurpleAccent,
+                foregroundColor: Colors.white,
+                child: Icon(Icons.person),
               ),
-            ],
+              itemBuilder: (context) {
+                return [
+                  PopupMenuItem<int>(
+                    value: 0,
+                    child: Row(
+                      children: [
+                        Icon(Icons.person_outline, size: 20),
+                        SizedBox(width: 12),
+                        Text(l10n.profile),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int>(
+                    value: 1,
+                    child: Row(
+                      children: [
+                        Icon(Icons.settings_outlined, size: 20),
+                        SizedBox(width: 12),
+                        Text(l10n.settings),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int>(
+                    value: 2,
+                    child: Row(
+                      children: [
+                        Icon(Icons.language_outlined, size: 20),
+                        SizedBox(width: 12),
+                        Text(l10n.language),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int>(
+                    value: 3,
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 20),
+                        SizedBox(width: 12),
+                        Text(l10n.about),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int>(
+                    value: 4,
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, size: 20, color: Colors.red),
+                        SizedBox(width: 12),
+                        Text(
+                          l10n.logout,
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ];
+              },
+              onSelected: (value) async {
+                switch (value) {
+                  case 0:
+                    print('Profil');
+                    break;
+                  case 1:
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
+                    break;
+                  case 2:
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LanguageScreen()),
+                    );
+                    break;
+                  case 3:
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutScreen(),
+                      ),
+                    );
+                    break;
+                  case 4:
+                    await ServerConfig.clearToken();
+                    if (!context.mounted) {
+                      return;
+                    }
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                      (route) =>
+                          false, // Tüm geçmişi siler ki geri tuşuyla anasayfaya dönülmesin
+                    );
+                    break;
+                }
+              },
+            ),
           ),
-        ),
-      ];
-    },
-    onSelected: (value) {
-      switch (value) {
-        case 0:
-          print('Profil');
-          break;
-        case 1:
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const SettingsScreen(),
-            ),
-          );
-          break;
-        case 2:
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const LanguageScreen(),
-            ),
-          );
-          break;
-        case 3:
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AboutScreen(),
-            ),
-          );
-          break;
-        case 4:
-          // TODO: Go backend'ine logout isteği atıp token'ı yerelden sil
-          print('Çıkış Yapıldı');
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false, // Tüm geçmişi siler ki geri tuşuyla anasayfaya dönülmesin
-          );
-          break;
-      }
-    },
-  ),
-),
         ],
       ),
       body: Center(
@@ -241,9 +237,7 @@ Padding(
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const MeetingScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const MeetingScreen()),
                     );
                   },
                   child: const Text('Meeting Screen Test'),

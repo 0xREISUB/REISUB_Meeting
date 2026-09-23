@@ -1,8 +1,9 @@
-﻿import 'dart:math';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
+import 'package:v_meeting/meeting/meeting_api.dart';
+import 'package:v_meeting/meeting/meeting_screen.dart';
 
 class CreateScreen extends ConsumerStatefulWidget {
   const CreateScreen({super.key});
@@ -15,6 +16,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
   final TextEditingController _nameController = TextEditingController();
   final FocusNode _nameFocusNode = FocusNode();
   bool _isNameError = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -34,15 +36,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
     }
   }
 
-  String _generateRoomId() {
-    final random = Random();
-    final part1 = random.nextInt(900) + 100;
-    final part2 = random.nextInt(900) + 100;
-    final part3 = random.nextInt(900) + 100;
-    return '$part1-$part2-$part3';
-  }
-
-  void _startMeeting(AppLocalizations l10n) {
+  Future<void> _startMeeting(AppLocalizations l10n) async {
     final name = _nameController.text.trim();
 
     setState(() {
@@ -75,8 +69,25 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
       return;
     }
 
-    final newRoomId = _generateRoomId();
-    print('Toplant─▒ Ba┼şlat─▒l─▒yor... ─░sim: $name, Oda: $newRoomId');
+    setState(() => _isSubmitting = true);
+    try {
+      final credentials = await MeetingApi().createRoom(name);
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MeetingScreen(credentials: credentials),
+        ),
+      );
+    } on MeetingApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -141,9 +152,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () => _startMeeting(l10n),
+                  onPressed: _isSubmitting ? null : () => _startMeeting(l10n),
                   child: Text(
-                    l10n.startMeeting,
+                    _isSubmitting ? 'Bağlanıyor...' : l10n.startMeeting,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

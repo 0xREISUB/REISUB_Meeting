@@ -42,7 +42,7 @@
   "serverAddress": "Sunucu Adresi / IP",
   "serverPort": "Sunucu Portu",
   "saveServerSettings": "Sunucu Ayarlarını Kaydet",
-  "serverSettingsHint": "Örnek: 192.168.1.10 : 3000",
+  "serverSettingsHint": "Örnek: meeting.example.com",
   "version": "Sürüm",
   "checkForUpdates": "Güncellemeleri Kontrol Et",
 
