@@ -6,19 +6,21 @@ class ControlButton extends StatelessWidget {
   final IconData icon;
   final bool isActive;
   final VoidCallback onTap;
+  final bool showBadge;
 
   const ControlButton({
-    super.key, 
-    required this.icon, 
-    required this.isActive, 
-    required this.onTap
+    super.key,
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+    this.showBadge = false,
   });
 
   @override
   Widget build(BuildContext context) {
     // Kapalıysa Kırmızı, Açıksa Koyu Gri
     final bgColor = isActive ? const Color(0xFF3A3A3C) : Colors.redAccent;
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
@@ -26,7 +28,26 @@ class ControlButton extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
         // HATA BURADAYDI: Şeffaf renk ve sabit ikon yerine, gönderilen ikonu beyaz yapıyoruz
-        child: Icon(icon, color: Colors.white, size: 24),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(icon, color: Colors.white, size: 24),
+            if (showBadge)
+              Positioned(
+                top: -2,
+                right: -3,
+                child: Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFF3A3A3C)),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -46,13 +67,18 @@ class RoundIconButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
       child: Container(
-        width: 48, height: 48,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           color: enabled ? const Color(0xFF2C2C2E) : const Color(0xFF1C1C1E),
           shape: BoxShape.circle,
           border: Border.all(color: enabled ? Colors.white12 : Colors.white10),
         ),
-        child: Icon(icon, color: enabled ? Colors.white : Colors.white24, size: 22),
+        child: Icon(
+          icon,
+          color: enabled ? Colors.white : Colors.white24,
+          size: 22,
+        ),
       ),
     );
   }
@@ -70,7 +96,9 @@ class ChatBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.7,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isMe ? const Color(0xFF8A5CFF) : const Color(0xFF2C2C2E),
@@ -81,7 +109,10 @@ class ChatBubble extends StatelessWidget {
             bottomRight: Radius.circular(isMe ? 4 : 16),
           ),
         ),
-        child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 15)),
+        child: Text(
+          message,
+          style: const TextStyle(color: Colors.white, fontSize: 15),
+        ),
       ),
     );
   }
@@ -106,13 +137,26 @@ class ParticipantTile extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Center(child: Icon(Icons.person, size: 32, color: Colors.white.withValues(alpha: 0.2))),
+            Center(
+              child: Icon(
+                Icons.person,
+                size: 32,
+                color: Colors.white.withValues(alpha: 0.2),
+              ),
+            ),
             Positioned(
-              left: 8, bottom: 8,
+              left: 8,
+              bottom: 8,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(6)),
-                child: Text(l10n.userName(index + 1), style: const TextStyle(color: Colors.white, fontSize: 11)),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  l10n.userName(index + 1),
+                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                ),
               ),
             ),
           ],
@@ -135,32 +179,57 @@ class MemberTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isFirst ? const Color(0xFF8A5CFF) : Colors.white12, width: isFirst ? 2 : 1),
+        border: Border.all(
+          color: isFirst ? const Color(0xFF8A5CFF) : Colors.white12,
+          width: isFirst ? 2 : 1,
+        ),
         boxShadow: [
-          if (isFirst) BoxShadow(color: const Color(0xFF8A5CFF).withValues(alpha: 0.15), blurRadius: 12)
+          if (isFirst)
+            BoxShadow(
+              color: const Color(0xFF8A5CFF).withValues(alpha: 0.15),
+              blurRadius: 12,
+            ),
         ],
       ),
       child: Stack(
         children: [
-          const Center(child: Icon(Icons.person, size: 44, color: Colors.white24)),
+          const Center(
+            child: Icon(Icons.person, size: 44, color: Colors.white24),
+          ),
           Positioned(
-            top: 8, left: 8,
+            top: 8,
+            left: 8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: isFirst ? const Color(0xFF8A5CFF) : const Color(0xFF2C2C2E),
+                color: isFirst
+                    ? const Color(0xFF8A5CFF)
+                    : const Color(0xFF2C2C2E),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Text(memberNumber.toString().padLeft(2, '0'), style: const TextStyle(color: Colors.white, fontSize: 12)),
+              child: Text(
+                memberNumber.toString().padLeft(2, '0'),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
             ),
           ),
           const Positioned(top: 8, right: 8, child: LiveBadge()),
           Positioned(
-            left: 8, right: 8, bottom: 8,
+            left: 8,
+            right: 8,
+            bottom: 8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(6)),
-              child: Text(l10n.userName(memberNumber), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12)),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                l10n.userName(memberNumber),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
             ),
           ),
         ],
@@ -176,13 +245,23 @@ class LiveBadge extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(
+        color: Colors.redAccent,
+        borderRadius: BorderRadius.circular(4),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.circle, size: 6, color: Colors.white),
           const SizedBox(width: 3),
-          Text(l10n.liveBadge, style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
+          Text(
+            l10n.liveBadge,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -195,8 +274,13 @@ class PageDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 8, height: 8, margin: const EdgeInsets.symmetric(vertical: 5),
-      decoration: BoxDecoration(shape: BoxShape.circle, color: active ? const Color(0xFF8A5CFF) : const Color(0xFF3A3A3C)),
+      width: 8,
+      height: 8,
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: active ? const Color(0xFF8A5CFF) : const Color(0xFF3A3A3C),
+      ),
     );
   }
 }
