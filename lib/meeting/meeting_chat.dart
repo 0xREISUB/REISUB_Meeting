@@ -187,12 +187,14 @@ class _MeetingChatSheetState extends State<MeetingChatSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final controller = widget.controller;
+    final media = MediaQuery.of(context);
+    final maxSheetHeight = (media.size.height - media.viewInsets.bottom - 12)
+        .clamp(0.0, media.size.height);
+    final sheetHeight = (media.size.height * 0.65).clamp(0.0, maxSheetHeight);
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.65,
+        height: sheetHeight,
         decoration: const BoxDecoration(
           color: Color(0xFF1C1C1E),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

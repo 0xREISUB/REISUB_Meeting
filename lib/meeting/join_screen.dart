@@ -95,10 +95,7 @@ class _JoinScreenState extends State<JoinScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final credentials = await MeetingApi().joinRoom(
-        roomId: room,
-        name: name,
-      );
+      final credentials = await MeetingApi().joinRoom(roomId: room, name: name);
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -146,111 +143,133 @@ class _JoinScreenState extends State<JoinScreen> {
               onPressed: _returnToMainMenu,
             ),
           ),
-          body: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Icon(
-                      Icons.video_camera_front,
-                      size: 80,
-                      color: Colors.deepPurpleAccent,
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: (constraints.maxHeight - 44).clamp(
+                      0,
+                      double.infinity,
                     ),
-                    const SizedBox(height: 32),
-                    Text(
-                      l10n.joinMeeting, // Dil paketinden
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Icon(
+                            Icons.video_camera_front,
+                            size: 80,
+                            color: Colors.deepPurpleAccent,
+                          ),
+                          const SizedBox(height: 32),
+                          Text(
+                            l10n.joinMeeting, // Dil paketinden
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
 
-                    TextField(
-                      controller: _nameController,
-                      focusNode: _nameFocusNode,
-                      textInputAction: TextInputAction.next,
-                      onSubmitted: (_) {
-                        FocusScope.of(context).requestFocus(_roomFocusNode);
-                      },
-                      onChanged: (val) {
-                        if (_isNameError && val.trim().isNotEmpty) {
-                          setState(() => _isNameError = false);
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: l10n.yourName, // Dil paketinden
-                        errorText: _isNameError ? l10n.nameError : null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        prefixIcon: const Icon(Icons.person),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                          TextField(
+                            controller: _nameController,
+                            focusNode: _nameFocusNode,
+                            textInputAction: TextInputAction.next,
+                            onSubmitted: (_) {
+                              FocusScope.of(
+                                context,
+                              ).requestFocus(_roomFocusNode);
+                            },
+                            onChanged: (val) {
+                              if (_isNameError && val.trim().isNotEmpty) {
+                                setState(() => _isNameError = false);
+                              }
+                            },
+                            decoration: InputDecoration(
+                              labelText: l10n.yourName, // Dil paketinden
+                              errorText: _isNameError ? l10n.nameError : null,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: const Icon(Icons.person),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
 
-                    TextField(
-                      controller: _roomController,
-                      focusNode: _roomFocusNode,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _joinMeeting(),
-                      onChanged: (val) {
-                        if (_isRoomError &&
-                          RegExp(r'^\d{3}-\d{3}-\d{3}$').hasMatch(val)) {
-                          setState(() => _isRoomError = false);
-                        }
-                      },
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4.0,
-                        color: _isRoomError
-                            ? Colors.red
-                            : Colors.deepPurpleAccent,
-                      ),
-                      maxLength: 11,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9\-]')),
-                        _RoomNumberFormatter(),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: l10n.roomId, // Dil paketinden
-                        counterText: "",
-                        errorText: _isRoomError ? l10n.roomError : null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        prefixIcon: const Icon(Icons.meeting_room),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                          TextField(
+                            controller: _roomController,
+                            focusNode: _roomFocusNode,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _joinMeeting(),
+                            onChanged: (val) {
+                              if (_isRoomError &&
+                                  RegExp(
+                                    r'^\d{3}-\d{3}-\d{3}$',
+                                  ).hasMatch(val)) {
+                                setState(() => _isRoomError = false);
+                              }
+                            },
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 4.0,
+                              color: _isRoomError
+                                  ? Colors.red
+                                  : Colors.deepPurpleAccent,
+                            ),
+                            maxLength: 11,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9\-]'),
+                              ),
+                              _RoomNumberFormatter(),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: l10n.roomId, // Dil paketinden
+                              counterText: "",
+                              errorText: _isRoomError ? l10n.roomError : null,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: const Icon(Icons.meeting_room),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
 
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.deepPurpleAccent,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: _isSubmitting ? null : _joinMeeting,
-                      child: Text(
-                        _isSubmitting ? 'Bağlanıyor...' : l10n.joinMeeting,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: Colors.deepPurpleAccent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: _isSubmitting ? null : _joinMeeting,
+                            child: Text(
+                              _isSubmitting
+                                  ? 'Bağlanıyor...'
+                                  : l10n.joinMeeting,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

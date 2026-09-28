@@ -4,7 +4,6 @@ import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/create_screen.dart';
 import 'package:v_meeting/meeting/join_screen.dart';
-import 'package:v_meeting/meeting/meeting_screen.dart';
 import 'package:v_meeting/settings/about_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
 import 'package:v_meeting/settings/settings_screen.dart';
@@ -141,110 +140,126 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // LOGO
-                const Icon(
-                  Icons.video_chat_rounded,
-                  size: 100,
-                  color: Colors.deepPurpleAccent,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact =
+                constraints.maxWidth < 400 || constraints.maxHeight < 620;
+            final verticalPadding = isCompact ? 20.0 : 32.0;
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: verticalPadding,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: (constraints.maxHeight - verticalPadding * 2)
+                      .clamp(0, double.infinity),
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'REISUB Meeting',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                // AÇIK KAYNAK ALT BAŞLIĞI
-                Text(
-                  l10n.appSubtitle,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 60),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // LOGO
+                        Icon(
+                          Icons.video_chat_rounded,
+                          size: isCompact ? 72 : 100,
+                          color: Colors.deepPurpleAccent,
+                        ),
+                        SizedBox(height: isCompact ? 16 : 24),
+                        Text(
+                          'REISUB Meeting',
+                          style: TextStyle(
+                            fontSize: isCompact ? 30 : 36,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        // AÇIK KAYNAK ALT BAŞLIĞI
+                        Text(
+                          l10n.appSubtitle,
+                          style: TextStyle(
+                            fontSize: isCompact ? 14 : 16,
+                            color: Colors.grey,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: isCompact ? 32 : 60),
 
-                // ODA KUR BUTONU
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    backgroundColor: Colors.deepPurpleAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.add_box, size: 24),
-                  label: Text(
-                    l10n.createRoom,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CreateScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 20),
+                        // ODA KUR BUTONU
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                              vertical: isCompact ? 16 : 20,
+                            ),
+                            backgroundColor: Colors.deepPurpleAccent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const Icon(Icons.add_box, size: 24),
+                          label: Text(
+                            l10n.createRoom,
+                            style: TextStyle(
+                              fontSize: isCompact ? 16 : 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CreateScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        SizedBox(height: isCompact ? 12 : 20),
 
-                // ODAYA KATIL BUTONU
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    foregroundColor: Colors.deepPurpleAccent,
-                    side: const BorderSide(
-                      color: Colors.deepPurpleAccent,
-                      width: 2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                        // ODAYA KATIL BUTONU
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                              vertical: isCompact ? 16 : 20,
+                            ),
+                            foregroundColor: Colors.deepPurpleAccent,
+                            side: const BorderSide(
+                              color: Colors.deepPurpleAccent,
+                              width: 2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const Icon(Icons.login, size: 24),
+                          label: Text(
+                            l10n.joinMeeting,
+                            style: TextStyle(
+                              fontSize: isCompact ? 16 : 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const JoinScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                  icon: const Icon(Icons.login, size: 24),
-                  label: Text(
-                    l10n.joinMeeting,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const JoinScreen(),
-                      ),
-                    );
-                  },
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MeetingScreen()),
-                    );
-                  },
-                  child: const Text('Meeting Screen Test'),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

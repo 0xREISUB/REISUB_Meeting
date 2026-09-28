@@ -21,11 +21,7 @@ class MembersScreen extends StatefulWidget {
   final int totalMembers;
   final List<MemberEntry>? members;
 
-  const MembersScreen({
-    super.key,
-    required this.totalMembers,
-    this.members,
-  });
+  const MembersScreen({super.key, required this.totalMembers, this.members});
 
   @override
   State<MembersScreen> createState() => _MembersScreenState();
@@ -81,6 +77,27 @@ class _MembersScreenState extends State<MembersScreen> {
     final start = page * _perPage;
     final end = (start + _perPage).clamp(0, entries.length);
     final visibleEntries = entries.sublist(start, end);
+    final isCompact = MediaQuery.sizeOf(context).width < 600;
+    final memberGrid = visibleEntries.isEmpty
+        ? const Center(
+            child: Text(
+              'Henüz katılımcı yok',
+              style: TextStyle(color: Colors.white54),
+            ),
+          )
+        : GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isCompact ? 2 : _columns,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 10,
+              childAspectRatio: 16 / 10,
+            ),
+            itemCount: visibleEntries.length,
+            itemBuilder: (context, index) => _LiveMemberTile(
+              member: visibleEntries[index],
+              memberNumber: start + index + 1,
+            ),
+          );
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -136,69 +153,79 @@ class _MembersScreenState extends State<MembersScreen> {
                 ),
               const SizedBox(height: 16),
               Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: visibleEntries.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Henüz katılımcı yok',
-                                style: TextStyle(color: Colors.white54),
-                              ),
-                            )
-                          : GridView.builder(
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: _columns,
-                                mainAxisSpacing: 12,
-                                crossAxisSpacing: 10,
-                                childAspectRatio: 16 / 10,
-                              ),
-                              itemCount: visibleEntries.length,
-                              itemBuilder: (context, index) => _LiveMemberTile(
-                                member: visibleEntries[index],
-                                memberNumber: start + index + 1,
-                              ),
-                            ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 76,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                child: isCompact
+                    ? Column(
                         children: [
-                          RoundIconButton(
-                            icon: Icons.arrow_back_ios_new_rounded,
-                            onTap: page > 0
-                                ? () => _goToPage(page - 1)
-                                : null,
-                          ),
-                          const SizedBox(height: 16),
-                          Flexible(
-                            child: SingleChildScrollView(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  for (var index = 0;
-                                      index < totalPages;
-                                      index++)
-                                    PageDot(active: index == page),
-                                ],
+                          Expanded(child: memberGrid),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              RoundIconButton(
+                                icon: Icons.arrow_back_ios_new_rounded,
+                                onTap: page > 0
+                                    ? () => _goToPage(page - 1)
+                                    : null,
                               ),
-                            ),
+                              const SizedBox(width: 20),
+                              Text(
+                                '${page + 1} / $totalPages',
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                              const SizedBox(width: 20),
+                              RoundIconButton(
+                                icon: Icons.arrow_forward_ios_rounded,
+                                onTap: page < totalPages - 1
+                                    ? () => _goToPage(page + 1)
+                                    : null,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          RoundIconButton(
-                            icon: Icons.arrow_forward_ios_rounded,
-                            onTap: page < totalPages - 1
-                                ? () => _goToPage(page + 1)
-                                : null,
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(child: memberGrid),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 76,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                RoundIconButton(
+                                  icon: Icons.arrow_back_ios_new_rounded,
+                                  onTap: page > 0
+                                      ? () => _goToPage(page - 1)
+                                      : null,
+                                ),
+                                const SizedBox(height: 16),
+                                Flexible(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        for (
+                                          var index = 0;
+                                          index < totalPages;
+                                          index++
+                                        )
+                                          PageDot(active: index == page),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                RoundIconButton(
+                                  icon: Icons.arrow_forward_ios_rounded,
+                                  onTap: page < totalPages - 1
+                                      ? () => _goToPage(page + 1)
+                                      : null,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -307,10 +334,7 @@ class _LiveMemberTile extends StatelessWidget {
   final MemberEntry member;
   final int memberNumber;
 
-  const _LiveMemberTile({
-    required this.member,
-    required this.memberNumber,
-  });
+  const _LiveMemberTile({required this.member, required this.memberNumber});
 
   @override
   Widget build(BuildContext context) {

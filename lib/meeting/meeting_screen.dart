@@ -280,6 +280,24 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   ],
                 ),
               ),
+              if (!isDesktop && remoteParticipants.isNotEmpty)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: _showControls ? 150 : 16,
+                  height: 92,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: remoteParticipants.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) => SizedBox(
+                      width: 160,
+                      child: _RemoteParticipantTile(
+                        participant: remoteParticipants[index],
+                      ),
+                    ),
+                  ),
+                ),
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
                 bottom: _showControls ? 32 : -100,
@@ -287,16 +305,18 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isDesktop ? 24 : 12,
+                      vertical: isDesktop ? 14 : 10,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2C2C2E).withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(40),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: isDesktop ? 16 : 8,
+                      runSpacing: 8,
                       children: [
                         ControlButton(
                           icon: _isMicEnabled
@@ -305,7 +325,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
                           isActive: _isMicEnabled,
                           onTap: _toggleMicrophone,
                         ),
-                        const SizedBox(width: 16),
                         ControlButton(
                           icon: _isCameraEnabled
                               ? Icons.videocam_rounded
@@ -313,13 +332,11 @@ class _MeetingScreenState extends State<MeetingScreen> {
                           isActive: _isCameraEnabled,
                           onTap: _toggleCamera,
                         ),
-                        const SizedBox(width: 16),
                         ControlButton(
                           icon: Icons.people_rounded,
                           isActive: true,
                           onTap: _openMembersScreen,
                         ),
-                        const SizedBox(width: 16),
                         ControlButton(
                           icon: Icons.chat_bubble_rounded,
                           isActive: true,
@@ -327,7 +344,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
                               _chatController?.hasUnreadMessages ?? false,
                           onTap: _openChatSheet,
                         ),
-                        const SizedBox(width: 16),
                         PopupMenuButton<String>(
                           tooltip: 'Daha fazla',
                           color: const Color(0xFF2C2C2E),
@@ -360,7 +376,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(width: 16),
                         IconButton(
                           onPressed: _leaveMeeting,
                           style: IconButton.styleFrom(
