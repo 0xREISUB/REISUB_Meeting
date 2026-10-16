@@ -1,8 +1,42 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:livekit_client/livekit_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
+import 'package:v_meeting/meeting/meeting_screen.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
+
+class _TestRoom extends ChangeNotifier implements Room {
+  @override
+  final events = EventsEmitter<RoomEvent>();
+
+  @override
+  EventsListener<RoomEvent> createListener({bool synchronized = false}) =>
+      EventsListener<RoomEvent>(events, synchronized: synchronized);
+  @override
+  LocalParticipant? get localParticipant => null;
+
+  @override
+  UnmodifiableListView<Participant> get activeSpeakers =>
+      UnmodifiableListView([]);
+
+  @override
+  UnmodifiableMapView<String, RemoteParticipant> get remoteParticipants =>
+      UnmodifiableMapView({});
+
+  @override
+  Future<bool> dispose() async {
+    super.dispose();
+    await events.dispose();
+    return true;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 const local = MemberEntry(
   id: 'local',
@@ -177,6 +211,52 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('desktop previews keep their shape and size as people join', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final entries = ValueNotifier<List<MemberEntry>>([local, remote]);
+    addTearDown(entries.dispose);
+    await tester.pumpWidget(
+      localized(
+        Scaffold(
+          body: ValueListenableBuilder<List<MemberEntry>>(
+            valueListenable: entries,
+            builder: (context, value, _) =>
+                MeetingVideoLayout(members: value, mainMember: remote),
+          ),
+        ),
+      ),
+    );
+    final preview = find.byKey(const ValueKey('preview-local'));
+    final before = tester.getSize(preview);
+    expect(before.width / before.height, closeTo(16 / 9, 0.001));
+    expect(before.height, lessThan(150));
+    entries.value = [local, remote, third, fourth, ...members.skip(3).take(2)];
+    await tester.pumpAndSettle();
+    expect(tester.getSize(preview), before);
+    final sidebar = find.byKey(const ValueKey('meeting-sidebar'));
+    final tiles = find.descendant(
+      of: sidebar,
+      matching: find.byType(MeetingParticipantTile),
+    );
+    expect(tiles, findsNWidgets(5));
+    for (var i = 0; i < 5; i++) {
+      expect(tester.getSize(tiles.at(i)), before);
+    }
+    tester.view.physicalSize = const Size(1280, 600);
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 5; i++) {
+      final rect = tester.getRect(tiles.at(i));
+      expect(rect.width / rect.height, closeTo(16 / 9, 0.001));
+      expect(rect.bottom, lessThanOrEqualTo(600.001));
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('mobile main video fills page and galleries use swipes only', (
     tester,
   ) async {
@@ -234,4 +314,119 @@ void main() {
     expect(find.byKey(const ValueKey('main-local')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('landscape phone stays swipeable and only taps reveal controls', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(920, 400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var taps = 0;
+    await tester.pumpWidget(
+      localized(
+        Scaffold(
+          body: MeetingVideoLayout(
+            members: const [local, remote, third, fourth],
+            mainMember: remote,
+            onMainPageTap: () => taps++,
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(IconButton), findsNothing);
+    expect(find.byKey(const ValueKey('meeting-sidebar')), findsNothing);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('main-remote'))),
+      const Size(920, 400),
+    );
+    await tester.tapAt(const Offset(5, 200));
+    expect(taps, 1);
+    final pager = find.byKey(const ValueKey('meeting-pages'));
+    await tester.drag(pager, const Offset(-850, 0));
+    await tester.pumpAndSettle();
+    expect(taps, 1);
+    expect(find.byType(MeetingParticipantTile), findsNWidgets(4));
+    await tester.tapAt(const Offset(100, 100));
+    expect(taps, 1);
+    await tester.drag(pager, const Offset(850, 0));
+    await tester.pumpAndSettle();
+    expect(taps, 1);
+    await tester.tapAt(const Offset(915, 200));
+    expect(taps, 2);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'phone enters fullscreen, controls overlay video, exit restores UI',
+    (tester) async {
+      tester.view.physicalSize = const Size(920, 400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final calls = <MethodCall>[];
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        calls.add(call);
+        return null;
+      });
+      const display = MethodChannel('reisub_meeting/display');
+      messenger.setMockMethodCallHandler(display, (call) async {
+        calls.add(call);
+        return null;
+      });
+      addTearDown(() {
+        messenger.setMockMethodCallHandler(SystemChannels.platform, null);
+        messenger.setMockMethodCallHandler(display, null);
+      });
+      await tester.pumpWidget(localized(MeetingScreen(room: _TestRoom())));
+      await tester.pumpAndSettle();
+      expect(
+        calls.any(
+          (call) => call.method == 'setFullscreen' && call.arguments == true,
+        ),
+        isTrue,
+      );
+      expect(
+        calls
+            .where(
+              (call) => call.method == 'SystemChrome.setPreferredOrientations',
+            )
+            .last
+            .arguments,
+        ['DeviceOrientation.landscapeLeft', 'DeviceOrientation.landscapeRight'],
+      );
+      final video = find.byKey(const ValueKey('main-local'));
+      final before = tester.getRect(video);
+      expect(before.size, const Size(920, 400));
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.mic_rounded).hitTestable(), findsNothing);
+      expect(tester.getRect(video), before);
+      await tester.tapAt(const Offset(5, 200));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.mic_rounded).hitTestable(), findsOneWidget);
+      expect(tester.getRect(video), before);
+      await tester.tapAt(const Offset(915, 200));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.mic_rounded).hitTestable(), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+      expect(
+        calls.where((call) => call.method == 'setFullscreen').last.arguments,
+        false,
+      );
+      expect(
+        calls
+            .where(
+              (call) => call.method == 'SystemChrome.setPreferredOrientations',
+            )
+            .last
+            .arguments,
+        isEmpty,
+      );
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
 }

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 
@@ -57,7 +59,7 @@ class MeetingParticipantTile extends StatelessWidget {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
+        color: isMain ? Colors.black : const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(isMain ? 24 : 16),
         border: Border.all(
           color: member.isSpeaking
@@ -75,7 +77,7 @@ class MeetingParticipantTile extends StatelessWidget {
             VideoTrackRenderer(
               member.videoTrack!,
               key: ObjectKey(member.videoTrack),
-              fit: VideoViewFit.cover,
+              fit: isMain ? VideoViewFit.contain : VideoViewFit.cover,
               mirrorMode: member.isLocal
                   ? VideoViewMirrorMode.mirror
                   : VideoViewMirrorMode.off,
@@ -138,12 +140,14 @@ class MeetingVideoLayout extends StatefulWidget {
   final List<MemberEntry> members;
   final MemberEntry mainMember;
   final bool connecting;
+  final VoidCallback? onMainPageTap;
 
   const MeetingVideoLayout({
     super.key,
     required this.members,
     required this.mainMember,
     this.connecting = false,
+    this.onMainPageTap,
   });
 
   @override
@@ -172,7 +176,9 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 800;
+        final isWide =
+            MediaQuery.sizeOf(context).shortestSide >= 600 &&
+            constraints.maxWidth > 800;
         final perPage = isWide ? 16 : 4;
         final galleryPages = widget.members.length > 1
             ? (widget.members.length / perPage).ceil()
@@ -213,33 +219,54 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
               isMain: true,
               placeholder: widget.connecting ? 'Bağlanıyor...' : null,
             );
-            if (!isWide || widget.members.length == 1) return mainVideo;
+            if (!isWide || widget.members.length == 1) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: widget.onMainPageTap,
+                child: mainVideo,
+              );
+            }
             final previews = widget.members
                 .where((member) => member.id != widget.mainMember.id)
                 .take(5)
                 .toList();
-            return Row(
-              children: [
-                Expanded(child: mainVideo),
-                const SizedBox(width: 16),
-                SizedBox(
-                  key: const ValueKey('meeting-sidebar'),
-                  width: 220,
-                  child: Column(
-                    children: [
-                      for (var index = 0; index < previews.length; index++) ...[
-                        if (index > 0) const SizedBox(height: 10),
-                        Expanded(
-                          child: MeetingParticipantTile(
-                            key: ValueKey('preview-${previews[index].id}'),
-                            member: previews[index],
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onMainPageTap,
+              child: Row(
+                children: [
+                  Expanded(child: mainVideo),
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    key: const ValueKey('meeting-sidebar'),
+                    // Reserve room for five 16:9 previews regardless of how
+                    // many people have joined, so existing tiles keep their size.
+                    width: math.min(
+                      220,
+                      (constraints.maxHeight - 40) * 16 / 45,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (
+                          var index = 0;
+                          index < previews.length;
+                          index++
+                        ) ...[
+                          if (index > 0) const SizedBox(height: 10),
+                          AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: MeetingParticipantTile(
+                              key: ValueKey('preview-${previews[index].id}'),
+                              member: previews[index],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         );
