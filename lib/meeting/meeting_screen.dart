@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -11,6 +12,7 @@ import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
+import 'package:v_meeting/meeting/meeting_sharing.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
 import 'widgets/meeting_components.dart';
 import 'widgets/meeting_participant.dart';
@@ -40,6 +42,10 @@ class _MeetingScreenState extends State<MeetingScreen>
   RoomCredentials? _credentials;
   bool _isRejoining = false;
   bool _isJoining = false;
+  MeetingSharing? _sharing;
+  bool _changingScreenShare = false;
+  bool _ownsScreenShare = false;
+  bool _screenServiceRunning = false;
   bool _endingRoom = false;
   bool _leavingMeeting = false;
   bool _exitDialogOpen = false;
@@ -93,6 +99,9 @@ class _MeetingScreenState extends State<MeetingScreen>
     }
     final roomId = widget.credentials?.roomId;
     if (roomId != null) {
+      _sharing = MeetingSharing(roomId: roomId, api: _api)
+        ..addListener(_onSharingChanged)
+        ..start();
       _chatController = MeetingChatController(roomId: roomId, api: _api)
         ..addListener(_onChatChanged)
         ..start();
@@ -327,6 +336,9 @@ class _MeetingScreenState extends State<MeetingScreen>
   void _onRoomChanged() {
     if (!mounted || _leavingMeeting) return;
     _handleMicrophonePolicy();
+    if (_ownsScreenShare && !_changingScreenShare && !_localScreenSharing) {
+      unawaited(_stopScreenShare());
+    }
     final members = _members();
     final mainMember = selectMainMember(
       members,
@@ -352,6 +364,13 @@ class _MeetingScreenState extends State<MeetingScreen>
         isMicEnabled: local?.isMicrophoneEnabled() ?? _isMicEnabled,
         isSpeaking: local?.isSpeaking ?? false,
         videoTrack: local == null ? null : _participantVideoTrack(local),
+        isScreenSharing: local != null && _participantHasScreenShare(local),
+        screenShareTrack: local == null
+            ? null
+            : _participantVideoTrack(
+                local,
+                source: TrackSource.screenShareVideo,
+              ),
       ),
       if (_connection.isConnected)
         ..._room.remoteParticipants.values.map(
@@ -367,6 +386,11 @@ class _MeetingScreenState extends State<MeetingScreen>
             isMicEnabled: participant.isMicrophoneEnabled(),
             isSpeaking: participant.isSpeaking,
             videoTrack: _participantVideoTrack(participant),
+            isScreenSharing: _participantHasScreenShare(participant),
+            screenShareTrack: _participantVideoTrack(
+              participant,
+              source: TrackSource.screenShareVideo,
+            ),
           ),
         ),
     ];
@@ -619,12 +643,160 @@ class _MeetingScreenState extends State<MeetingScreen>
     );
   }
 
-  VideoTrack? _participantVideoTrack(Participant participant) {
-    final publication = participant.getTrackPublicationBySource(
-      TrackSource.camera,
-    );
+  VideoTrack? _participantVideoTrack(
+    Participant participant, {
+    TrackSource source = TrackSource.camera,
+  }) {
+    final publication = participant.getTrackPublicationBySource(source);
     final track = publication?.track;
     return track is VideoTrack && !publication!.muted ? track : null;
+  }
+
+  bool _participantHasScreenShare(Participant participant) {
+    final publication = participant.getTrackPublicationBySource(
+      TrackSource.screenShareVideo,
+    );
+    return publication != null && !publication.muted;
+  }
+
+  bool get _localScreenSharing =>
+      _room.localParticipant != null &&
+      _participantHasScreenShare(_room.localParticipant!);
+
+  void _onSharingChanged() {
+    if (!mounted || _leavingMeeting) return;
+    final state = _sharing!.state;
+    if (_ownsScreenShare &&
+        !_changingScreenShare &&
+        state.screenShareIdentity != _room.localParticipant?.identity) {
+      unawaited(_stopScreenShare());
+    }
+    setState(() {});
+  }
+
+  Future<void> _stopScreenService() async {
+    if (!_screenServiceRunning) return;
+    _screenServiceRunning = false;
+    await _displayChannel.invokeMethod<void>('stopScreenShareService');
+  }
+
+  Future<void> _stopScreenShare() async {
+    if (_changingScreenShare) return;
+    setState(() => _changingScreenShare = true);
+    final identity = _room.localParticipant?.identity;
+    try {
+      await _room.localParticipant?.setScreenShareEnabled(false);
+      _ownsScreenShare = false;
+      await _stopScreenService();
+      if (identity != null) await _sharing?.release(identity);
+    } catch (error) {
+      if (mounted && !_leavingMeeting) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _changingScreenShare = false);
+    }
+  }
+
+  Future<void> _toggleScreenShare() async {
+    if (_changingScreenShare || _leavingMeeting) return;
+    if (_localScreenSharing || _ownsScreenShare) {
+      await _stopScreenShare();
+      return;
+    }
+    final local = _room.localParticipant;
+    final sharing = _sharing;
+    if (local == null || sharing == null || !_connection.isConnected) return;
+    setState(() => _changingScreenShare = true);
+    bool reserved = false;
+    try {
+      String? sourceId;
+      if (!kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.linux ||
+              defaultTargetPlatform == TargetPlatform.windows ||
+              defaultTargetPlatform == TargetPlatform.macOS)) {
+        final source = await showDialog<rtc.DesktopCapturerSource>(
+          context: context,
+          builder: (_) => ScreenSelectDialog(
+            titleText: 'Paylaşılacak ekranı seç',
+            screenTabText: 'Ekran',
+            windowTabText: 'Pencere',
+            cancelText: 'Vazgeç',
+            shareText: 'Paylaş',
+          ),
+        );
+        sourceId = source?.id;
+        if (sourceId == null || !mounted || _leavingMeeting) return;
+      } else if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        if (!await rtc.Helper.requestCapturePermission()) return;
+        if (!mounted || _leavingMeeting) return;
+      }
+      await sharing.acquire(local.identity);
+      reserved = true;
+      if (!mounted || _leavingMeeting) return;
+      // Wait for the permission update on the signaling channel as well as HTTP.
+      for (var i = 0; i < 30; i++) {
+        if (local.permissions.canPublish &&
+            local.permissions.canPublishSources.any(
+              (s) => s.name == 'SCREEN_SHARE',
+            )) {
+          break;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        if (!mounted || _leavingMeeting) return;
+      }
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        await _displayChannel.invokeMethod<void>('startScreenShareService');
+        _screenServiceRunning = true;
+      }
+      if (!mounted || _leavingMeeting) return;
+      final publication = await local.setScreenShareEnabled(
+        true,
+        captureScreenAudio: false,
+        screenShareCaptureOptions: ScreenShareCaptureOptions(
+          sourceId: sourceId,
+          maxFrameRate: 15,
+        ),
+      );
+      if (publication == null) {
+        throw const MeetingApiException('Ekran paylaşımı başlatılamadı.');
+      }
+      if (!mounted || _leavingMeeting) {
+        await local.setScreenShareEnabled(false);
+        return;
+      }
+      _ownsScreenShare = true;
+      reserved = false;
+    } catch (error) {
+      if (mounted && !_leavingMeeting) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (reserved) {
+        try {
+          await local.setScreenShareEnabled(false);
+        } catch (_) {}
+        try {
+          await sharing.release(local.identity);
+        } catch (_) {}
+      }
+      if (!_ownsScreenShare) await _stopScreenService();
+      if (mounted) setState(() => _changingScreenShare = false);
+    }
+  }
+
+  void _openMeetingSettings() {
+    final sharing = _sharing;
+    if (sharing == null || !(_credentials?.isHost ?? false)) return;
+    unawaited(sharing.refresh());
+    showDialog<void>(
+      context: context,
+      builder: (_) => MeetingSettingsDialog(sharing: sharing),
+    );
   }
 
   void _openChatSheet() {
@@ -646,6 +818,14 @@ class _MeetingScreenState extends State<MeetingScreen>
     if (!mounted || _leavingMeeting) return;
     _leavingMeeting = true;
     _controlsTimer?.cancel();
+    if (_ownsScreenShare) {
+      final identity = _room.localParticipant?.identity;
+      if (identity != null) {
+        unawaited(_sharing?.release(identity).catchError((Object _) {}));
+      }
+      _ownsScreenShare = false;
+    }
+    unawaited(_stopScreenService());
     unawaited(_room.disconnect());
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pushAndRemoveUntil(
@@ -667,6 +847,10 @@ class _MeetingScreenState extends State<MeetingScreen>
     _controlsTimer?.cancel();
     _systemUiTimer?.cancel();
     _videoStatsTimer?.cancel();
+    unawaited(_stopScreenService());
+    _sharing
+      ?..removeListener(_onSharingChanged)
+      ..dispose();
     _connection.removeListener(_onConnectionChanged);
     _connection.dispose();
     if (_mobileDisplayActive) {
@@ -713,6 +897,9 @@ class _MeetingScreenState extends State<MeetingScreen>
                       _isConnecting ||
                       _connection.phase == MeetingConnectionPhase.reconnecting,
                   onMainPageTap: _showMeetingControls,
+                  onStopScreenShare: _changingScreenShare
+                      ? null
+                      : _stopScreenShare,
                 ),
               ),
             ),
@@ -776,6 +963,42 @@ class _MeetingScreenState extends State<MeetingScreen>
                                 onTap: _openChatSheet,
                               ),
                               const SizedBox(width: 16),
+                              IconButton(
+                                tooltip: _localScreenSharing || _ownsScreenShare
+                                    ? 'Paylaşımı durdur'
+                                    : (_credentials?.isHost ?? false) ||
+                                          (_sharing
+                                                  ?.state
+                                                  .allowParticipantScreenShare ??
+                                              false)
+                                    ? 'Ekranı paylaş'
+                                    : 'Ekran paylaşımı oda sahibi tarafından kapatıldı',
+                                onPressed:
+                                    !_changingScreenShare &&
+                                        _connection.isConnected &&
+                                        (_localScreenSharing ||
+                                            _ownsScreenShare ||
+                                            (_credentials?.isHost ?? false) ||
+                                            (_sharing?.loaded == true &&
+                                                _sharing!
+                                                    .state
+                                                    .allowParticipantScreenShare &&
+                                                _sharing!
+                                                    .state
+                                                    .screenShareIdentity
+                                                    .isEmpty))
+                                    ? _toggleScreenShare
+                                    : null,
+                                icon: Icon(
+                                  _localScreenSharing || _ownsScreenShare
+                                      ? Icons.stop_screen_share_rounded
+                                      : Icons.screen_share_rounded,
+                                ),
+                                color: _localScreenSharing || _ownsScreenShare
+                                    ? Colors.redAccent
+                                    : Colors.white,
+                              ),
+                              const SizedBox(width: 16),
                               PopupMenuButton<String>(
                                 tooltip: 'Daha fazla',
                                 color: const Color(0xFF2C2C2E),
@@ -787,9 +1010,19 @@ class _MeetingScreenState extends State<MeetingScreen>
                                 onSelected: (value) {
                                   if (value == 'room_id') {
                                     _showRoomCodeForThirtySeconds();
+                                  } else if (value == 'meeting_settings') {
+                                    _openMeetingSettings();
                                   }
                                 },
                                 itemBuilder: (context) => [
+                                  if (_credentials?.isHost ?? false)
+                                    const PopupMenuItem<String>(
+                                      value: 'meeting_settings',
+                                      child: Text(
+                                        'Toplantı ayarları',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
                                   PopupMenuItem<String>(
                                     value: 'room_id',
                                     child: Row(

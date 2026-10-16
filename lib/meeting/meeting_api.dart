@@ -27,6 +27,22 @@ class RoomCredentials {
   }
 }
 
+class MeetingState {
+  final bool allowParticipantScreenShare;
+  final String screenShareIdentity;
+
+  const MeetingState({
+    this.allowParticipantScreenShare = false,
+    this.screenShareIdentity = '',
+  });
+
+  factory MeetingState.fromJson(Map<String, dynamic> json) => MeetingState(
+    allowParticipantScreenShare:
+        json['allow_participant_screen_share'] as bool? ?? false,
+    screenShareIdentity: json['screen_share_identity'] as String? ?? '',
+  );
+}
+
 class MeetingChatMessage {
   final int id;
   final String roomId;
@@ -70,6 +86,48 @@ class MeetingApi {
     required String name,
   }) async {
     return _requestRoom('/rooms/join', {'room_id': roomId, 'name': name});
+  }
+
+  Future<MeetingState> getMeetingState(String roomId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '${await _authorizedUrl()}/rooms/${Uri.encodeComponent(roomId)}/state',
+        options: await _authorizedOptions(),
+      );
+      return MeetingState.fromJson(response.data!);
+    } on DioException catch (error) {
+      throw MeetingApiException(_errorMessage(error));
+    }
+  }
+
+  Future<MeetingState> updateMeetingSettings(
+    String roomId, {
+    required bool allowScreenShare,
+  }) => _sharingRequest(roomId, 'settings', {
+    'allow_participant_screen_share': allowScreenShare,
+  });
+
+  Future<MeetingState> startScreenShare(String roomId, String identity) =>
+      _sharingRequest(roomId, 'screen-share/start', {'identity': identity});
+
+  Future<MeetingState> stopScreenShare(String roomId, String identity) =>
+      _sharingRequest(roomId, 'screen-share/stop', {'identity': identity});
+
+  Future<MeetingState> _sharingRequest(
+    String roomId,
+    String action,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '${await _authorizedUrl()}/rooms/${Uri.encodeComponent(roomId)}/$action',
+        data: data,
+        options: await _authorizedOptions(),
+      );
+      return MeetingState.fromJson(response.data!);
+    } on DioException catch (error) {
+      throw MeetingApiException(_errorMessage(error));
+    }
   }
 
   Future<void> closeRoom(String roomId) async {

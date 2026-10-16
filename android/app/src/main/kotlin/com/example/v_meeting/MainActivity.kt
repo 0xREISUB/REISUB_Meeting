@@ -1,5 +1,6 @@
 package com.example.v_meeting
 
+import android.content.Intent
 import android.os.Build
 import android.view.View
 import android.view.WindowInsets
@@ -18,6 +19,22 @@ class MainActivity : FlutterActivity() {
                 if (call.method == "setFullscreen") {
                     meetingFullscreen = call.arguments == true
                     applyMeetingFullscreen()
+                    result.success(null)
+                } else if (call.method == "startScreenShareService") {
+                    ScreenShareService.onReady = { error ->
+                        if (error == null) result.success(null)
+                        else result.error("screen_share_service", error.message, null)
+                    }
+                    try {
+                        val intent = Intent(this, ScreenShareService::class.java)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+                        else startService(intent)
+                    } catch (error: Exception) {
+                        ScreenShareService.onReady = null
+                        result.error("screen_share_service", error.message, null)
+                    }
+                } else if (call.method == "stopScreenShareService") {
+                    stopService(Intent(this, ScreenShareService::class.java))
                     result.success(null)
                 } else {
                     result.notImplemented()

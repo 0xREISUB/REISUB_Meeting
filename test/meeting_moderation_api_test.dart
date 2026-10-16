@@ -59,6 +59,53 @@ void main() {
   );
 
   test(
+    'screen sharing and settings use authenticated server-controlled routes',
+    () async {
+      final requests = <RequestOptions>[];
+      final dio = Dio()
+        ..interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              requests.add(options);
+              handler.resolve(
+                Response<dynamic>(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: {
+                    'allow_participant_screen_share': false,
+                    'screen_share_identity': '',
+                  },
+                ),
+              );
+            },
+          ),
+        );
+      final api = MeetingApi(dio: dio);
+      expect(
+        (await api.getMeetingState('123-456-789')).allowParticipantScreenShare,
+        isFalse,
+      );
+      await api.updateMeetingSettings('123-456-789', allowScreenShare: true);
+      await api.startScreenShare('123-456-789', 'my-identity');
+      await api.stopScreenShare('123-456-789', 'my-identity');
+      expect(requests.map((r) => r.uri.path), [
+        '/rooms/123-456-789/state',
+        '/rooms/123-456-789/settings',
+        '/rooms/123-456-789/screen-share/start',
+        '/rooms/123-456-789/screen-share/stop',
+      ]);
+      expect(requests.first.method, 'GET');
+      expect(requests[1].data, {'allow_participant_screen_share': true});
+      for (final request in requests) {
+        expect(request.headers['Authorization'], 'Bearer app-session-token');
+      }
+      expect(requests[2].data, {'identity': 'my-identity'});
+      expect(requests[3].data, {'identity': 'my-identity'});
+      dio.close();
+    },
+  );
+
+  test(
     'server authorization failures are presented without claiming success',
     () async {
       final dio = Dio()
