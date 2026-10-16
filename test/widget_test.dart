@@ -8,11 +8,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod importu eklendi
 import 'package:v_meeting/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('app builds and shows host screen', (WidgetTester tester) async {
     // Uygulamayı Riverpod state'lerinin çalışabilmesi için ProviderScope ile sarıyoruz
+    SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const ProviderScope(child: VMeetingApp()));
+
+    await tester.pumpAndSettle();
 
     expect(find.text('Sunucu Ayarları'), findsOneWidget);
     expect(find.text('Sunucu Adresi / IP'), findsOneWidget);

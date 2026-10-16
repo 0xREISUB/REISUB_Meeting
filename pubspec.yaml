@@ -43,7 +43,8 @@ dependencies:
   flutter_webrtc: ^1.4.0
   dio: ^5.11.0
   shared_preferences: ^2.5.5
-  permission_handler: ^13.0.1
+  # 13.x requires Android SDK 37, incompatible with the current Gradle setup.
+  permission_handler: 12.0.3
 
 dev_dependencies:
   flutter_test:

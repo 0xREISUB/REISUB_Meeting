@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
 import 'widgets/meeting_components.dart';
+import 'widgets/meeting_participant.dart';
 
 class MeetingScreen extends StatefulWidget {
   final RoomCredentials? credentials;
@@ -28,12 +30,23 @@ class _MeetingScreenState extends State<MeetingScreen> {
   Timer? _roomCodeTimer;
   bool _showRoomCode = false;
   int _roomCodeSeconds = 30;
+  String? _mainMemberId;
   MeetingChatController? _chatController;
 
   @override
   void initState() {
     super.initState();
-    _room = Room();
+    _room = Room(
+      roomOptions: const RoomOptions(
+        adaptiveStream: true,
+        dynacast: true,
+        // Reduce camera/encoder load while keeping lower simulcast layers
+        // available for participants on slower connections.
+        defaultCameraCaptureOptions: CameraCaptureOptions(
+          params: VideoParametersPresets.h540_169,
+        ),
+      ),
+    );
     _room.addListener(_onRoomChanged);
     final roomId = widget.credentials?.roomId;
     if (roomId != null) {
@@ -70,10 +83,37 @@ class _MeetingScreenState extends State<MeetingScreen> {
     }
 
     try {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        // Android 12+ requires runtime permission for Bluetooth headsets.
+        // Denial still allows using the phone's microphone and speaker.
+        await Permission.bluetoothConnect.request();
+        if (!mounted) return;
+      }
       await _room.connect(credentials.liveKitUrl, credentials.token);
-      await _room.localParticipant?.setMicrophoneEnabled(_isMicEnabled);
-      await _room.localParticipant?.setCameraEnabled(_isCameraEnabled);
-      if (mounted) setState(() => _isConnecting = false);
+      if (!mounted) return;
+      final mediaErrors = <String>[];
+      // A microphone permission/device failure must not prevent video startup.
+      try {
+        await _room.localParticipant?.setMicrophoneEnabled(_isMicEnabled);
+      } catch (error) {
+        _isMicEnabled = false;
+        mediaErrors.add('Mikrofon açılamadı: $error');
+      }
+      if (!mounted) return;
+      try {
+        await _room.localParticipant?.setCameraEnabled(_isCameraEnabled);
+      } catch (error) {
+        _isCameraEnabled = false;
+        mediaErrors.add('Kamera açılamadı: $error');
+      }
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+          _connectionError = mediaErrors.isEmpty
+              ? null
+              : mediaErrors.join('\n');
+        });
+      }
     } catch (error) {
       if (mounted) {
         setState(() {
@@ -85,32 +125,72 @@ class _MeetingScreenState extends State<MeetingScreen> {
   }
 
   void _onRoomChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    final members = _members();
+    final mainMember = selectMainMember(
+      members,
+      activeSpeakerIds: _room.activeSpeakers.map((p) => p.sid).toList(),
+      previousSpeakerId: _mainMemberId,
+    );
+    setState(() => _mainMemberId = mainMember.id);
   }
 
   void _onChatChanged() {
     if (mounted) setState(() {});
   }
 
-  VideoTrack? _localVideoTrack() {
-    for (final publication
-        in _room.localParticipant?.videoTrackPublications ?? const []) {
-      final track = publication.track;
-      if (track is VideoTrack && !publication.muted) return track;
-    }
-    return null;
+  List<MemberEntry> _members() {
+    final local = _room.localParticipant;
+    return [
+      MemberEntry(
+        id: local?.sid ?? 'local',
+        name: widget.credentials?.participant ?? 'Sen',
+        isLocal: true,
+        isMicEnabled: local?.isMicrophoneEnabled() ?? _isMicEnabled,
+        isSpeaking: local?.isSpeaking ?? false,
+        videoTrack: local == null ? null : _participantVideoTrack(local),
+      ),
+      ..._room.remoteParticipants.values.map(
+        (participant) => MemberEntry(
+          id: participant.sid,
+          name: participant.name.isEmpty
+              ? participant.identity
+              : participant.name,
+          isLocal: false,
+          isMicEnabled: participant.isMicrophoneEnabled(),
+          isSpeaking: participant.isSpeaking,
+          videoTrack: _participantVideoTrack(participant),
+        ),
+      ),
+    ];
   }
 
   Future<void> _toggleMicrophone() async {
     final enabled = !_isMicEnabled;
-    setState(() => _isMicEnabled = enabled);
-    await _room.localParticipant?.setMicrophoneEnabled(enabled);
+    try {
+      final participant = _room.localParticipant;
+      if (participant == null) return;
+      await participant.setMicrophoneEnabled(enabled);
+      if (mounted) setState(() => _isMicEnabled = enabled);
+    } catch (error) {
+      if (mounted) {
+        setState(() => _connectionError = 'Mikrofon değiştirilemedi: $error');
+      }
+    }
   }
 
   Future<void> _toggleCamera() async {
     final enabled = !_isCameraEnabled;
-    setState(() => _isCameraEnabled = enabled);
-    await _room.localParticipant?.setCameraEnabled(enabled);
+    try {
+      final participant = _room.localParticipant;
+      if (participant == null) return;
+      await participant.setCameraEnabled(enabled);
+      if (mounted) setState(() => _isCameraEnabled = enabled);
+    } catch (error) {
+      if (mounted) {
+        setState(() => _connectionError = 'Kamera değiştirilemedi: $error');
+      }
+    }
   }
 
   void _showRoomCodeForThirtySeconds() {
@@ -138,40 +218,33 @@ class _MeetingScreenState extends State<MeetingScreen> {
     setState(() => _showRoomCode = false);
   }
 
-  void _openMembersScreen() {
-    final members = <MemberEntry>[
-      MemberEntry(
-        name: widget.credentials?.participant ?? 'Sen',
-        isLocal: true,
-        isMicEnabled: _isMicEnabled,
-        videoTrack: _localVideoTrack(),
+  void _openMembersSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1C1C1E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      ..._room.remoteParticipants.values.map(
-        (participant) => MemberEntry(
-          name: participant.name.isEmpty
-              ? participant.identity
-              : participant.name,
-          isLocal: false,
-          isMicEnabled: !participant.isMuted,
-          videoTrack: _participantVideoTrack(participant),
+      clipBehavior: Clip.antiAlias,
+      builder: (context) => SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.65,
+        child: ListenableBuilder(
+          listenable: _room,
+          builder: (context, _) => MembersScreen(
+            names: _members().map((member) => member.name).toList(),
+          ),
         ),
-      ),
-    ];
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            MembersScreen(totalMembers: members.length, members: members),
       ),
     );
   }
 
-  VideoTrack? _participantVideoTrack(RemoteParticipant participant) {
-    for (final publication in participant.videoTrackPublications) {
-      final track = publication.track;
-      if (track is VideoTrack && !publication.muted) return track;
-    }
-    return null;
+  VideoTrack? _participantVideoTrack(Participant participant) {
+    final publication = participant.getTrackPublicationBySource(
+      TrackSource.camera,
+    );
+    final track = publication?.track;
+    return track is VideoTrack && !publication!.muted ? track : null;
   }
 
   void _openChatSheet() {
@@ -208,9 +281,12 @@ class _MeetingScreenState extends State<MeetingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final localTrack = _localVideoTrack();
-    final isDesktop = MediaQuery.of(context).size.width > 800;
-    final remoteParticipants = _room.remoteParticipants.values.toList();
+    final members = _members();
+    final mainMember = selectMainMember(
+      members,
+      activeSpeakerIds: _room.activeSpeakers.map((p) => p.sid).toList(),
+      previousSpeakerId: _mainMemberId,
+    );
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -220,171 +296,121 @@ class _MeetingScreenState extends State<MeetingScreen> {
           behavior: HitTestBehavior.opaque,
           child: Stack(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1C1C1E),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white12),
-                        ),
-                        child: Stack(
-                          children: [
-                            if (localTrack != null)
-                              Positioned.fill(
-                                child: VideoTrackRenderer(
-                                  localTrack,
-                                  fit: VideoViewFit.cover,
-                                  mirrorMode: VideoViewMirrorMode.mirror,
-                                ),
-                              )
-                            else
-                              Center(
-                                child: Text(
-                                  _isConnecting
-                                      ? 'Bağlanıyor...'
-                                      : l10n.mainVideoLabel,
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                              ),
-                            Positioned(
-                              left: 16,
-                              bottom: 16,
-                              child: Text(
-                                widget.credentials?.participant ??
-                                    l10n.speakerLabel,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (isDesktop) const SizedBox(width: 16),
-                    if (isDesktop)
-                      SizedBox(
-                        width: 260,
-                        child: ListView.separated(
-                          itemCount: remoteParticipants.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) =>
-                              _RemoteParticipantTile(
-                                participant: remoteParticipants[index],
-                              ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (!isDesktop && remoteParticipants.isNotEmpty)
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: _showControls ? 150 : 16,
-                  height: 92,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: remoteParticipants.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) => SizedBox(
-                      width: 160,
-                      child: _RemoteParticipantTile(
-                        participant: remoteParticipants[index],
-                      ),
-                    ),
+              Positioned.fill(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    MediaQuery.sizeOf(context).width > 800 && _showControls
+                        ? 120
+                        : 16,
+                  ),
+                  child: MeetingVideoLayout(
+                    members: members,
+                    mainMember: mainMember,
+                    connecting: _isConnecting,
                   ),
                 ),
+              ),
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
                 bottom: _showControls ? 32 : -100,
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop ? 24 : 12,
-                      vertical: isDesktop ? 14 : 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2C2C2E).withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: isDesktop ? 16 : 8,
-                      runSpacing: 8,
-                      children: [
-                        ControlButton(
-                          icon: _isMicEnabled
-                              ? Icons.mic_rounded
-                              : Icons.mic_off_rounded,
-                          isActive: _isMicEnabled,
-                          onTap: _toggleMicrophone,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
                         ),
-                        ControlButton(
-                          icon: _isCameraEnabled
-                              ? Icons.videocam_rounded
-                              : Icons.videocam_off_rounded,
-                          isActive: _isCameraEnabled,
-                          onTap: _toggleCamera,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2C2C2E).withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(40),
                         ),
-                        ControlButton(
-                          icon: Icons.people_rounded,
-                          isActive: true,
-                          onTap: _openMembersScreen,
-                        ),
-                        ControlButton(
-                          icon: Icons.chat_bubble_rounded,
-                          isActive: true,
-                          showBadge:
-                              _chatController?.hasUnreadMessages ?? false,
-                          onTap: _openChatSheet,
-                        ),
-                        PopupMenuButton<String>(
-                          tooltip: 'Daha fazla',
-                          color: const Color(0xFF2C2C2E),
-                          icon: const Icon(
-                            Icons.more_horiz_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                          onSelected: (value) {
-                            if (value == 'room_id') {
-                              _showRoomCodeForThirtySeconds();
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem<String>(
-                              value: 'room_id',
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.tag_rounded,
-                                    color: Colors.white70,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    l10n.roomId,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ControlButton(
+                              icon: _isMicEnabled
+                                  ? Icons.mic_rounded
+                                  : Icons.mic_off_rounded,
+                              isActive: _isMicEnabled,
+                              onTap: _toggleMicrophone,
+                            ),
+                            const SizedBox(width: 16),
+                            ControlButton(
+                              icon: _isCameraEnabled
+                                  ? Icons.videocam_rounded
+                                  : Icons.videocam_off_rounded,
+                              isActive: _isCameraEnabled,
+                              onTap: _toggleCamera,
+                            ),
+                            const SizedBox(width: 16),
+                            ControlButton(
+                              icon: Icons.people_rounded,
+                              isActive: true,
+                              onTap: _openMembersSheet,
+                            ),
+                            const SizedBox(width: 16),
+                            ControlButton(
+                              icon: Icons.chat_bubble_rounded,
+                              isActive: true,
+                              showBadge:
+                                  _chatController?.hasUnreadMessages ?? false,
+                              onTap: _openChatSheet,
+                            ),
+                            const SizedBox(width: 16),
+                            PopupMenuButton<String>(
+                              tooltip: 'Daha fazla',
+                              color: const Color(0xFF2C2C2E),
+                              icon: const Icon(
+                                Icons.more_horiz_rounded,
+                                color: Colors.white,
+                                size: 28,
                               ),
+                              onSelected: (value) {
+                                if (value == 'room_id') {
+                                  _showRoomCodeForThirtySeconds();
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem<String>(
+                                  value: 'room_id',
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.tag_rounded,
+                                        color: Colors.white70,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        l10n.roomId,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 16),
+                            IconButton(
+                              onPressed: _leaveMeeting,
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                foregroundColor: Colors.white,
+                              ),
+                              icon: const Icon(Icons.call_end_rounded),
                             ),
                           ],
                         ),
-                        IconButton(
-                          onPressed: _leaveMeeting,
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            foregroundColor: Colors.white,
-                          ),
-                          icon: const Icon(Icons.call_end_rounded),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -470,87 +496,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RemoteParticipantTile extends StatelessWidget {
-  final RemoteParticipant participant;
-
-  const _RemoteParticipantTile({required this.participant});
-
-  VideoTrack? _videoTrack() {
-    for (final publication in participant.videoTrackPublications) {
-      final track = publication.track;
-      if (track is VideoTrack && !publication.muted) return track;
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final track = _videoTrack();
-    final displayName = participant.name.isEmpty
-        ? participant.identity
-        : participant.name;
-
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white12),
-        ),
-        child: Stack(
-          children: [
-            if (track != null)
-              Positioned.fill(
-                child: VideoTrackRenderer(track, fit: VideoViewFit.cover),
-              )
-            else
-              const Center(
-                child: Icon(Icons.person, size: 32, color: Colors.white54),
-              ),
-            Positioned(
-              left: 8,
-              right: 8,
-              bottom: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      participant.isMuted ? Icons.mic_off : Icons.mic,
-                      color: participant.isMuted
-                          ? Colors.redAccent
-                          : Colors.white,
-                      size: 13,
-                    ),
-                    const SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        displayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
