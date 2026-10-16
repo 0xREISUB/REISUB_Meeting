@@ -6,6 +6,8 @@ import 'package:livekit_client/livekit_client.dart';
 class MemberEntry {
   final String id;
   final String name;
+  final String identity;
+  final bool isMicrophoneLocked;
   final bool isLocal;
   final bool isMicEnabled;
   final bool isSpeaking;
@@ -14,6 +16,8 @@ class MemberEntry {
   const MemberEntry({
     required this.id,
     required this.name,
+    this.identity = '',
+    this.isMicrophoneLocked = false,
     required this.isLocal,
     required this.isMicEnabled,
     this.isSpeaking = false,

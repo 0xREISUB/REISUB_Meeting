@@ -72,6 +72,38 @@ class MeetingApi {
     return _requestRoom('/rooms/join', {'room_id': roomId, 'name': name});
   }
 
+  Future<void> closeRoom(String roomId) async {
+    await _moderationRequest('/rooms/${Uri.encodeComponent(roomId)}/close', {});
+  }
+
+  Future<void> setParticipantMicrophone({
+    required String roomId,
+    required String identity,
+    required bool locked,
+    bool requestUnmute = false,
+  }) async {
+    await _moderationRequest(
+      '/rooms/${Uri.encodeComponent(roomId)}/participants/'
+      '${Uri.encodeComponent(identity)}/microphone',
+      {'locked': locked, 'request_unmute': requestUnmute},
+    );
+  }
+
+  Future<void> _moderationRequest(
+    String path,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      await _dio.post<dynamic>(
+        '${await _authorizedUrl()}$path',
+        data: data,
+        options: await _authorizedOptions(),
+      );
+    } on DioException catch (error) {
+      throw MeetingApiException(_errorMessage(error));
+    }
+  }
+
   Future<List<MeetingChatMessage>> getRoomMessages(String roomId) async {
     try {
       final response = await _dio.get<List<dynamic>>(
@@ -79,7 +111,9 @@ class MeetingApi {
         options: await _authorizedOptions(),
       );
       return (response.data ?? const [])
-          .map((item) => MeetingChatMessage.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => MeetingChatMessage.fromJson(item as Map<String, dynamic>),
+          )
           .toList();
     } on DioException catch (error) {
       throw MeetingApiException(_errorMessage(error));
@@ -90,7 +124,10 @@ class MeetingApi {
     }
   }
 
-  Future<MeetingChatMessage> sendRoomMessage(String roomId, String content) async {
+  Future<MeetingChatMessage> sendRoomMessage(
+    String roomId,
+    String content,
+  ) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         '${await _authorizedUrl()}/rooms/$roomId/messages',

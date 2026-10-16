@@ -98,4 +98,19 @@ void main() {
       expect(connection.message, contains('medya akışı alınamadı'));
     },
   );
+  test(
+    'closed rooms and removed participants are not offered a rejoin',
+    () async {
+      for (final reason in [
+        DisconnectReason.roomDeleted,
+        DisconnectReason.roomClosed,
+        DisconnectReason.participantRemoved,
+      ]) {
+        await emit(RoomDisconnectedEvent(reason: reason));
+        expect(connection.canRejoin, isFalse);
+      }
+      connection.startConnecting();
+      expect(connection.canRejoin, isTrue);
+    },
+  );
 }

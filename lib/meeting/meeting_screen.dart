@@ -36,6 +36,14 @@ class _MeetingScreenState extends State<MeetingScreen>
   RoomCredentials? _credentials;
   bool _isRejoining = false;
   bool _isJoining = false;
+  bool _endingRoom = false;
+  bool _applyingMicLock = false;
+  bool _unmuteDialogOpen = false;
+  String? _lastUnmuteRequest;
+  static const _micLockAttribute = 'meeting.microphone_locked';
+  static const _micRequestAttribute = 'meeting.microphone_request';
+  bool get _microphoneLocked =>
+      _room.localParticipant?.attributes[_micLockAttribute] == 'true';
   Timer? _videoStatsTimer;
   bool _readingVideoStats = false;
   bool _isMicEnabled = true;
@@ -194,7 +202,9 @@ class _MeetingScreenState extends State<MeetingScreen>
       final mediaErrors = <String>[];
       // A microphone permission/device failure must not prevent video startup.
       try {
-        await _room.localParticipant?.setMicrophoneEnabled(_isMicEnabled);
+        final startMic = _isMicEnabled && !_microphoneLocked;
+        await _room.localParticipant?.setMicrophoneEnabled(startMic);
+        _isMicEnabled = startMic;
       } catch (error) {
         _isMicEnabled = false;
         mediaErrors.add('Mikrofon açılamadı: $error');
@@ -223,6 +233,7 @@ class _MeetingScreenState extends State<MeetingScreen>
       }
     } finally {
       _isJoining = false;
+      if (mounted) _handleMicrophonePolicy();
     }
   }
 
@@ -301,6 +312,7 @@ class _MeetingScreenState extends State<MeetingScreen>
 
   void _onRoomChanged() {
     if (!mounted) return;
+    _handleMicrophonePolicy();
     final members = _members();
     final mainMember = selectMainMember(
       members,
@@ -320,6 +332,8 @@ class _MeetingScreenState extends State<MeetingScreen>
       MemberEntry(
         id: local?.sid ?? 'local',
         name: widget.credentials?.participant ?? 'Sen',
+        identity: local?.identity ?? '',
+        isMicrophoneLocked: _microphoneLocked,
         isLocal: true,
         isMicEnabled: local?.isMicrophoneEnabled() ?? _isMicEnabled,
         isSpeaking: local?.isSpeaking ?? false,
@@ -329,6 +343,9 @@ class _MeetingScreenState extends State<MeetingScreen>
         ..._room.remoteParticipants.values.map(
           (participant) => MemberEntry(
             id: participant.sid,
+            identity: participant.identity,
+            isMicrophoneLocked:
+                participant.attributes[_micLockAttribute] == 'true',
             name: participant.name.isEmpty
                 ? participant.identity
                 : participant.name,
@@ -341,12 +358,160 @@ class _MeetingScreenState extends State<MeetingScreen>
     ];
   }
 
+  void _handleMicrophonePolicy() {
+    final local = _room.localParticipant;
+    if (local == null) return;
+    if (_microphoneLocked) {
+      _isMicEnabled = false;
+      if (local.isMicrophoneEnabled() && !_applyingMicLock) {
+        unawaited(_disableLockedMicrophone(local));
+      }
+      return;
+    }
+    if (!_isConnecting) _isMicEnabled = local.isMicrophoneEnabled();
+    final request = local.attributes[_micRequestAttribute];
+    if (_isConnecting ||
+        request == null ||
+        request.isEmpty ||
+        request == _lastUnmuteRequest ||
+        _unmuteDialogOpen) {
+      return;
+    }
+    _lastUnmuteRequest = request;
+    _unmuteDialogOpen = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _microphoneLocked) {
+        _unmuteDialogOpen = false;
+        return;
+      }
+      unawaited(_confirmUnmute());
+    });
+  }
+
+  Future<void> _disableLockedMicrophone(LocalParticipant local) async {
+    _applyingMicLock = true;
+    try {
+      await local.setMicrophoneEnabled(false);
+    } catch (error) {
+      if (mounted) {
+        setState(() => _connectionError = 'Mikrofon kapatılamadı: $error');
+      }
+    } finally {
+      _applyingMicLock = false;
+    }
+  }
+
+  Future<void> _confirmUnmute() async {
+    try {
+      final accepted = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Mikrofon açma isteği'),
+          content: const Text(
+            'Yönetici mikrofonunuzu açmanızı istiyor. Açmak istiyor musunuz?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Şimdi değil'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Mikrofonu aç'),
+            ),
+          ],
+        ),
+      );
+      if (accepted == true && mounted && !_microphoneLocked) {
+        final local = _room.localParticipant;
+        if (local == null) return;
+        await local.setMicrophoneEnabled(true);
+        if (_microphoneLocked) {
+          await local.setMicrophoneEnabled(false);
+          return;
+        }
+        if (mounted) setState(() => _isMicEnabled = true);
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _connectionError = 'Mikrofon açılamadı: $error');
+      }
+    } finally {
+      _unmuteDialogOpen = false;
+    }
+  }
+
+  Future<void> _moderateMicrophone(
+    MemberEntry member,
+    bool locked,
+    bool requestUnmute,
+  ) async {
+    final credentials = _credentials;
+    if (credentials == null || !credentials.isHost) return;
+    await MeetingApi().setParticipantMicrophone(
+      roomId: credentials.roomId,
+      identity: member.identity,
+      locked: locked,
+      requestUnmute: requestUnmute,
+    );
+  }
+
+  Future<void> _closeRoomForEveryone() async {
+    final credentials = _credentials;
+    if (credentials == null || !credentials.isHost || _endingRoom) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Toplantı herkes için bitirilsin mi?'),
+        content: const Text(
+          'Tüm katılımcıların bağlantısı kesilecek ve bu oda kodu tekrar kullanılamayacak.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Herkes için bitir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _endingRoom = true);
+    try {
+      await MeetingApi().closeRoom(credentials.roomId);
+      if (mounted) _leaveMeeting();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _endingRoom = false);
+    }
+  }
+
   Future<void> _toggleMicrophone() async {
+    if (_microphoneLocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mikrofonunuz yönetici tarafından kilitlendi.'),
+        ),
+      );
+      return;
+    }
     final enabled = !_isMicEnabled;
     try {
       final participant = _room.localParticipant;
       if (participant == null) return;
       await participant.setMicrophoneEnabled(enabled);
+      if (enabled && _microphoneLocked) {
+        await participant.setMicrophoneEnabled(false);
+        return;
+      }
       if (mounted) setState(() => _isMicEnabled = enabled);
     } catch (error) {
       if (mounted) {
@@ -408,7 +573,9 @@ class _MeetingScreenState extends State<MeetingScreen>
         child: ListenableBuilder(
           listenable: _room,
           builder: (context, _) => MembersScreen(
-            names: _members().map((member) => member.name).toList(),
+            members: _members(),
+            isHost: _credentials?.isHost ?? false,
+            onMicrophoneChange: _moderateMicrophone,
           ),
         ),
       ),
@@ -527,10 +694,12 @@ class _MeetingScreenState extends State<MeetingScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               ControlButton(
-                                icon: _isMicEnabled
+                                icon: _microphoneLocked
+                                    ? Icons.lock_rounded
+                                    : _isMicEnabled
                                     ? Icons.mic_rounded
                                     : Icons.mic_off_rounded,
-                                isActive: _isMicEnabled,
+                                isActive: _isMicEnabled && !_microphoneLocked,
                                 onTap: _toggleMicrophone,
                               ),
                               const SizedBox(width: 16),
@@ -567,9 +736,22 @@ class _MeetingScreenState extends State<MeetingScreen>
                                 onSelected: (value) {
                                   if (value == 'room_id') {
                                     _showRoomCodeForThirtySeconds();
+                                  } else if (value == 'close_room') {
+                                    unawaited(_closeRoomForEveryone());
                                   }
                                 },
                                 itemBuilder: (context) => [
+                                  if (_credentials?.isHost ?? false)
+                                    PopupMenuItem<String>(
+                                      value: 'close_room',
+                                      enabled: !_endingRoom,
+                                      child: const Text(
+                                        'Toplantıyı herkes için bitir',
+                                        style: TextStyle(
+                                          color: Colors.redAccent,
+                                        ),
+                                      ),
+                                    ),
                                   PopupMenuItem<String>(
                                     value: 'room_id',
                                     child: Row(
@@ -635,6 +817,7 @@ class _MeetingScreenState extends State<MeetingScreen>
                           ),
                           if (_connection.phase ==
                                   MeetingConnectionPhase.disconnected &&
+                              _connection.canRejoin &&
                               _credentials != null &&
                               !_isRejoining)
                             TextButton(

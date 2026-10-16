@@ -49,6 +49,10 @@ class MeetingConnection extends ChangeNotifier {
   String? problem;
 
   bool get isConnected => phase == MeetingConnectionPhase.connected;
+  bool get canRejoin =>
+      disconnectReason != DisconnectReason.roomDeleted &&
+      disconnectReason != DisconnectReason.roomClosed &&
+      disconnectReason != DisconnectReason.participantRemoved;
 
   String? get message {
     switch (phase) {

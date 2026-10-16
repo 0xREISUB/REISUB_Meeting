@@ -10,6 +10,9 @@ import 'package:v_meeting/meeting/meeting_screen.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 
 class _TestRoom extends ChangeNotifier implements Room {
+  _TestRoom({this.local});
+  final LocalParticipant? local;
+  void changed() => notifyListeners();
   @override
   final events = EventsEmitter<RoomEvent>();
 
@@ -17,7 +20,7 @@ class _TestRoom extends ChangeNotifier implements Room {
   EventsListener<RoomEvent> createListener({bool synchronized = false}) =>
       EventsListener<RoomEvent>(events, synchronized: synchronized);
   @override
-  LocalParticipant? get localParticipant => null;
+  LocalParticipant? get localParticipant => local;
 
   @override
   UnmodifiableListView<Participant> get activeSpeakers =>
@@ -32,6 +35,38 @@ class _TestRoom extends ChangeNotifier implements Room {
     super.dispose();
     await events.dispose();
     return true;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _TestLocal implements LocalParticipant {
+  final values = <String, String>{};
+  final microphoneChanges = <bool>[];
+  bool microphone = false;
+  @override
+  UnmodifiableMapView<String, String> get attributes =>
+      UnmodifiableMapView(values);
+  @override
+  String get identity => 'test-local';
+  @override
+  String get sid => 'local';
+  @override
+  bool get isSpeaking => false;
+  @override
+  bool isMicrophoneEnabled() => microphone;
+  @override
+  LocalTrackPublication? getTrackPublicationBySource(TrackSource source) =>
+      null;
+  @override
+  Future<LocalTrackPublication?> setMicrophoneEnabled(
+    bool enabled, {
+    AudioCaptureOptions? audioCaptureOptions,
+  }) async {
+    microphoneChanges.add(enabled);
+    microphone = enabled;
+    return null;
   }
 
   @override
@@ -428,5 +463,113 @@ void main() {
       expect(tester.takeException(), isNull);
     },
     variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+  testWidgets('only owners can moderate remote participants', (tester) async {
+    const guest = MemberEntry(
+      id: 'guest',
+      identity: 'guest',
+      name: 'Konuk',
+      isLocal: false,
+      isMicEnabled: true,
+    );
+    final actions = <(bool, bool)>[];
+    Future<void> render(bool host, MemberEntry entry) async {
+      await tester.pumpWidget(
+        localized(
+          Scaffold(
+            body: MembersScreen(
+              members: [local, entry],
+              isHost: host,
+              onMicrophoneChange: (_, locked, request) async =>
+                  actions.add((locked, request)),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await render(false, guest);
+    expect(find.byTooltip('Mikrofon yönetimi'), findsNothing);
+    await render(true, guest);
+    expect(find.byTooltip('Mikrofon yönetimi'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mikrofonu kapat ve kilitle'));
+    await tester.pumpAndSettle();
+    expect(actions, [(true, false)]);
+    const lockedGuest = MemberEntry(
+      id: 'guest',
+      identity: 'guest',
+      name: 'Konuk',
+      isLocal: false,
+      isMicEnabled: false,
+      isMicrophoneLocked: true,
+    );
+    await render(true, lockedGuest);
+    await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kilidi kaldır ve açmasını iste'));
+    await tester.pumpAndSettle();
+    expect(actions.last, (false, true));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('locked microphone stops capture and cannot be opened locally', (
+    tester,
+  ) async {
+    final participant = _TestLocal()..microphone = true;
+    participant.values['meeting.microphone_locked'] = 'true';
+    final room = _TestRoom(local: participant);
+    await tester.pumpWidget(localized(MeetingScreen(room: room)));
+    await tester.pumpAndSettle();
+    room.changed();
+    await tester.pumpAndSettle();
+    expect(participant.microphoneChanges, [false]);
+    await tester.tap(find.byIcon(Icons.lock_rounded));
+    await tester.pumpAndSettle();
+    expect(participant.microphoneChanges, [false]);
+    expect(
+      find.text('Mikrofonunuz yönetici tarafından kilitlendi.'),
+      findsOneWidget,
+    );
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets(
+    'microphone requests require consent and a new lock overrides consent',
+    (tester) async {
+      final participant = _TestLocal();
+      final room = _TestRoom(local: participant);
+      await tester.pumpWidget(localized(MeetingScreen(room: room)));
+      await tester.pumpAndSettle();
+      participant.values['meeting.microphone_request'] = 'request-1';
+      room.changed();
+      await tester.pumpAndSettle();
+      expect(find.text('Mikrofon açma isteği'), findsOneWidget);
+      expect(participant.microphoneChanges, isEmpty);
+      await tester.tap(find.text('Şimdi değil'));
+      await tester.pumpAndSettle();
+      expect(participant.microphoneChanges, isEmpty);
+      participant.values['meeting.microphone_request'] = 'request-2';
+      room.changed();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mikrofonu aç'));
+      await tester.pumpAndSettle();
+      expect(participant.microphoneChanges, [true]);
+      participant.microphone = false;
+      participant.values['meeting.microphone_request'] = 'request-3';
+      room.changed();
+      await tester.pumpAndSettle();
+      participant.values['meeting.microphone_locked'] = 'true';
+      room.changed();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mikrofonu aç'));
+      await tester.pumpAndSettle();
+      expect(participant.microphoneChanges, [true]);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+    },
   );
 }

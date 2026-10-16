@@ -114,3 +114,15 @@ Feel free to fork the repository and submit a Pull Request.
 
 This project is licensed under the **MIT License**.
 See the **LICENSE** file for more information.
+
+## Oda yöneticisi kontrolleri
+
+Odayı oluşturan hesap, katılımcı listesindeki menülerden mikrofonu kapatıp
+kilitleyebilir, kilidi kaldırabilir veya katılımcıya mikrofon açma isteği
+gönderebilir. Açma isteği katılımcının onayını gerektirir. Mikrofon kilidi
+sunucuda uygulanır ve aynı hesap yeniden katıldığında korunur.
+
+Toplantıdaki “Daha fazla” menüsünden “Toplantıyı herkes için bitir” seçeneğiyle
+oda kapatılır. Bu işlem tüm bağlantıları keser ve oda koduyla yeni katılımı
+engeller. Bu kontroller güncel Engine moderasyon API’lerini gerektirir; Engine
+ve LiveKit yapılandırması birlikte güncellenmelidir.
