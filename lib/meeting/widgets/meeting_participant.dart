@@ -242,7 +242,7 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
                     // Reserve room for five 16:9 previews regardless of how
                     // many people have joined, so existing tiles keep their size.
                     width: math.min(
-                      220,
+                      280,
                       (constraints.maxHeight - 40) * 16 / 45,
                     ),
                     child: Column(

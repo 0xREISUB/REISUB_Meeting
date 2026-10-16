@@ -234,7 +234,7 @@ void main() {
     final preview = find.byKey(const ValueKey('preview-local'));
     final before = tester.getSize(preview);
     expect(before.width / before.height, closeTo(16 / 9, 0.001));
-    expect(before.height, lessThan(150));
+    expect(before.height, lessThan(170));
     entries.value = [local, remote, third, fourth, ...members.skip(3).take(2)];
     await tester.pumpAndSettle();
     expect(tester.getSize(preview), before);
