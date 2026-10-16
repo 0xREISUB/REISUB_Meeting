@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
@@ -18,8 +19,10 @@ class MeetingScreen extends StatefulWidget {
   final RoomCredentials? credentials;
   @visibleForTesting
   final Room? room;
+  @visibleForTesting
+  final MeetingApi? api;
 
-  const MeetingScreen({super.key, this.credentials, this.room});
+  const MeetingScreen({super.key, this.credentials, this.room, this.api});
 
   @override
   State<MeetingScreen> createState() => _MeetingScreenState();
@@ -32,11 +35,14 @@ class _MeetingScreenState extends State<MeetingScreen>
   Timer? _controlsTimer;
   Timer? _systemUiTimer;
   late final Room _room;
+  late final MeetingApi _api;
   late final MeetingConnection _connection;
   RoomCredentials? _credentials;
   bool _isRejoining = false;
   bool _isJoining = false;
   bool _endingRoom = false;
+  bool _leavingMeeting = false;
+  bool _exitDialogOpen = false;
   bool _applyingMicLock = false;
   bool _unmuteDialogOpen = false;
   String? _lastUnmuteRequest;
@@ -75,6 +81,7 @@ class _MeetingScreenState extends State<MeetingScreen>
             ),
           ),
         );
+    _api = widget.api ?? MeetingApi();
     _credentials = widget.credentials;
     _connection = MeetingConnection(_room)..addListener(_onConnectionChanged);
     _room.addListener(_onRoomChanged);
@@ -86,7 +93,7 @@ class _MeetingScreenState extends State<MeetingScreen>
     }
     final roomId = widget.credentials?.roomId;
     if (roomId != null) {
-      _chatController = MeetingChatController(roomId: roomId)
+      _chatController = MeetingChatController(roomId: roomId, api: _api)
         ..addListener(_onChatChanged)
         ..start();
     }
@@ -161,7 +168,7 @@ class _MeetingScreenState extends State<MeetingScreen>
   }
 
   Future<void> _connectToRoom() async {
-    if (_isJoining) return;
+    if (_isJoining || _leavingMeeting) return;
     final credentials = _credentials;
     if (credentials == null) {
       setState(() {
@@ -176,7 +183,7 @@ class _MeetingScreenState extends State<MeetingScreen>
         Uri.base.scheme != 'https' &&
         Uri.base.host != 'localhost' &&
         Uri.base.host != '127.0.0.1') {
-      if (mounted) {
+      if (mounted && !_leavingMeeting) {
         setState(() {
           _isConnecting = false;
           _connectionError =
@@ -194,10 +201,10 @@ class _MeetingScreenState extends State<MeetingScreen>
         // Android 12+ requires runtime permission for Bluetooth headsets.
         // Denial still allows using the phone's microphone and speaker.
         await Permission.bluetoothConnect.request();
-        if (!mounted) return;
+        if (!mounted || _leavingMeeting) return;
       }
       await _room.connect(credentials.liveKitUrl, credentials.token);
-      if (!mounted) return;
+      if (!mounted || _leavingMeeting) return;
       _connection.markConnected();
       final mediaErrors = <String>[];
       // A microphone permission/device failure must not prevent video startup.
@@ -209,14 +216,14 @@ class _MeetingScreenState extends State<MeetingScreen>
         _isMicEnabled = false;
         mediaErrors.add('Mikrofon açılamadı: $error');
       }
-      if (!mounted) return;
+      if (!mounted || _leavingMeeting) return;
       try {
         await _room.localParticipant?.setCameraEnabled(_isCameraEnabled);
       } catch (error) {
         _isCameraEnabled = false;
         mediaErrors.add('Kamera açılamadı: $error');
       }
-      if (mounted) {
+      if (mounted && !_leavingMeeting) {
         setState(() {
           _isConnecting = false;
           _connectionError = mediaErrors.isEmpty
@@ -225,7 +232,7 @@ class _MeetingScreenState extends State<MeetingScreen>
         });
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && !_leavingMeeting) {
         setState(() {
           _isConnecting = false;
         });
@@ -233,12 +240,19 @@ class _MeetingScreenState extends State<MeetingScreen>
       }
     } finally {
       _isJoining = false;
-      if (mounted) _handleMicrophonePolicy();
+      if (mounted && !_leavingMeeting) _handleMicrophonePolicy();
     }
   }
 
   void _onConnectionChanged() {
-    if (!mounted) return;
+    if (!mounted || _leavingMeeting) return;
+    if (_connection.phase == MeetingConnectionPhase.disconnected &&
+        !_connection.canRejoin) {
+      _leaveMeeting(
+        notice: _endingRoom ? 'Toplantıyı bitirdiniz.' : _connection.message,
+      );
+      return;
+    }
     if (!_connection.isConnected) _mainMemberId = null;
     developer.log(
       'phase=${_connection.phase.name} reason=${_connection.disconnectReason?.name} '
@@ -262,7 +276,7 @@ class _MeetingScreenState extends State<MeetingScreen>
       if (!mounted) return;
       _connection.startConnecting();
       // A new token also recovers expired credentials and stale server sessions.
-      _credentials = await MeetingApi().joinRoom(
+      _credentials = await _api.joinRoom(
         roomId: previous.roomId,
         name: previous.participant,
       );
@@ -311,7 +325,7 @@ class _MeetingScreenState extends State<MeetingScreen>
   }
 
   void _onRoomChanged() {
-    if (!mounted) return;
+    if (!mounted || _leavingMeeting) return;
     _handleMicrophonePolicy();
     final members = _members();
     final mainMember = selectMainMember(
@@ -359,6 +373,7 @@ class _MeetingScreenState extends State<MeetingScreen>
   }
 
   void _handleMicrophonePolicy() {
+    if (_leavingMeeting) return;
     final local = _room.localParticipant;
     if (local == null) return;
     if (_microphoneLocked) {
@@ -380,7 +395,7 @@ class _MeetingScreenState extends State<MeetingScreen>
     _lastUnmuteRequest = request;
     _unmuteDialogOpen = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _microphoneLocked) {
+      if (!mounted || _leavingMeeting || _microphoneLocked) {
         _unmuteDialogOpen = false;
         return;
       }
@@ -422,7 +437,10 @@ class _MeetingScreenState extends State<MeetingScreen>
           ],
         ),
       );
-      if (accepted == true && mounted && !_microphoneLocked) {
+      if (accepted == true &&
+          mounted &&
+          !_leavingMeeting &&
+          !_microphoneLocked) {
         final local = _room.localParticipant;
         if (local == null) return;
         await local.setMicrophoneEnabled(true);
@@ -448,7 +466,7 @@ class _MeetingScreenState extends State<MeetingScreen>
   ) async {
     final credentials = _credentials;
     if (credentials == null || !credentials.isHost) return;
-    await MeetingApi().setParticipantMicrophone(
+    await _api.setParticipantMicrophone(
       roomId: credentials.roomId,
       identity: member.identity,
       locked: locked,
@@ -456,41 +474,60 @@ class _MeetingScreenState extends State<MeetingScreen>
     );
   }
 
-  Future<void> _closeRoomForEveryone() async {
-    final credentials = _credentials;
-    if (credentials == null || !credentials.isHost || _endingRoom) return;
-    final confirmed = await showDialog<bool>(
+  Future<void> _requestLeaveMeeting() async {
+    if (_leavingMeeting || _endingRoom || _exitDialogOpen) return;
+    if (!(_credentials?.isHost ?? false)) {
+      _leaveMeeting();
+      return;
+    }
+    _exitDialogOpen = true;
+    final action = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Toplantı herkes için bitirilsin mi?'),
+        title: const Text('Toplantıdan çık'),
         content: const Text(
-          'Tüm katılımcıların bağlantısı kesilecek ve bu oda kodu tekrar kullanılamayacak.',
+          'Toplantıyı bitirirseniz tüm katılımcılar çıkarılır ve oda kapanır. '
+          'Yalnızca ayrılırsanız toplantı devam eder.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Vazgeç'),
+            onPressed: () => Navigator.pop(context, 'leave'),
+            child: const Text('Ayrıl'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Herkes için bitir'),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, 'end'),
+            child: const Text('Toplantıyı bitir'),
           ),
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
+    _exitDialogOpen = false;
+    if (!mounted || _leavingMeeting) return;
+    if (action == 'end') {
+      await _closeRoomForEveryone();
+    } else if (action == 'leave') {
+      _leaveMeeting();
+    }
+  }
+
+  Future<void> _closeRoomForEveryone() async {
+    final credentials = _credentials;
+    if (credentials == null || !credentials.isHost || _endingRoom) return;
     setState(() => _endingRoom = true);
     try {
-      await MeetingApi().closeRoom(credentials.roomId);
-      if (mounted) _leaveMeeting();
+      await _api.closeRoom(credentials.roomId);
+      if (mounted && !_leavingMeeting) {
+        _leaveMeeting(notice: 'Toplantıyı bitirdiniz.');
+      }
     } catch (error) {
-      if (mounted) {
+      if (mounted && !_leavingMeeting) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     } finally {
-      if (mounted) setState(() => _endingRoom = false);
+      if (mounted && !_leavingMeeting) setState(() => _endingRoom = false);
     }
   }
 
@@ -605,9 +642,23 @@ class _MeetingScreenState extends State<MeetingScreen>
     );
   }
 
-  void _leaveMeeting() {
+  void _leaveMeeting({String? notice}) {
+    if (!mounted || _leavingMeeting) return;
+    _leavingMeeting = true;
+    _controlsTimer?.cancel();
     unawaited(_room.disconnect());
-    Navigator.pop(context);
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+      (_) => false,
+    );
+    if (notice != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!messenger.mounted) return;
+        messenger.clearSnackBars();
+        messenger.showSnackBar(SnackBar(content: Text(notice)));
+      });
+    }
   }
 
   @override
@@ -736,22 +787,9 @@ class _MeetingScreenState extends State<MeetingScreen>
                                 onSelected: (value) {
                                   if (value == 'room_id') {
                                     _showRoomCodeForThirtySeconds();
-                                  } else if (value == 'close_room') {
-                                    unawaited(_closeRoomForEveryone());
                                   }
                                 },
                                 itemBuilder: (context) => [
-                                  if (_credentials?.isHost ?? false)
-                                    PopupMenuItem<String>(
-                                      value: 'close_room',
-                                      enabled: !_endingRoom,
-                                      child: const Text(
-                                        'Toplantıyı herkes için bitir',
-                                        style: TextStyle(
-                                          color: Colors.redAccent,
-                                        ),
-                                      ),
-                                    ),
                                   PopupMenuItem<String>(
                                     value: 'room_id',
                                     child: Row(
@@ -774,7 +812,10 @@ class _MeetingScreenState extends State<MeetingScreen>
                               ),
                               const SizedBox(width: 16),
                               IconButton(
-                                onPressed: _leaveMeeting,
+                                onPressed: _endingRoom
+                                    ? null
+                                    : _requestLeaveMeeting,
+                                tooltip: 'Toplantıdan çık',
                                 style: IconButton.styleFrom(
                                   backgroundColor: Colors.redAccent,
                                   foregroundColor: Colors.white,

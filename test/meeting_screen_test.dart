@@ -1,5 +1,9 @@
 import 'dart:collection';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/home/home_screen.dart';
+import 'package:v_meeting/meeting/meeting_api.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -29,6 +33,12 @@ class _TestRoom extends ChangeNotifier implements Room {
   @override
   UnmodifiableMapView<String, RemoteParticipant> get remoteParticipants =>
       UnmodifiableMapView({});
+
+  int disconnects = 0;
+  @override
+  Future<void> disconnect() async {
+    disconnects++;
+  }
 
   @override
   Future<bool> dispose() async {
@@ -73,6 +83,19 @@ class _TestLocal implements LocalParticipant {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _ModerationApi extends MeetingApi {
+  int closes = 0;
+  VoidCallback? onClose;
+  @override
+  Future<List<MeetingChatMessage>> getRoomMessages(String roomId) async => [];
+  @override
+  Future<void> closeRoom(String roomId) async {
+    closes++;
+    onClose?.call();
+    await Future<void>.delayed(Duration.zero);
+  }
+}
+
 const local = MemberEntry(
   id: 'local',
   name: 'Ali',
@@ -106,6 +129,115 @@ Widget localized(Widget child) => MaterialApp(
 );
 
 void main() {
+  Future<void> openExitTest(
+    WidgetTester tester,
+    _TestRoom room, {
+    bool host = false,
+    _ModerationApi? api,
+  }) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: localized(
+          MeetingScreen(
+            room: room,
+            api: api ?? _ModerationApi(),
+            credentials: RoomCredentials(
+              roomId: '123-456-789',
+              liveKitUrl: 'wss://example.test',
+              token: 'test',
+              participant: 'Test',
+              isHost: host,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  for (final reason in [
+    DisconnectReason.roomDeleted,
+    DisconnectReason.roomClosed,
+  ]) {
+    testWidgets('server $reason returns home even with a sheet open', (
+      tester,
+    ) async {
+      final room = _TestRoom();
+      await openExitTest(tester, room);
+      await tester.tap(find.byIcon(Icons.people_rounded));
+      await tester.pumpAndSettle();
+      room.events.streamCtrl.add(RoomDisconnectedEvent(reason: reason));
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(MeetingScreen), findsNothing);
+      expect(find.byType(MembersScreen), findsNothing);
+      expect(
+        find.text('Toplantı sunucu tarafından kapatıldı.'),
+        findsOneWidget,
+      );
+      expect(room.disconnects, 1);
+      expect(tester.takeException(), isNull);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+  }
+
+  testWidgets('network failure keeps the meeting and rejoin action', (
+    tester,
+  ) async {
+    final room = _TestRoom();
+    await openExitTest(tester, room);
+    room.events.streamCtrl.add(
+      RoomDisconnectedEvent(reason: DisconnectReason.reconnectAttemptsExceeded),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(MeetingScreen), findsOneWidget);
+    expect(find.text('Tekrar katıl'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+  testWidgets('host exit offers end and leave; leave does not close the room', (
+    tester,
+  ) async {
+    final room = _TestRoom();
+    final api = _ModerationApi();
+    await openExitTest(tester, room, host: true, api: api);
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('Toplantıyı herkes için bitir'), findsNothing);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.call_end_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('Toplantıyı bitir'), findsOneWidget);
+    expect(find.text('Ayrıl'), findsOneWidget);
+    await tester.tap(find.text('Ayrıl'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(api.closes, 0);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+  testWidgets('host end tolerates server disconnect before API returns', (
+    tester,
+  ) async {
+    final room = _TestRoom();
+    final api = _ModerationApi()
+      ..onClose = () {
+        room.events.streamCtrl.add(
+          RoomDisconnectedEvent(reason: DisconnectReason.roomDeleted),
+        );
+      };
+    await openExitTest(tester, room, host: true, api: api);
+    await tester.tap(find.byIcon(Icons.call_end_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Toplantıyı bitir'));
+    await tester.pumpAndSettle();
+    expect(api.closes, 1);
+    expect(room.disconnects, 1);
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.text('Toplantıyı bitirdiniz.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
   test('alone shows self; two participants always show the other person', () {
     expect(selectMainMember([local], activeSpeakerIds: []).id, local.id);
     expect(
