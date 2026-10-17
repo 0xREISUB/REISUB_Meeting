@@ -46,6 +46,30 @@ rtc.MediaDeviceInfo device(String kind, String id) =>
 
 void main() {
   test(
+    'explicit saved choices are used and never replaced by another input',
+    () async {
+      final participant = _Participant()
+        ..workingMicrophone = 'chosen-mic'
+        ..workingCamera = 'chosen-camera';
+      final media = MeetingMedia(
+        isWindows: true,
+        microphoneId: 'chosen-mic',
+        cameraId: 'chosen-camera',
+        enumerateDevices: () async => throw StateError('unexpected fallback'),
+      );
+      await media.setMicrophoneEnabled(participant, true);
+      await media.setCameraEnabled(participant, true);
+      expect(participant.microphones.single!.deviceId, 'chosen-mic');
+      expect(participant.cameras.single!.deviceId, 'chosen-camera');
+      participant.workingMicrophone = 'other';
+      await expectLater(
+        media.setMicrophoneEnabled(participant, true),
+        throwsA(isA<TrackCreateException>()),
+      );
+    },
+  );
+
+  test(
     'Windows retries physical camera after default and virtual camera fail',
     () async {
       final participant = _Participant()..workingCamera = 'usb';

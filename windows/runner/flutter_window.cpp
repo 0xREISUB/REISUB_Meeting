@@ -1,6 +1,8 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <shellapi.h>
+#include <flutter/standard_method_codec.h>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -25,6 +27,26 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  privacy_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "reisub_meeting/privacy",
+      &flutter::StandardMethodCodec::GetInstance());
+  privacy_channel_->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+        const wchar_t* uri = nullptr;
+        if (call.method_name() == "openCameraSettings") {
+          uri = L"ms-settings:privacy-webcam";
+        } else if (call.method_name() == "openMicrophoneSettings") {
+          uri = L"ms-settings:privacy-microphone";
+        } else {
+          result->NotImplemented();
+          return;
+        }
+        // Open only the requested Settings page; never change consent itself.
+        const auto status = reinterpret_cast<INT_PTR>(
+            ShellExecuteW(GetHandle(), L"open", uri, nullptr, nullptr, SW_SHOWNORMAL));
+        result->Success(flutter::EncodableValue(status > 32));
+      });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -40,6 +62,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  privacy_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }

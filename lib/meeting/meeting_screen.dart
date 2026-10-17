@@ -13,6 +13,8 @@ import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
 import 'package:v_meeting/meeting/meeting_media.dart';
+import 'package:v_meeting/settings/media_preferences.dart';
+import 'package:v_meeting/settings/media_privacy.dart';
 import 'package:v_meeting/meeting/meeting_sharing.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
 import 'widgets/meeting_components.dart';
@@ -75,6 +77,7 @@ class _MeetingScreenState extends State<MeetingScreen>
     ].whereType<String>().toList();
     return errors.isEmpty ? null : errors.join('\n');
   }
+
   Timer? _roomCodeTimer;
   bool _showRoomCode = false;
   int _roomCodeSeconds = 30;
@@ -218,6 +221,10 @@ class _MeetingScreenState extends State<MeetingScreen>
     _isJoining = true;
     _connection.startConnecting();
     try {
+      final mediaPreferences = await MediaPreferences.load();
+      _media.microphoneId = mediaPreferences.microphoneId;
+      _media.cameraId = mediaPreferences.cameraId;
+      if (!mounted || _leavingMeeting) return;
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         // Android 12+ requires runtime permission for Bluetooth headsets.
         // Denial still allows using the phone's microphone and speaker.
@@ -498,7 +505,9 @@ class _MeetingScreenState extends State<MeetingScreen>
       }
     } catch (error) {
       if (mounted) {
-        setState(() => _microphoneError = mediaCaptureError(error, camera: false));
+        setState(
+          () => _microphoneError = mediaCaptureError(error, camera: false),
+        );
       }
     } finally {
       _unmuteDialogOpen = false;
@@ -603,7 +612,9 @@ class _MeetingScreenState extends State<MeetingScreen>
       }
     } catch (error) {
       if (mounted) {
-        setState(() => _microphoneError = mediaCaptureError(error, camera: false));
+        setState(
+          () => _microphoneError = mediaCaptureError(error, camera: false),
+        );
       }
     }
   }
@@ -624,6 +635,19 @@ class _MeetingScreenState extends State<MeetingScreen>
       if (mounted) {
         setState(() => _cameraError = mediaCaptureError(error, camera: true));
       }
+    }
+  }
+
+  Future<void> _openPrivacySettings({required bool camera}) async {
+    final opened = await openMediaPrivacy(camera: camera);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Windows ayarları açılamadı. Ayarlar > Gizlilik ve güvenlik bölümünü açın.',
+          ),
+        ),
+      );
     }
   }
 
@@ -1149,10 +1173,39 @@ class _MeetingScreenState extends State<MeetingScreen>
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
-                    child: Text(
-                      _meetingError!,
-                      style: const TextStyle(color: Colors.white),
-                      textAlign: TextAlign.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _meetingError!,
+                          style: const TextStyle(color: Colors.white),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (isWindowsDesktop)
+                          Wrap(
+                            spacing: 12,
+                            children: [
+                              if (_microphoneError != null)
+                                TextButton(
+                                  onPressed: () =>
+                                      _openPrivacySettings(camera: false),
+                                  child: const Text(
+                                    'Mikrofon gizlilik ayarları',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              if (_cameraError != null)
+                                TextButton(
+                                  onPressed: () =>
+                                      _openPrivacySettings(camera: true),
+                                  child: const Text(
+                                    'Kamera gizlilik ayarları',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                            ],
+                          ),
+                      ],
                     ),
                   ),
                 ),

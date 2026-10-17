@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'device_test_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -294,15 +295,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.mic_external_on),
             title: Text(l10n.testMicrophone),
+            subtitle: const Text('Mikrofon seçimi ve canlı ses seviyesi'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {},
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const DeviceTestScreen(camera: false),
+              ),
+            ),
           ),
 
           ListTile(
             leading: const Icon(Icons.videocam),
             title: Text(l10n.testCamera),
+            subtitle: const Text('Kamera seçimi ve canlı önizleme'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {},
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const DeviceTestScreen(camera: true),
+              ),
+            ),
           ),
 
           ListTile(

@@ -7,6 +7,8 @@ import 'package:livekit_client/livekit_client.dart';
 class MeetingMedia {
   MeetingMedia({
     bool? isWindows,
+    this.microphoneId,
+    this.cameraId,
     Future<List<rtc.MediaDeviceInfo>> Function()? enumerateDevices,
   }) : _isWindows =
            isWindows ??
@@ -15,12 +17,15 @@ class MeetingMedia {
            enumerateDevices ?? rtc.navigator.mediaDevices.enumerateDevices;
 
   final bool _isWindows;
+  String? microphoneId;
+  String? cameraId;
   final Future<List<rtc.MediaDeviceInfo>> Function() _enumerateDevices;
 
   Future<void> setCameraEnabled(LocalParticipant participant, bool enabled) =>
       _setEnabled(
         enabled: enabled,
         kind: 'videoinput',
+        preferredDeviceId: cameraId,
         start: (deviceId) async {
           await participant.setCameraEnabled(
             enabled,
@@ -42,6 +47,7 @@ class MeetingMedia {
   ) => _setEnabled(
     enabled: enabled,
     kind: 'audioinput',
+    preferredDeviceId: microphoneId,
     start: (deviceId) async {
       await participant.setMicrophoneEnabled(
         enabled,
@@ -55,13 +61,15 @@ class MeetingMedia {
   Future<void> _setEnabled({
     required bool enabled,
     required String kind,
+    String? preferredDeviceId,
     required Future<void> Function(String?) start,
   }) async {
     try {
-      await start(null);
+      await start(preferredDeviceId);
       return;
     } on TrackCreateException catch (captureError, captureStack) {
-      if (!_isWindows || !enabled) rethrow;
+      // Honor explicit choices instead of silently opening another microphone.
+      if (!_isWindows || !enabled || preferredDeviceId != null) rethrow;
       // Preserve the original capture error if device enumeration also fails.
       final List<rtc.MediaDeviceInfo> devices;
       try {
@@ -91,7 +99,17 @@ class MeetingMedia {
 
 String mediaCaptureError(Object error, {required bool camera}) {
   final device = camera ? 'Kamera' : 'Mikrofon';
-  if (error is! TrackCreateException) return '$device açılamadı: $error';
+  final message = error.toString().toLowerCase();
+  final captureFailure =
+      error is TrackCreateException ||
+      [
+        'getusermedia',
+        'notallowed',
+        'permission',
+        'denied',
+        '0x80070005',
+      ].any(message.contains);
+  if (!captureFailure) return '$device açılamadı: $error';
   final windows = !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
   return '$device açılamadı; cihazdan ${camera ? 'görüntü' : 'ses'} alınamadı. '
       'Cihazın bağlı olduğunu ve başka bir uygulama tarafından kullanılmadığını kontrol edin. '
