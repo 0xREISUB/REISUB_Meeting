@@ -12,6 +12,7 @@ import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
+import 'package:v_meeting/meeting/meeting_media.dart';
 import 'package:v_meeting/meeting/meeting_sharing.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
 import 'widgets/meeting_components.dart';
@@ -63,6 +64,17 @@ class _MeetingScreenState extends State<MeetingScreen>
   bool _showControls = true;
   bool _isConnecting = true;
   String? _connectionError;
+  final _media = MeetingMedia();
+  String? _microphoneError;
+  String? _cameraError;
+  String? get _meetingError {
+    final errors = [
+      _connectionError,
+      _microphoneError,
+      _cameraError,
+    ].whereType<String>().toList();
+    return errors.isEmpty ? null : errors.join('\n');
+  }
   Timer? _roomCodeTimer;
   bool _showRoomCode = false;
   int _roomCodeSeconds = 30;
@@ -215,29 +227,34 @@ class _MeetingScreenState extends State<MeetingScreen>
       await _room.connect(credentials.liveKitUrl, credentials.token);
       if (!mounted || _leavingMeeting) return;
       _connection.markConnected();
-      final mediaErrors = <String>[];
+      _microphoneError = null;
+      _cameraError = null;
       // A microphone permission/device failure must not prevent video startup.
       try {
         final startMic = _isMicEnabled && !_microphoneLocked;
-        await _room.localParticipant?.setMicrophoneEnabled(startMic);
+        final participant = _room.localParticipant;
+        if (participant != null) {
+          await _media.setMicrophoneEnabled(participant, startMic);
+        }
         _isMicEnabled = startMic;
       } catch (error) {
         _isMicEnabled = false;
-        mediaErrors.add('Mikrofon açılamadı: $error');
+        _microphoneError = mediaCaptureError(error, camera: false);
       }
       if (!mounted || _leavingMeeting) return;
       try {
-        await _room.localParticipant?.setCameraEnabled(_isCameraEnabled);
+        final participant = _room.localParticipant;
+        if (participant != null) {
+          await _media.setCameraEnabled(participant, _isCameraEnabled);
+        }
       } catch (error) {
         _isCameraEnabled = false;
-        mediaErrors.add('Kamera açılamadı: $error');
+        _cameraError = mediaCaptureError(error, camera: true);
       }
       if (mounted && !_leavingMeeting) {
         setState(() {
           _isConnecting = false;
-          _connectionError = mediaErrors.isEmpty
-              ? null
-              : mediaErrors.join('\n');
+          _connectionError = null;
         });
       }
     } catch (error) {
@@ -467,16 +484,21 @@ class _MeetingScreenState extends State<MeetingScreen>
           !_microphoneLocked) {
         final local = _room.localParticipant;
         if (local == null) return;
-        await local.setMicrophoneEnabled(true);
+        await _media.setMicrophoneEnabled(local, true);
         if (_microphoneLocked) {
           await local.setMicrophoneEnabled(false);
           return;
         }
-        if (mounted) setState(() => _isMicEnabled = true);
+        if (mounted) {
+          setState(() {
+            _isMicEnabled = true;
+            _microphoneError = null;
+          });
+        }
       }
     } catch (error) {
       if (mounted) {
-        setState(() => _connectionError = 'Mikrofon açılamadı: $error');
+        setState(() => _microphoneError = mediaCaptureError(error, camera: false));
       }
     } finally {
       _unmuteDialogOpen = false;
@@ -568,15 +590,20 @@ class _MeetingScreenState extends State<MeetingScreen>
     try {
       final participant = _room.localParticipant;
       if (participant == null) return;
-      await participant.setMicrophoneEnabled(enabled);
+      await _media.setMicrophoneEnabled(participant, enabled);
       if (enabled && _microphoneLocked) {
         await participant.setMicrophoneEnabled(false);
         return;
       }
-      if (mounted) setState(() => _isMicEnabled = enabled);
+      if (mounted) {
+        setState(() {
+          _isMicEnabled = enabled;
+          _microphoneError = null;
+        });
+      }
     } catch (error) {
       if (mounted) {
-        setState(() => _connectionError = 'Mikrofon değiştirilemedi: $error');
+        setState(() => _microphoneError = mediaCaptureError(error, camera: false));
       }
     }
   }
@@ -586,11 +613,16 @@ class _MeetingScreenState extends State<MeetingScreen>
     try {
       final participant = _room.localParticipant;
       if (participant == null) return;
-      await participant.setCameraEnabled(enabled);
-      if (mounted) setState(() => _isCameraEnabled = enabled);
+      await _media.setCameraEnabled(participant, enabled);
+      if (mounted) {
+        setState(() {
+          _isCameraEnabled = enabled;
+          _cameraError = null;
+        });
+      }
     } catch (error) {
       if (mounted) {
-        setState(() => _connectionError = 'Kamera değiştirilemedi: $error');
+        setState(() => _cameraError = mediaCaptureError(error, camera: true));
       }
     }
   }
@@ -1107,7 +1139,7 @@ class _MeetingScreenState extends State<MeetingScreen>
                   ),
                 ),
               ),
-            if (_connectionError != null && _connection.message == null)
+            if (_meetingError != null && _connection.message == null)
               Positioned(
                 top: 16,
                 left: 24,
@@ -1118,7 +1150,7 @@ class _MeetingScreenState extends State<MeetingScreen>
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
-                      _connectionError!,
+                      _meetingError!,
                       style: const TextStyle(color: Colors.white),
                       textAlign: TextAlign.center,
                     ),
