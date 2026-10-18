@@ -27,6 +27,9 @@ class MainActivity : FlutterActivity() {
                     }
                     try {
                         val intent = Intent(this, ScreenShareService::class.java)
+                            .putExtra("channelName", call.argument<String>("channelName"))
+                            .putExtra("title", call.argument<String>("title"))
+                            .putExtra("body", call.argument<String>("body"))
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
                         else startService(intent)
                     } catch (error: Exception) {

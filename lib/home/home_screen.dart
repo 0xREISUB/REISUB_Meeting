@@ -26,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: PopupMenuButton<int>(
-              tooltip: 'Profile Menu',
+              tooltip: l10n.profileMenu,
               offset: const Offset(0, 50),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

@@ -18,23 +18,21 @@
   "madeWithFlutter": "Flutter ile ❤️ kullanılarak geliştirildi.",
   "language": "Dil",
   "profile": "Profil",
+  "profileMenu": "Profil menüsü",
   "settings": "Ayarlar",
   "logout": "Çıkış Yap",
   "general": "Genel",
   "meeting": "Toplantılar",
   "application": "Uygulama",
   "deviceTest": "Cihaz Testi",
-
   "darkTheme": "Koyu Tema",
   "notifications": "Bildirimler",
   "comingSoon": "Yakında",
-
   "startWithMic": "Mikrofon açık başlat",
   "startWithCamera": "Kamera açık başlat",
   "mirrorCamera": "Kamerayı aynala",
   "noiseSuppression": "Gürültü engelleme",
   "highQualityVideo": "HD Video",
-
   "testMicrophone": "Mikrofonu Test Et",
   "testCamera": "Kamerayı Test Et",
   "testSpeaker": "Hoparlörü Test Et",
@@ -45,7 +43,6 @@
   "serverSettingsHint": "Örnek: meeting.example.com",
   "version": "Sürüm",
   "checkForUpdates": "Güncellemeleri Kontrol Et",
-
   "chatTitle": "Sohbet",
   "chatMessage1": "Selam, sesim geliyor mu?",
   "chatMessage2": "Evet, net geliyor. Görüntü de gayet iyi.",
@@ -58,7 +55,6 @@
   "screenCountLabel": "{count} ekran",
   "userName": "Kullanıcı {number}",
   "liveBadge": "CANLI",
-
   "welcome": "Hoş Geldiniz",
   "nickname": "Kullanıcı Adı (Nick)",
   "password": "Şifre",
@@ -69,5 +65,241 @@
   "register": "Kayıt Ol",
   "passwordsNotMatch": "Şifreler eşleşmiyor!",
   "registerSuccess": "Kayıt başarılı! Giriş yapabilirsiniz.",
-  "connectionError": "Bağlantı hatası!"
+  "connectionError": "Bağlantı hatası!",
+  "connecting": "Bağlanıyor...",
+  "moreOptions": "Daha fazla",
+  "close": "Kapat",
+  "cancel": "Vazgeç",
+  "send": "Gönder",
+  "notNow": "Şimdi değil",
+  "you": "Sen",
+  "secondsRemaining": "{seconds} sn",
+  "@secondsRemaining": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "meetingSettings": "Toplantı ayarları",
+  "microphoneSelectionTest": "Mikrofon seçimi ve testi",
+  "cameraSelectionTest": "Kamera seçimi ve testi",
+  "microphoneSelectionHint": "Mikrofon seçimi ve canlı ses seviyesi",
+  "cameraSelectionHint": "Kamera seçimi ve canlı önizleme",
+  "audioInputHint": "Giriş aygıtı ve canlı ses seviyesi",
+  "cameraInputHint": "Kamera aygıtı ve canlı önizleme",
+  "allowScreenSharing": "Başkalarının ekran paylaşmasına izin ver",
+  "oneScreenShareHint": "Aynı anda yalnızca bir kişi ekran paylaşabilir.",
+  "microphoneManagement": "Mikrofon yönetimi",
+  "unlockMicrophone": "Mikrofon kilidini kaldır",
+  "lockMicrophone": "Mikrofonu kapat ve kilitle",
+  "unlockAndRequestMicrophone": "Kilidi kaldır ve açmasını iste",
+  "requestMicrophone": "Mikrofonu açmasını iste",
+  "unmuteRequestTitle": "Mikrofon açma isteği",
+  "unmuteRequestBody": "Yönetici mikrofonunuzu açmanızı istiyor. Açmak istiyor musunuz?",
+  "unmuteMicrophone": "Mikrofonu aç",
+  "microphoneLocked": "Mikrofonunuz yönetici tarafından kilitlendi.",
+  "leaveMeeting": "Toplantıdan çık",
+  "hostLeaveBody": "Toplantıyı bitirirseniz tüm katılımcılar çıkarılır ve oda kapanır. Yalnızca ayrılırsanız toplantı devam eder.",
+  "leave": "Ayrıl",
+  "endMeeting": "Toplantıyı bitir",
+  "meetingEndedByYou": "Toplantıyı bitirdiniz.",
+  "selectScreenToShare": "Paylaşılacak ekranı seç",
+  "screen": "Ekran",
+  "window": "Pencere",
+  "share": "Paylaş",
+  "screenShareLabel": "Ekran paylaşımı",
+  "stopScreenSharing": "Paylaşımı durdur",
+  "shareScreen": "Ekranı paylaş",
+  "screenSharingDisabled": "Ekran paylaşımı oda sahibi tarafından kapatıldı",
+  "exitFullscreen": "Tam ekrandan çık",
+  "fullscreenMainVideo": "Ana yayını tam ekran göster",
+  "previousPage": "Önceki sayfa",
+  "nextPage": "Sonraki sayfa",
+  "resetZoom": "Yakınlaştırmayı sıfırla",
+  "rejoiningMeeting": "Toplantıya tekrar katılınıyor…",
+  "rejoinMeeting": "Tekrar katıl",
+  "noMessagesYet": "Henüz mesaj yok",
+  "microphonePrivacySettings": "Mikrofon gizlilik ayarları",
+  "cameraPrivacySettings": "Kamera gizlilik ayarları",
+  "windowsPrivacyUnavailable": "Windows ayarları açılamadı. Ayarlar > Gizlilik ve güvenlik bölümünü açın.",
+  "missingMeetingDetails": "Toplantı bilgileri bulunamadı",
+  "mediaRequiresHttps": "Telefon tarayıcısında kamera ve mikrofon için HTTPS gerekir. Uygulamayı güvenli bir HTTPS adresinden açın.",
+  "joiningMeeting": "Toplantıya bağlanılıyor…",
+  "reconnectingMeeting": "Bağlantı kesildi. Yeniden bağlanılıyor…",
+  "duplicateSession": "Bu oturum başka bir cihazda açıldığı için bağlantı kesildi.",
+  "meetingClosedByServer": "Toplantı sunucu tarafından kapatıldı.",
+  "removedFromMeeting": "Sunucu tarafından toplantıdan çıkarıldınız.",
+  "reconnectFailed": "Bağlantı geri kurulamadı. Tekrar katılmayı deneyin.",
+  "meetingSessionLost": "Sunucu oturumu kaybetti. Toplantıya tekrar katılın.",
+  "meetingDisconnected": "Toplantı bağlantısı kesildi. Şu anda odaya bağlı değilsiniz.",
+  "poorMediaConnection": "Medya bağlantısı zayıf. Görüntü ve ses kesilebilir.",
+  "subscriptionFailed": "Katılımcının medya akışı alınamadı ({reason}).",
+  "@subscriptionFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingJoinFailed": "Toplantıya bağlanılamadı: {error}",
+  "@meetingJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "microphoneDisableFailed": "Mikrofon kapatılamadı: {error}",
+  "@microphoneDisableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "screenShareStartFailed": "Ekran paylaşımı başlatılamadı.",
+  "invalidMessageData": "Sunucudan geçersiz mesaj verisi alındı",
+  "invalidServerResponse": "Sunucudan geçersiz yanıt alındı",
+  "invalidRoomData": "Sunucudan geçersiz oda bilgisi alındı",
+  "missingServerSession": "Oturum veya sunucu ayarı bulunamadı",
+  "meetingServerUnavailable": "Toplantı sunucusuna bağlanılamadı",
+  "serverSettingsReadFailed": "Kayıtlı sunucu ayarları okunamadı.",
+  "serverSettingsSaveFailed": "Sunucu ayarları kaydedilemedi. Tekrar deneyin.",
+  "invalidServerAddressPort": "Lütfen geçerli bir sunucu IP/host ve port girin.",
+  "serverSettingsSaved": "Sunucu ayarları kaydedildi: {url}",
+  "@serverSettingsSaved": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraName": "Kamera",
+  "microphoneName": "Mikrofon",
+  "captureVideo": "görüntü",
+  "captureAudio": "ses",
+  "deviceTestTitle": "{device} testi ve cihaz seçimi",
+  "@deviceTestTitle": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingDeviceTestHint": "Bu panel açıkken toplantıdaki {device} yayının duraklatılır. Test yalnızca bu cihazda çalışır. Paneli kapatınca seçtiğin cihaz toplantıya uygulanır; önceden kapalı olan yayın kapalı kalır.",
+  "@meetingDeviceTestHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "localDeviceTestHint": "Seçiminiz kaydedilir ve bir sonraki toplantıda kullanılır. Test yalnızca bu cihazda çalışır; sunucuya ses veya görüntü gönderilmez.",
+  "devicePreference": "{device} tercihi",
+  "@devicePreference": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "systemDefault": "Sistem varsayılanı",
+  "savedDeviceMissing": "Kayıtlı cihaz bağlı değil",
+  "deviceNumber": "{device} {number}",
+  "@deviceNumber": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "refreshDevices": "Cihazları yenile",
+  "microphoneLevelHint": "Konuşun; ses seviyesi çubuğunun hareket ettiğini kontrol edin.",
+  "microphoneLevelWaiting": "Mikrofon açık. Ses seviyesi bekleniyor; bazı sürücüler seviye bilgisi sağlamayabilir.",
+  "microphoneAudioDetected": "Mikrofondan ses alınıyor.",
+  "microphoneSilent": "Mikrofon açık, şu anda sessiz.",
+  "deviceOpening": "Cihaz açılıyor…",
+  "stopTest": "Testi durdur",
+  "startTest": "Testi başlat",
+  "devicePreferenceSaveFailed": "Cihaz tercihi kaydedilemedi. Tekrar deneyin.",
+  "windowsDevicePermissionHint": "Windows erişimi kapalıysa {device} erişimini ve masaüstü uygulamalarının erişimini açın. Sonra buraya dönüp testi yeniden başlatın.",
+  "@windowsDevicePermissionHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "windowsDevicePrivacyUnavailable": "Windows ayarları açılamadı. Ayarlar > Gizlilik ve güvenlik > {device} bölümünü açın.",
+  "@windowsDevicePrivacyUnavailable": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "openWindowsDevicePrivacy": "Windows {device} gizlilik ayarlarını aç",
+  "@openWindowsDevicePrivacy": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "captureFailed": "{device} açılamadı: {error}",
+  "@captureFailed": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "captureUnavailable": "{device} açılamadı; cihazdan {media} alınamadı. Cihazın bağlı olduğunu ve başka bir uygulama tarafından kullanılmadığını kontrol edin.",
+  "@captureUnavailable": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "media": {
+        "type": "String"
+      }
+    }
+  },
+  "windowsCaptureAccessHint": "Windows ayarlarında {device} erişimini ve masaüstü uygulamalarının erişimini açın.",
+  "@windowsCaptureAccessHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "appCaptureAccessHint": "Uygulamanın {device} iznini kontrol edin.",
+  "@appCaptureAccessHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "captureRetryHint": "Ardından {device} düğmesiyle tekrar deneyin.",
+  "@captureRetryHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "windowsAudioRestartRequired": "Windows ses bileşeni güncel değil. Uygulamayı yeniden derleyip tamamen kapatarak yeniden başlatın.",
+  "windowsMicrophoneMissing": "Windows varsayılan mikrofonu bulunamadı. Ses ayarlarından bir giriş aygıtı seçin.",
+  "englishLanguage": "İngilizce",
+  "turkishLanguage": "Türkçe",
+  "screenShareNotificationTitle": "Ekranınız paylaşılıyor",
+  "screenShareNotificationBody": "Paylaşımı durdurmak için toplantıya dönün."
 }

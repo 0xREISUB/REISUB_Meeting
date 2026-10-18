@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/app_localizations.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ MemberEntry selectMainMember(
     if (member.isScreenSharing) {
       return MemberEntry(
         id: member.id,
-        name: '${member.name} • Ekran paylaşımı',
+        name: member.name,
         identity: member.identity,
         isLocal: member.isLocal,
         isMicEnabled: member.isMicEnabled,
@@ -143,7 +144,9 @@ class MeetingParticipantTile extends StatelessWidget {
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      member.name,
+                      member.isScreenShare
+                          ? '${member.name} • ${AppLocalizations.of(context)!.screenShareLabel}'
+                          : member.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -282,14 +285,18 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
                         FilledButton.icon(
                           onPressed: widget.onStopScreenShare,
                           icon: const Icon(Icons.stop_rounded),
-                          label: const Text('Paylaşımı durdur'),
+                          label: Text(
+                            AppLocalizations.of(context)!.stopScreenSharing,
+                          ),
                         ),
                       if (isWide)
                         IconButton.filledTonal(
                           key: const ValueKey('main-fullscreen'),
                           tooltip: _fullscreen
-                              ? 'Tam ekrandan çık'
-                              : 'Ana yayını tam ekran göster',
+                              ? AppLocalizations.of(context)!.exitFullscreen
+                              : AppLocalizations.of(
+                                  context,
+                                )!.fullscreenMainVideo,
                           onPressed: () => setState(() {
                             _fullscreen = !_fullscreen;
                             _zoomed = false;
@@ -371,7 +378,7 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
               child: _page > 0
                   ? IconButton(
                       key: const ValueKey('meeting-previous-page'),
-                      tooltip: 'Önceki sayfa',
+                      tooltip: AppLocalizations.of(context)!.previousPage,
                       color: Colors.white,
                       icon: const Icon(Icons.chevron_left_rounded),
                       onPressed: () => _goToPage(_page - 1),
@@ -384,7 +391,7 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
               child: _page < pageCount - 1
                   ? IconButton(
                       key: const ValueKey('meeting-next-page'),
-                      tooltip: 'Sonraki sayfa',
+                      tooltip: AppLocalizations.of(context)!.nextPage,
                       color: Colors.white,
                       icon: const Icon(Icons.chevron_right_rounded),
                       onPressed: () => _goToPage(_page + 1),
@@ -457,7 +464,9 @@ class _MeetingMainVideoState extends State<MeetingMainVideo> {
     final tile = MeetingParticipantTile(
       member: widget.member,
       isMain: true,
-      placeholder: widget.connecting ? 'Bağlanıyor...' : null,
+      placeholder: widget.connecting
+          ? AppLocalizations.of(context)!.connecting
+          : null,
     );
     if (!widget.member.isScreenShare) return tile;
     return Stack(
@@ -480,7 +489,7 @@ class _MeetingMainVideoState extends State<MeetingMainVideo> {
               key: const ValueKey('reset-video-zoom'),
               onPressed: () => _transform.value = Matrix4.identity(),
               icon: const Icon(Icons.zoom_out_map_rounded),
-              label: const Text('Yakınlaştırmayı sıfırla'),
+              label: Text(AppLocalizations.of(context)!.resetZoom),
             ),
           ),
       ],

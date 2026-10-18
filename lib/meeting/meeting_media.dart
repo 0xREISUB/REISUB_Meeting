@@ -1,3 +1,5 @@
+import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
@@ -167,8 +169,17 @@ bool _isCaptureFailure(Object error) {
   ].any(message.contains);
 }
 
-String mediaCaptureError(Object error, {required bool camera}) {
-  final device = camera ? 'Kamera' : 'Mikrofon';
+String mediaCaptureError(
+  Object error, {
+  required bool camera,
+  required AppLocalizations l10n,
+}) {
+  final device = camera ? l10n.cameraName : l10n.microphoneName;
+  if (error is PlatformException &&
+      (error.code == 'WindowsAudioRestartRequired' ||
+          error.code == 'WindowsMicrophoneNotFound')) {
+    return localizeError(error, l10n);
+  }
   final message = error.toString().toLowerCase();
   final captureFailure =
       error is TrackCreateException ||
@@ -179,10 +190,13 @@ String mediaCaptureError(Object error, {required bool camera}) {
         'denied',
         '0x80070005',
       ].any(message.contains);
-  if (!captureFailure) return '$device açılamadı: $error';
+  if (!captureFailure) {
+    return l10n.captureFailed(device, localizeError(error, l10n));
+  }
   final windows = !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
-  return '$device açılamadı; cihazdan ${camera ? 'görüntü' : 'ses'} alınamadı. '
-      'Cihazın bağlı olduğunu ve başka bir uygulama tarafından kullanılmadığını kontrol edin. '
-      '${windows ? 'Windows ayarlarında $device erişimini ve masaüstü uygulamalarının erişimini açın.' : 'Uygulamanın ${camera ? 'kamera' : 'mikrofon'} iznini kontrol edin.'} '
-      'Ardından ${camera ? 'kamera' : 'mikrofon'} düğmesiyle tekrar deneyin.';
+  final accessHint = windows
+      ? l10n.windowsCaptureAccessHint(device)
+      : l10n.appCaptureAccessHint(device.toLowerCase());
+  return '${l10n.captureUnavailable(device, camera ? l10n.captureVideo : l10n.captureAudio)} '
+      '$accessHint ${l10n.captureRetryHint(device.toLowerCase())}';
 }

@@ -18,7 +18,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Sunucu Ayarları'), findsOneWidget);
-    expect(find.text('Sunucu Adresi / IP'), findsOneWidget);
+    expect(find.text('Server Settings'), findsOneWidget);
+    expect(find.text('Server Address / IP'), findsOneWidget);
   });
 }

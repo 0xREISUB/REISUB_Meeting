@@ -18,37 +18,31 @@
   "madeWithFlutter": "Made with ❤️ using Flutter.",
   "language": "Language",
   "profile": "Profile",
+  "profileMenu": "Profile menu",
   "settings": "Settings",
-  "language": "Language",
-  "about": "About",
   "logout": "Log Out",
   "general": "General",
   "meeting": "Meetings",
   "application": "Application",
   "deviceTest": "Device Test",
-
   "darkTheme": "Dark Theme",
   "notifications": "Notifications",
   "comingSoon": "Coming Soon",
-
   "startWithMic": "Start with microphone on",
   "startWithCamera": "Start with camera on",
   "mirrorCamera": "Mirror camera",
   "noiseSuppression": "Noise suppression",
   "highQualityVideo": "HD Video",
-
   "testMicrophone": "Test Microphone",
   "testCamera": "Test Camera",
   "testSpeaker": "Test Speaker",
-    "serverSettings": "Server Settings",
+  "serverSettings": "Server Settings",
   "serverAddress": "Server Address / IP",
   "serverPort": "Server Port",
   "saveServerSettings": "Save Server Settings",
   "serverSettingsHint": "Example: meeting.example.com",
-
   "version": "Version",
   "checkForUpdates": "Check for Updates",
-
   "chatTitle": "Chat",
   "chatMessage1": "Hey, can you hear me?",
   "chatMessage2": "Yes, it's clear. The video looks great too.",
@@ -61,7 +55,6 @@
   "screenCountLabel": "{count} screens",
   "userName": "User {number}",
   "liveBadge": "LIVE",
-
   "welcome": "Welcome",
   "nickname": "Username (Nick)",
   "password": "Password",
@@ -72,5 +65,241 @@
   "register": "Register",
   "passwordsNotMatch": "Passwords don't match!",
   "registerSuccess": "Registration successful! You can log in now.",
-  "connectionError": "Connection error!"
+  "connectionError": "Connection error!",
+  "connecting": "Connecting...",
+  "moreOptions": "More options",
+  "close": "Close",
+  "cancel": "Cancel",
+  "send": "Send",
+  "notNow": "Not now",
+  "you": "You",
+  "secondsRemaining": "{seconds} s",
+  "@secondsRemaining": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "meetingSettings": "Meeting settings",
+  "microphoneSelectionTest": "Microphone selection and test",
+  "cameraSelectionTest": "Camera selection and test",
+  "microphoneSelectionHint": "Microphone selection and live audio level",
+  "cameraSelectionHint": "Camera selection and live preview",
+  "audioInputHint": "Input device and live audio level",
+  "cameraInputHint": "Camera device and live preview",
+  "allowScreenSharing": "Allow participants to share their screens",
+  "oneScreenShareHint": "Only one person can share their screen at a time.",
+  "microphoneManagement": "Microphone controls",
+  "unlockMicrophone": "Unlock microphone",
+  "lockMicrophone": "Mute and lock microphone",
+  "unlockAndRequestMicrophone": "Unlock and request unmute",
+  "requestMicrophone": "Request unmute",
+  "unmuteRequestTitle": "Unmute request",
+  "unmuteRequestBody": "The host is asking you to unmute your microphone. Would you like to unmute?",
+  "unmuteMicrophone": "Unmute microphone",
+  "microphoneLocked": "Your microphone has been locked by the host.",
+  "leaveMeeting": "Leave meeting",
+  "hostLeaveBody": "Ending the meeting disconnects everyone and closes the room. If you only leave, the meeting continues.",
+  "leave": "Leave",
+  "endMeeting": "End meeting",
+  "meetingEndedByYou": "You ended the meeting.",
+  "selectScreenToShare": "Choose a screen to share",
+  "screen": "Screen",
+  "window": "Window",
+  "share": "Share",
+  "screenShareLabel": "Screen sharing",
+  "stopScreenSharing": "Stop sharing",
+  "shareScreen": "Share screen",
+  "screenSharingDisabled": "Screen sharing has been disabled by the host",
+  "exitFullscreen": "Exit fullscreen",
+  "fullscreenMainVideo": "Show main video fullscreen",
+  "previousPage": "Previous page",
+  "nextPage": "Next page",
+  "resetZoom": "Reset zoom",
+  "rejoiningMeeting": "Rejoining the meeting…",
+  "rejoinMeeting": "Rejoin",
+  "noMessagesYet": "No messages yet",
+  "microphonePrivacySettings": "Microphone privacy settings",
+  "cameraPrivacySettings": "Camera privacy settings",
+  "windowsPrivacyUnavailable": "Could not open Windows settings. Open Settings > Privacy & security.",
+  "missingMeetingDetails": "Meeting details are missing",
+  "mediaRequiresHttps": "Camera and microphone access in a mobile browser requires HTTPS. Open the app using a secure HTTPS address.",
+  "joiningMeeting": "Connecting to the meeting…",
+  "reconnectingMeeting": "Connection lost. Reconnecting…",
+  "duplicateSession": "Disconnected because this session was opened on another device.",
+  "meetingClosedByServer": "The meeting was closed by the server.",
+  "removedFromMeeting": "You were removed from the meeting by the server.",
+  "reconnectFailed": "Could not restore the connection. Try rejoining.",
+  "meetingSessionLost": "The server lost the session. Please rejoin the meeting.",
+  "meetingDisconnected": "Disconnected from the meeting. You are no longer connected to the room.",
+  "poorMediaConnection": "The media connection is weak. Audio and video may cut out.",
+  "subscriptionFailed": "Could not receive a participant’s media stream ({reason}).",
+  "@subscriptionFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingJoinFailed": "Could not join the meeting: {error}",
+  "@meetingJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "microphoneDisableFailed": "Could not turn off the microphone: {error}",
+  "@microphoneDisableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "screenShareStartFailed": "Could not start screen sharing.",
+  "invalidMessageData": "The server returned invalid message data",
+  "invalidServerResponse": "The server returned an invalid response",
+  "invalidRoomData": "The server returned invalid room details",
+  "missingServerSession": "The session or server configuration is missing",
+  "meetingServerUnavailable": "Could not connect to the meeting server",
+  "serverSettingsReadFailed": "Could not read the saved server settings.",
+  "serverSettingsSaveFailed": "Could not save the server settings. Please try again.",
+  "invalidServerAddressPort": "Please enter a valid server address and port.",
+  "serverSettingsSaved": "Server settings saved: {url}",
+  "@serverSettingsSaved": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraName": "Camera",
+  "microphoneName": "Microphone",
+  "captureVideo": "video",
+  "captureAudio": "audio",
+  "deviceTestTitle": "{device} test and selection",
+  "@deviceTestTitle": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingDeviceTestHint": "Your meeting’s {device} is paused while this panel is open. The test runs only on this device. When you close the panel, your selection is applied to the meeting; a previously disabled device stays off.",
+  "@meetingDeviceTestHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "localDeviceTestHint": "Your selection is saved for your next meeting. The test runs only on this device; no audio or video is sent to the server.",
+  "devicePreference": "{device} preference",
+  "@devicePreference": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "systemDefault": "System default",
+  "savedDeviceMissing": "Saved device is disconnected",
+  "deviceNumber": "{device} {number}",
+  "@deviceNumber": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "refreshDevices": "Refresh devices",
+  "microphoneLevelHint": "Speak and check that the audio level bar moves.",
+  "microphoneLevelWaiting": "Microphone is on. Waiting for audio levels; some drivers may not provide level information.",
+  "microphoneAudioDetected": "Audio is being captured from the microphone.",
+  "microphoneSilent": "Microphone is on, currently silent.",
+  "deviceOpening": "Opening device…",
+  "stopTest": "Stop test",
+  "startTest": "Start test",
+  "devicePreferenceSaveFailed": "Could not save the device preference. Please try again.",
+  "windowsDevicePermissionHint": "If Windows access is disabled, allow {device} access and access for desktop apps. Then return here and restart the test.",
+  "@windowsDevicePermissionHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "windowsDevicePrivacyUnavailable": "Could not open Windows settings. Open Settings > Privacy & security > {device}.",
+  "@windowsDevicePrivacyUnavailable": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "openWindowsDevicePrivacy": "Open Windows {device} privacy settings",
+  "@openWindowsDevicePrivacy": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "captureFailed": "Could not open {device}: {error}",
+  "@captureFailed": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "captureUnavailable": "Could not open {device}; no {media} could be captured. Check that the device is connected and is not in use by another application.",
+  "@captureUnavailable": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "media": {
+        "type": "String"
+      }
+    }
+  },
+  "windowsCaptureAccessHint": "In Windows settings, enable {device} access and access for desktop apps.",
+  "@windowsCaptureAccessHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "appCaptureAccessHint": "Check the app’s {device} permission.",
+  "@appCaptureAccessHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "captureRetryHint": "Then try again using the {device} button.",
+  "@captureRetryHint": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "windowsAudioRestartRequired": "The Windows audio component is outdated. Rebuild the application, fully close it, and start it again.",
+  "windowsMicrophoneMissing": "The Windows default microphone could not be found. Select an input device in Sound settings.",
+  "englishLanguage": "English",
+  "turkishLanguage": "Turkish",
+  "screenShareNotificationTitle": "Your screen is being shared",
+  "screenShareNotificationBody": "Return to the meeting to stop sharing."
 }

@@ -28,8 +28,7 @@ class MicrophoneInput {
       throw PlatformException(
         code: 'WindowsAudioRestartRequired',
         message:
-            'Windows ses bileşeni güncel değil. Uygulamayı yeniden '
-            'derleyip tamamen kapatarak yeniden başlatın.',
+            'Rebuild the application and restart it to update the Windows audio component.',
       );
     }
   }

@@ -4,6 +4,7 @@ import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
+import 'package:v_meeting/widgets/language_menu_button.dart';
 
 class HostScreen extends StatefulWidget {
   const HostScreen({super.key, this.dio});
@@ -37,7 +38,9 @@ class _HostScreenState extends State<HostScreen> {
         _portController.text = uri.port.toString();
       }
     } catch (_) {
-      if (mounted) _showError('Kayıtlı sunucu ayarları okunamadı.');
+      if (mounted) {
+        _showError(AppLocalizations.of(context)!.serverSettingsReadFailed);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -91,7 +94,9 @@ class _HostScreenState extends State<HostScreen> {
         _showError(l10n.connectionError);
       }
     } catch (_) {
-      if (mounted) _showError('Sunucu ayarları kaydedilemedi. Tekrar deneyin.');
+      if (mounted) {
+        _showError(AppLocalizations.of(context)!.serverSettingsSaveFailed);
+      }
     } finally {
       if (mounted) {
         setState(() => _isConnecting = false);
@@ -117,6 +122,12 @@ class _HostScreenState extends State<HostScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: const [LanguageMenuButton(), SizedBox(width: 8)],
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),

@@ -1,3 +1,5 @@
+import 'package:v_meeting/l10n/app_localizations_tr.dart';
+import 'package:v_meeting/l10n/app_localizations_en.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
@@ -41,10 +43,13 @@ void main() {
       await emit(const RoomReconnectingEvent());
       expect(connection.phase, MeetingConnectionPhase.reconnecting);
       expect(connection.isConnected, isFalse);
-      expect(connection.message, contains('Yeniden bağlanılıyor'));
+      expect(
+        connection.message(AppLocalizationsTr()),
+        contains('Yeniden bağlanılıyor'),
+      );
       await emit(const RoomReconnectedEvent());
       expect(connection.isConnected, isTrue);
-      expect(connection.message, isNull);
+      expect(connection.message(AppLocalizationsTr()), isNull);
       await emit(const RoomResumingEvent());
       expect(connection.isConnected, isFalse);
     },
@@ -58,13 +63,16 @@ void main() {
         RoomDisconnectedEvent(reason: DisconnectReason.duplicateIdentity),
       );
       expect(connection.phase, MeetingConnectionPhase.disconnected);
-      expect(connection.message, contains('başka bir cihazda'));
+      expect(
+        connection.message(AppLocalizationsTr()),
+        contains('başka bir cihazda'),
+      );
       connection.startConnecting();
       expect(connection.disconnectReason, isNull);
       expect(connection.phase, MeetingConnectionPhase.connecting);
       await emit(RoomConnectedEvent(room: room, metadata: null));
       expect(connection.isConnected, isTrue);
-      expect(connection.message, isNull);
+      expect(connection.message(AppLocalizationsTr()), isNull);
     },
   );
 
@@ -77,11 +85,17 @@ void main() {
         ),
       );
       expect(connection.isConnected, isFalse);
-      expect(connection.message, contains('geri kurulamadı'));
+      expect(
+        connection.message(AppLocalizationsTr()),
+        contains('geri kurulamadı'),
+      );
       connection.startConnecting();
       connection.fail('Oda bulunamadı');
       expect(connection.isConnected, isFalse);
-      expect(connection.message, contains('Oda bulunamadı'));
+      expect(
+        connection.message(AppLocalizationsTr()),
+        contains('Oda bulunamadı'),
+      );
     },
   );
 
@@ -95,9 +109,31 @@ void main() {
         ),
       );
       expect(connection.isConnected, isTrue);
-      expect(connection.message, contains('medya akışı alınamadı'));
+      expect(
+        connection.message(AppLocalizationsTr()),
+        contains('medya akışı alınamadı'),
+      );
     },
   );
+  test(
+    'an existing connection warning changes language without reconnecting',
+    () async {
+      connection.markConnected();
+      await emit(
+        RoomDisconnectedEvent(reason: DisconnectReason.duplicateIdentity),
+      );
+      expect(
+        connection.message(AppLocalizationsEn()),
+        contains('another device'),
+      );
+      expect(
+        connection.message(AppLocalizationsTr()),
+        contains('başka bir cihazda'),
+      );
+      expect(connection.phase, MeetingConnectionPhase.disconnected);
+    },
+  );
+
   test(
     'closed rooms and removed participants are not offered a rejoin',
     () async {

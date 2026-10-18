@@ -22,7 +22,7 @@ class ScreenShareService : Service() {
             val manager = getSystemService(NotificationManager::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 manager.createNotificationChannel(NotificationChannel(
-                    CHANNEL, "Ekran paylaşımı", NotificationManager.IMPORTANCE_LOW
+                    CHANNEL, intent?.getStringExtra("channelName") ?: "Screen sharing", NotificationManager.IMPORTANCE_LOW
                 ))
             }
             val launch = PendingIntent.getActivity(this, 0,
@@ -31,8 +31,8 @@ class ScreenShareService : Service() {
             val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(this, CHANNEL)
                 else @Suppress("DEPRECATION") Notification.Builder(this)
             val notification = builder.setSmallIcon(android.R.drawable.ic_menu_camera)
-                .setContentTitle("Ekranınız paylaşılıyor")
-                .setContentText("Paylaşımı durdurmak için toplantıya dönün.")
+                .setContentTitle(intent?.getStringExtra("title") ?: "Your screen is being shared")
+                .setContentText(intent?.getStringExtra("body") ?: "Return to the meeting to stop sharing.")
                 .setContentIntent(launch).setOngoing(true).build()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(4821, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)

@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -106,7 +107,10 @@ class _JoinScreenState extends State<JoinScreen> {
     } on MeetingApiException catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(localizeError(error, AppLocalizations.of(context)!)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -258,7 +262,7 @@ class _JoinScreenState extends State<JoinScreen> {
                             onPressed: _isSubmitting ? null : _joinMeeting,
                             child: Text(
                               _isSubmitting
-                                  ? 'Bağlanıyor...'
+                                  ? l10n.connecting
                                   : l10n.joinMeeting,
                               style: const TextStyle(
                                 fontSize: 18,

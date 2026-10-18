@@ -43,7 +43,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kayıtlı sunucu ayarları okunamadı.')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.serverSettingsReadFailed,
+            ),
+          ),
         );
       }
     } finally {
@@ -69,8 +73,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (newUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen geçerli bir sunucu IP/host ve port girin.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.invalidServerAddressPort),
         ),
       );
       return;
@@ -114,7 +118,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sunucu ayarları kaydedildi: $newUrl')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.serverSettingsSaved(newUrl),
+          ),
+        ),
       );
     } on DioException catch (_) {
       if (mounted) {
@@ -135,8 +143,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sunucu ayarları kaydedilemedi. Tekrar deneyin.'),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.serverSettingsSaveFailed,
+            ),
           ),
         );
       }
@@ -302,7 +312,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.mic_external_on),
             title: Text(l10n.testMicrophone),
-            subtitle: const Text('Mikrofon seçimi ve canlı ses seviyesi'),
+            subtitle: Text(
+              AppLocalizations.of(context)!.microphoneSelectionHint,
+            ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -314,7 +326,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.videocam),
             title: Text(l10n.testCamera),
-            subtitle: const Text('Kamera seçimi ve canlı önizleme'),
+            subtitle: Text(AppLocalizations.of(context)!.cameraSelectionHint),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(

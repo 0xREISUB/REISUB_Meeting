@@ -13,10 +13,7 @@ class LanguageScreen extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.language),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.language), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -24,7 +21,7 @@ class LanguageScreen extends ConsumerWidget {
             _LanguageCard(
               flag: "🇹🇷",
               title: "Türkçe",
-              subtitle: "Turkish",
+              subtitle: l10n.turkishLanguage,
               selected: currentLocale.languageCode == "tr",
               colorScheme: colorScheme,
               onTap: () {
@@ -37,7 +34,7 @@ class LanguageScreen extends ConsumerWidget {
             _LanguageCard(
               flag: "🇺🇸",
               title: "English",
-              subtitle: "English",
+              subtitle: l10n.englishLanguage,
               selected: currentLocale.languageCode == "en",
               colorScheme: colorScheme,
               onTap: () {
@@ -69,57 +66,48 @@ class _LanguageCard extends StatelessWidget {
   });
 
   @override
-@override
-Widget build(BuildContext context) {
-  return Material(
-    color: Colors.transparent,
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      decoration: BoxDecoration(
-        color: selected
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
           color: selected
-              ? colorScheme.primary
-              : Colors.transparent,
-          width: 2,
-        ),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 8,
-        ),
-        leading: Text(
-          flag,
-          style: const TextStyle(fontSize: 34),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 17,
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? colorScheme.primary : Colors.transparent,
+            width: 2,
           ),
         ),
-        subtitle: Text(subtitle),
-        trailing: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: selected
-              ? Icon(
-                  Icons.check_circle,
-                  key: const ValueKey(true),
-                  color: colorScheme.primary,
-                )
-              : const SizedBox(
-                  width: 28,
-                  key: ValueKey(false),
-                ),
+        child: Material(
+          color: Colors.transparent,
+          child: ListTile(
+            onTap: onTap,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
+            leading: Text(flag, style: const TextStyle(fontSize: 34)),
+            title: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+            subtitle: Text(subtitle),
+            trailing: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: selected
+                  ? Icon(
+                      Icons.check_circle,
+                      key: const ValueKey(true),
+                      color: colorScheme.primary,
+                    )
+                  : const SizedBox(width: 28, key: ValueKey(false)),
+            ),
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

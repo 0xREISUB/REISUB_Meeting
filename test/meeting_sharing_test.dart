@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/app_localizations.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -34,6 +35,9 @@ void main() {
     final opened = <bool>[];
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('tr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: MeetingSettingsDialog(
             onDeviceTest: (camera) async => opened.add(camera),
@@ -67,6 +71,9 @@ void main() {
       await sharing.refresh();
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: MeetingSettingsDialog(sharing: sharing)),
         ),
       );

@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:dio/dio.dart';
 import 'package:v_meeting/auth/server_config.dart';
 
@@ -96,7 +97,7 @@ class MeetingApi {
       );
       return MeetingState.fromJson(response.data!);
     } on DioException catch (error) {
-      throw MeetingApiException(_errorMessage(error));
+      throw _errorMessage(error);
     }
   }
 
@@ -126,7 +127,7 @@ class MeetingApi {
       );
       return MeetingState.fromJson(response.data!);
     } on DioException catch (error) {
-      throw MeetingApiException(_errorMessage(error));
+      throw _errorMessage(error);
     }
   }
 
@@ -158,7 +159,7 @@ class MeetingApi {
         options: await _authorizedOptions(),
       );
     } on DioException catch (error) {
-      throw MeetingApiException(_errorMessage(error));
+      throw _errorMessage(error);
     }
   }
 
@@ -174,11 +175,11 @@ class MeetingApi {
           )
           .toList();
     } on DioException catch (error) {
-      throw MeetingApiException(_errorMessage(error));
+      throw _errorMessage(error);
     } on TypeError {
-      throw const MeetingApiException('Sunucudan geçersiz mesaj verisi alındı');
+      throw const MeetingApiException.localized(AppError.invalidMessageData);
     } on FormatException {
-      throw const MeetingApiException('Sunucudan geçersiz mesaj verisi alındı');
+      throw const MeetingApiException.localized(AppError.invalidMessageData);
     }
   }
 
@@ -194,15 +195,17 @@ class MeetingApi {
       );
       final responseData = response.data;
       if (responseData == null) {
-        throw const MeetingApiException('Sunucudan geçersiz yanıt alındı');
+        throw const MeetingApiException.localized(
+          AppError.invalidServerResponse,
+        );
       }
       return MeetingChatMessage.fromJson(responseData);
     } on DioException catch (error) {
-      throw MeetingApiException(_errorMessage(error));
+      throw _errorMessage(error);
     } on TypeError {
-      throw const MeetingApiException('Sunucudan geçersiz mesaj verisi alındı');
+      throw const MeetingApiException.localized(AppError.invalidMessageData);
     } on FormatException {
-      throw const MeetingApiException('Sunucudan geçersiz mesaj verisi alındı');
+      throw const MeetingApiException.localized(AppError.invalidMessageData);
     }
   }
 
@@ -210,7 +213,7 @@ class MeetingApi {
     final serverUrl = await ServerConfig.readUrl();
     final authToken = await ServerConfig.readToken();
     if (serverUrl == null || authToken == null) {
-      throw const MeetingApiException('Oturum veya sunucu ayarı bulunamadı');
+      throw const MeetingApiException.localized(AppError.missingServerSession);
     }
     return serverUrl;
   }
@@ -218,17 +221,19 @@ class MeetingApi {
   Future<Options> _authorizedOptions() async {
     final authToken = await ServerConfig.readToken();
     if (authToken == null) {
-      throw const MeetingApiException('Oturum veya sunucu ayarı bulunamadı');
+      throw const MeetingApiException.localized(AppError.missingServerSession);
     }
     return Options(headers: {'Authorization': 'Bearer $authToken'});
   }
 
-  String _errorMessage(DioException error) {
+  MeetingApiException _errorMessage(DioException error) {
     final responseData = error.response?.data;
     final message = responseData is Map<String, dynamic>
         ? responseData['error'] as String?
         : null;
-    return message ?? 'Toplantı sunucusuna bağlanılamadı';
+    return message == null
+        ? const MeetingApiException.localized(AppError.meetingServerUnavailable)
+        : MeetingApiException(message);
   }
 
   Future<RoomCredentials> _requestRoom(
@@ -238,7 +243,7 @@ class MeetingApi {
     final serverUrl = await ServerConfig.readUrl();
     final authToken = await ServerConfig.readToken();
     if (serverUrl == null || authToken == null) {
-      throw const MeetingApiException('Oturum veya sunucu ayarı bulunamadı');
+      throw const MeetingApiException.localized(AppError.missingServerSession);
     }
 
     try {
@@ -249,7 +254,9 @@ class MeetingApi {
       );
       final responseData = response.data;
       if (responseData == null) {
-        throw const MeetingApiException('Sunucudan geçersiz yanıt alındı');
+        throw const MeetingApiException.localized(
+          AppError.invalidServerResponse,
+        );
       }
       return RoomCredentials.fromJson(responseData);
     } on DioException catch (error) {
@@ -257,18 +264,18 @@ class MeetingApi {
       final message = responseData is Map<String, dynamic>
           ? responseData['error'] as String?
           : null;
-      throw MeetingApiException(message ?? 'Toplantı sunucusuna bağlanılamadı');
+      throw message == null
+          ? const MeetingApiException.localized(
+              AppError.meetingServerUnavailable,
+            )
+          : MeetingApiException(message);
     } on TypeError {
-      throw const MeetingApiException('Sunucudan geçersiz oda bilgisi alındı');
+      throw const MeetingApiException.localized(AppError.invalidRoomData);
     }
   }
 }
 
-class MeetingApiException implements Exception {
-  final String message;
-
-  const MeetingApiException(this.message);
-
-  @override
-  String toString() => message;
+class MeetingApiException extends AppException {
+  const MeetingApiException(super.message);
+  const MeetingApiException.localized(super.code) : super.localized();
 }

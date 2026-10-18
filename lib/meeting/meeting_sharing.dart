@@ -1,3 +1,5 @@
+import 'package:v_meeting/l10n/localized_error.dart';
+import 'package:v_meeting/l10n/app_localizations.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,7 +11,7 @@ class MeetingSharing extends ChangeNotifier {
   final String roomId;
   final MeetingApi api;
   MeetingState state = const MeetingState();
-  String? error;
+  Object? error;
   bool loaded = false;
   bool updating = false;
   bool _refreshing = false;
@@ -39,7 +41,7 @@ class MeetingSharing extends ChangeNotifier {
       if (!updating && revision == _revision) _accept(value);
     } catch (e) {
       if (!_disposed) {
-        error = e.toString();
+        error = e;
         notifyListeners();
       }
     } finally {
@@ -94,7 +96,7 @@ class MeetingSettingsDialog extends StatelessWidget {
   Widget _dialog(BuildContext context) {
     final sharing = this.sharing;
     return AlertDialog(
-      title: const Text('Toplantı ayarları'),
+      title: Text(AppLocalizations.of(context)!.meetingSettings),
       content: SizedBox(
         width: 420,
         child: SingleChildScrollView(
@@ -104,16 +106,18 @@ class MeetingSettingsDialog extends StatelessWidget {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.mic_rounded),
-                title: const Text('Mikrofon seçimi ve testi'),
-                subtitle: const Text('Giriş aygıtı ve canlı ses seviyesi'),
+                title: Text(
+                  AppLocalizations.of(context)!.microphoneSelectionTest,
+                ),
+                subtitle: Text(AppLocalizations.of(context)!.audioInputHint),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: onDeviceTest == null ? null : () => onDeviceTest!(false),
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.videocam_rounded),
-                title: const Text('Kamera seçimi ve testi'),
-                subtitle: const Text('Kamera aygıtı ve canlı önizleme'),
+                title: Text(AppLocalizations.of(context)!.cameraSelectionTest),
+                subtitle: Text(AppLocalizations.of(context)!.cameraInputHint),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: onDeviceTest == null ? null : () => onDeviceTest!(true),
               ),
@@ -121,9 +125,9 @@ class MeetingSettingsDialog extends StatelessWidget {
                 const Divider(),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Başkalarının ekran paylaşmasına izin ver'),
-                  subtitle: const Text(
-                    'Aynı anda yalnızca bir kişi ekran paylaşabilir.',
+                  title: Text(AppLocalizations.of(context)!.allowScreenSharing),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!.oneScreenShareHint,
                   ),
                   value: sharing.state.allowParticipantScreenShare,
                   onChanged: !sharing.loaded || sharing.updating
@@ -134,7 +138,14 @@ class MeetingSettingsDialog extends StatelessWidget {
                           } catch (error) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(error.toString())),
+                                SnackBar(
+                                  content: Text(
+                                    localizeError(
+                                      error,
+                                      AppLocalizations.of(context)!,
+                                    ),
+                                  ),
+                                ),
                               );
                             }
                           }
@@ -142,7 +153,10 @@ class MeetingSettingsDialog extends StatelessWidget {
                 ),
                 if (sharing.error != null)
                   Text(
-                    sharing.error!,
+                    localizeError(
+                      sharing.error!,
+                      AppLocalizations.of(context)!,
+                    ),
                     style: const TextStyle(color: Colors.redAccent),
                   ),
               ],
@@ -153,7 +167,7 @@ class MeetingSettingsDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Kapat'),
+          child: Text(AppLocalizations.of(context)!.close),
         ),
       ],
     );

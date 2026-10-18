@@ -5,6 +5,7 @@ import 'package:v_meeting/home/home_screen.dart'; // Giriş başarılı olunca y
 import 'package:dio/dio.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
+import 'package:v_meeting/widgets/language_menu_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,16 +19,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   void _handleLogin() async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     try {
       final serverUrl = await ServerConfig.readUrl();
       if (serverUrl == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n?.connectionError ?? 'Bağlantı hatası!'),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.connectionError)));
         }
         return;
       }
@@ -59,9 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } on DioException catch (e) {
-      final errorMessage =
-          e.response?.data['error'] ??
-          (l10n?.connectionError ?? 'Bağlantı hatası!');
+      final errorMessage = e.response?.data['error'] ?? (l10n.connectionError);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
@@ -71,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.connectionError ?? 'Bağlantı hatası!'),
+            content: Text(l10n.connectionError),
             backgroundColor: Colors.red,
           ),
         );
@@ -84,6 +81,12 @@ class _LoginScreenState extends State<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: const [LanguageMenuButton(), SizedBox(width: 8)],
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),

@@ -1,3 +1,5 @@
+import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -28,7 +30,10 @@ class MeetingConnection extends ChangeNotifier {
         notifyListeners();
       })
       ..on<TrackSubscriptionExceptionEvent>((event) {
-        problem = 'Katılımcının medya akışı alınamadı (${event.reason.name}).';
+        problem = AppException.localized(
+          AppError.subscriptionFailed,
+          details: event.reason.name,
+        );
         notifyListeners();
       })
       ..on<TrackSubscribedEvent>((_) {
@@ -46,7 +51,7 @@ class MeetingConnection extends ChangeNotifier {
   MeetingConnectionPhase phase = MeetingConnectionPhase.connecting;
   DisconnectReason? disconnectReason;
   ConnectionQuality quality = ConnectionQuality.unknown;
-  String? problem;
+  Object? problem;
 
   bool get isConnected => phase == MeetingConnectionPhase.connected;
   bool get canRejoin =>
@@ -54,33 +59,30 @@ class MeetingConnection extends ChangeNotifier {
       disconnectReason != DisconnectReason.roomClosed &&
       disconnectReason != DisconnectReason.participantRemoved;
 
-  String? get message {
+  String? message(AppLocalizations l10n) {
     switch (phase) {
       case MeetingConnectionPhase.connecting:
-        return 'Toplantıya bağlanılıyor…';
+        return l10n.joiningMeeting;
       case MeetingConnectionPhase.reconnecting:
-        return 'Bağlantı kesildi. Yeniden bağlanılıyor…';
+        return l10n.reconnectingMeeting;
       case MeetingConnectionPhase.disconnected:
         return switch (disconnectReason) {
-          DisconnectReason.duplicateIdentity =>
-            'Bu oturum başka bir cihazda açıldığı için bağlantı kesildi.',
-          DisconnectReason.roomDeleted || DisconnectReason.roomClosed =>
-            'Toplantı sunucu tarafından kapatıldı.',
-          DisconnectReason.participantRemoved =>
-            'Sunucu tarafından toplantıdan çıkarıldınız.',
-          DisconnectReason.reconnectAttemptsExceeded =>
-            'Bağlantı geri kurulamadı. Tekrar katılmayı deneyin.',
-          DisconnectReason.stateMismatch =>
-            'Sunucu oturumu kaybetti. Toplantıya tekrar katılın.',
+          DisconnectReason.duplicateIdentity => l10n.duplicateSession,
+          DisconnectReason.roomDeleted ||
+          DisconnectReason.roomClosed => l10n.meetingClosedByServer,
+          DisconnectReason.participantRemoved => l10n.removedFromMeeting,
+          DisconnectReason.reconnectAttemptsExceeded => l10n.reconnectFailed,
+          DisconnectReason.stateMismatch => l10n.meetingSessionLost,
           _ =>
-            problem ??
-                'Toplantı bağlantısı kesildi. Şu anda odaya bağlı değilsiniz.',
+            problem == null
+                ? l10n.meetingDisconnected
+                : localizeError(problem!, l10n),
         };
       case MeetingConnectionPhase.connected:
-        if (problem != null) return problem;
+        if (problem != null) return localizeError(problem!, l10n);
         if (quality == ConnectionQuality.poor ||
             quality == ConnectionQuality.lost) {
-          return 'Medya bağlantısı zayıf. Görüntü ve ses kesilebilir.';
+          return l10n.poorMediaConnection;
         }
         return null;
     }
@@ -105,7 +107,10 @@ class MeetingConnection extends ChangeNotifier {
   void fail(Object error) {
     phase = MeetingConnectionPhase.disconnected;
     disconnectReason = null;
-    problem = 'Toplantıya bağlanılamadı: $error';
+    problem = AppException.localized(
+      AppError.meetingJoinFailed,
+      details: error,
+    );
     notifyListeners();
   }
 

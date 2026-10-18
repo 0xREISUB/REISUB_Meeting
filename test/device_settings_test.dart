@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/app_localizations.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -252,7 +253,12 @@ void main() {
           return null;
         });
     await tester.pumpWidget(
-      const MaterialApp(home: DeviceTestScreen(camera: false)),
+      MaterialApp(
+        locale: const Locale('tr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: DeviceTestScreen(camera: false),
+      ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>));
@@ -283,6 +289,9 @@ void main() {
         });
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('tr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DeviceTestScreen(camera: false, controller: controller),
       ),
     );

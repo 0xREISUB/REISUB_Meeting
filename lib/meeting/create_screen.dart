@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -82,7 +83,10 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
     } on MeetingApiException catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(localizeError(error, AppLocalizations.of(context)!)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -166,7 +170,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
                             ? null
                             : () => _startMeeting(l10n),
                         child: Text(
-                          _isSubmitting ? 'Bağlanıyor...' : l10n.startMeeting,
+                          _isSubmitting ? l10n.connecting : l10n.startMeeting,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

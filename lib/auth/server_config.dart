@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ServerConfig {
@@ -41,7 +42,7 @@ class ServerConfig {
   static Future<void> saveUrl(String url) async {
     final prefs = await SharedPreferences.getInstance();
     if (!await prefs.setString(_serverUrlKey, normalizeUrl(url))) {
-      throw StateError('Sunucu adresi kaydedilemedi.');
+      throw const AppException.localized(AppError.serverSettingsSaveFailed);
     }
   }
 

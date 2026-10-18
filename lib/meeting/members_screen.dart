@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'widgets/meeting_participant.dart';
@@ -26,7 +27,7 @@ class MembersScreen extends StatefulWidget {
 
 class _MembersScreenState extends State<MembersScreen> {
   final Set<String> _busy = {};
-  String? _error;
+  Object? _error;
 
   Future<void> _moderate(MemberEntry member, String action) async {
     if (_busy.contains(member.identity)) return;
@@ -41,7 +42,7 @@ class _MembersScreenState extends State<MembersScreen> {
         action == 'request',
       );
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = error);
     } finally {
       if (mounted) setState(() => _busy.remove(member.identity));
     }
@@ -89,7 +90,7 @@ class _MembersScreenState extends State<MembersScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                _error!,
+                localizeError(_error!, l10n),
                 style: const TextStyle(color: Colors.redAccent),
               ),
             ),
@@ -147,7 +148,7 @@ class _MembersScreenState extends State<MembersScreen> {
                         else
                           PopupMenuButton<String>(
                             key: ValueKey('moderate-${member.identity}'),
-                            tooltip: 'Mikrofon yönetimi',
+                            tooltip: l10n.microphoneManagement,
                             color: const Color(0xFF2C2C2E),
                             icon: const Icon(
                               Icons.more_vert_rounded,
@@ -156,18 +157,18 @@ class _MembersScreenState extends State<MembersScreen> {
                             onSelected: (action) => _moderate(member, action),
                             itemBuilder: (_) => [
                               if (member.isMicrophoneLocked)
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'unlock',
                                   child: Text(
-                                    'Mikrofon kilidini kaldır',
+                                    l10n.unlockMicrophone,
                                     style: TextStyle(color: Colors.white),
                                   ),
                                 )
                               else
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'lock',
                                   child: Text(
-                                    'Mikrofonu kapat ve kilitle',
+                                    l10n.lockMicrophone,
                                     style: TextStyle(color: Colors.white),
                                   ),
                                 ),
@@ -175,8 +176,8 @@ class _MembersScreenState extends State<MembersScreen> {
                                 value: 'request',
                                 child: Text(
                                   member.isMicrophoneLocked
-                                      ? 'Kilidi kaldır ve açmasını iste'
-                                      : 'Mikrofonu açmasını iste',
+                                      ? l10n.unlockAndRequestMicrophone
+                                      : l10n.requestMicrophone,
                                   style: const TextStyle(color: Colors.white),
                                 ),
                               ),

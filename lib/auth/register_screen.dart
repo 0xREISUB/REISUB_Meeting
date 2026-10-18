@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
-
+import 'package:v_meeting/widgets/language_menu_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,15 +16,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
 
-void _handleRegister() async {
-    final l10n = AppLocalizations.of(context);
+  void _handleRegister() async {
+    final l10n = AppLocalizations.of(context)!;
 
     if (_passwordController.text != _passwordConfirmController.text) {
       if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n?.passwordsNotMatch ?? 'Şifreler eşleşmiyor!')),
-      );
-    }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.passwordsNotMatch)));
+      }
       return;
     }
 
@@ -32,9 +32,9 @@ void _handleRegister() async {
       final serverUrl = await ServerConfig.readUrl();
       if (serverUrl == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n?.connectionError ?? 'Bağlantı hatası!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.connectionError)));
         }
         return;
       }
@@ -49,22 +49,21 @@ void _handleRegister() async {
 
       if (response.statusCode == 200) {
         if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n?.registerSuccess ?? 'Kayıt başarılı! Giriş yapabilirsiniz.')),
-        );
-        Navigator.pop(context); // Login ekranına dön
-      }
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.registerSuccess)));
+          Navigator.pop(context); // Login ekranına dön
+        }
       }
     } on DioException catch (e) {
       // Go sunucumuzdan dönen hata mesajını (örn: "Bu nick kullanımda") ekrana basıyoruz
-      final errorMessage =
-          e.response?.data['error'] ?? (l10n?.connectionError ?? 'Bağlantı hatası!');
+      final errorMessage = e.response?.data['error'] ?? (l10n.connectionError);
       if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
+      }
     }
-  }
   }
 
   @override
@@ -75,6 +74,7 @@ void _handleRegister() async {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: const [LanguageMenuButton(), SizedBox(width: 8)],
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -139,7 +139,10 @@ void _handleRegister() async {
                     ),
                   ),
                   onPressed: _handleRegister,
-                  child: Text(l10n.register, style: const TextStyle(fontSize: 18)),
+                  child: Text(
+                    l10n.register,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
               ],
             ),

@@ -87,9 +87,9 @@ bool FlutterWindow::OnCreate() {
         }
         const auto id = DefaultMicrophoneId();
         if (!id) {
-          result->Error("NotFoundError",
-                        "Windows varsayilan mikrofonu bulunamadi. "
-                        "Ses ayarlarindan bir giris aygiti secin.");
+          result->Error("WindowsMicrophoneNotFound",
+                        "The Windows default microphone was not found. "
+                        "Select an input device in Sound settings.");
           return;
         }
         result->Success(flutter::EncodableValue(*id));

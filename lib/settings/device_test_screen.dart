@@ -1,3 +1,5 @@
+import 'package:v_meeting/l10n/localized_error.dart';
+import 'package:v_meeting/l10n/app_localizations.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -38,7 +40,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
   late final Future<void> _rendererReady;
   List<rtc.MediaDeviceInfo> _devices = [];
   String? _selected;
-  String? _error;
+  Object? _error;
   bool _loading = true;
   bool _busy = false;
   bool _releasing = false;
@@ -95,7 +97,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
       if (_active) {
         setState(() {
           _loading = false;
-          _error = mediaCaptureError(error, camera: widget.camera);
+          _error = error;
         });
       }
     }
@@ -137,9 +139,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
       await session?.stop();
       if (identical(_session, session)) _session = null;
       if (_active && generation == _generation) {
-        setState(
-          () => _error = mediaCaptureError(error, camera: widget.camera),
-        );
+        setState(() => _error = error);
       }
     } finally {
       if (_active) setState(() => _busy = false);
@@ -162,7 +162,11 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
       }
     } catch (_) {
       if (_active) {
-        setState(() => _error = 'Cihaz tercihi kaydedilemedi. Tekrar deneyin.');
+        setState(
+          () => _error = const AppException.localized(
+            AppError.devicePreferenceSaveFailed,
+          ),
+        );
       }
     } finally {
       if (_active) setState(() => _busy = false);
@@ -247,14 +251,15 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
 
   @override
   Widget build(BuildContext context) {
-    final name = widget.camera ? 'Kamera' : 'Mikrofon';
+    final l10n = AppLocalizations.of(context)!;
+    final name = widget.camera ? l10n.cameraName : l10n.microphoneName;
     final running = _session != null;
     final busy = _busy || _releasing || _closing;
     final selectedMissing =
         _selected != null && !_devices.any((d) => d.deviceId == _selected);
     return Scaffold(
       appBar: AppBar(
-        title: Text('$name testi ve cihaz seçimi'),
+        title: Text(l10n.deviceTestTitle(name)),
         leading: widget.inMeeting
             ? CloseButton(
                 onPressed: () async {
@@ -269,8 +274,8 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
         children: [
           Text(
             widget.inMeeting
-                ? 'Bu panel açıkken toplantıdaki ${widget.camera ? 'kamera' : 'mikrofon'} yayının duraklatılır. Test yalnızca bu cihazda çalışır. Paneli kapatınca seçtiğin cihaz toplantıya uygulanır; önceden kapalı olan yayın kapalı kalır.'
-                : 'Seçiminiz kaydedilir ve bir sonraki toplantıda kullanılır. Test yalnızca bu cihazda çalışır; sunucuya ses veya görüntü gönderilmez.',
+                ? l10n.meetingDeviceTestHint(name.toLowerCase())
+                : l10n.localDeviceTestHint,
           ),
           const SizedBox(height: 20),
           if (_loading) const LinearProgressIndicator(),
@@ -278,23 +283,23 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
             key: ValueKey('${widget.camera}:$_selected'),
             initialValue: _selected ?? '',
             isExpanded: true,
-            decoration: InputDecoration(labelText: '$name tercihi'),
+            decoration: InputDecoration(labelText: l10n.devicePreference(name)),
             items: [
-              const DropdownMenuItem(
+              DropdownMenuItem(
                 value: '',
-                child: Text('Sistem varsayılanı'),
+                child: Text(AppLocalizations.of(context)!.systemDefault),
               ),
               if (selectedMissing)
                 DropdownMenuItem(
                   value: _selected,
-                  child: const Text('Kayıtlı cihaz bağlı değil'),
+                  child: Text(AppLocalizations.of(context)!.savedDeviceMissing),
                 ),
               ..._devices.asMap().entries.map(
                 (entry) => DropdownMenuItem(
                   value: entry.value.deviceId,
                   child: Text(
                     entry.value.label.isEmpty
-                        ? '$name ${entry.key + 1}'
+                        ? l10n.deviceNumber(name, entry.key + 1)
                         : entry.value.label,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -308,7 +313,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
             child: TextButton.icon(
               onPressed: busy || running ? null : _load,
               icon: const Icon(Icons.refresh),
-              label: const Text('Cihazları yenile'),
+              label: Text(AppLocalizations.of(context)!.refreshDevices),
             ),
           ),
           if (widget.camera)
@@ -324,7 +329,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
                             .RTCVideoViewObjectFit
                             .RTCVideoViewObjectFitContain,
                       )
-                    : const Center(
+                    : Center(
                         child: Icon(
                           Icons.videocam_off,
                           color: Colors.white54,
@@ -334,9 +339,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
               ),
             ),
           if (!widget.camera && running) ...[
-            const Text(
-              'Konuşun; ses seviyesi çubuğunun hareket ettiğini kontrol edin.',
-            ),
+            Text(AppLocalizations.of(context)!.microphoneLevelHint),
             const SizedBox(height: 12),
             LinearProgressIndicator(
               value: _level == null ? 0 : math.sqrt(_level!),
@@ -344,10 +347,10 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
             const SizedBox(height: 8),
             Text(
               _level == null
-                  ? 'Mikrofon açık. Ses seviyesi bekleniyor; bazı sürücüler seviye bilgisi sağlamayabilir.'
+                  ? AppLocalizations.of(context)!.microphoneLevelWaiting
                   : _level! > 0.01
-                  ? 'Mikrofondan ses alınıyor.'
-                  : 'Mikrofon açık, şu anda sessiz.',
+                  ? AppLocalizations.of(context)!.microphoneAudioDetected
+                  : AppLocalizations.of(context)!.microphoneSilent,
             ),
           ],
           const SizedBox(height: 16),
@@ -355,7 +358,13 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Text(
-                _error!,
+                _error is AppException
+                    ? localizeError(_error!, l10n)
+                    : mediaCaptureError(
+                        _error!,
+                        camera: widget.camera,
+                        l10n: l10n,
+                      ),
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
@@ -374,30 +383,30 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
                 : Icon(running ? Icons.stop : Icons.play_arrow),
             label: Text(
               busy
-                  ? 'Cihaz açılıyor…'
+                  ? AppLocalizations.of(context)!.deviceOpening
                   : running
-                  ? 'Testi durdur'
-                  : 'Testi başlat',
+                  ? AppLocalizations.of(context)!.stopTest
+                  : AppLocalizations.of(context)!.startTest,
             ),
           ),
           if (isWindowsDesktop) ...[
             const SizedBox(height: 16),
-            Text(
-              'Windows erişimi kapalıysa $name erişimini ve masaüstü uygulamalarının erişimini açın. Sonra buraya dönüp testi yeniden başlatın.',
-            ),
+            Text(l10n.windowsDevicePermissionHint(name)),
             OutlinedButton.icon(
               onPressed: () async {
                 await _stop();
                 final opened = await openMediaPrivacy(camera: widget.camera);
                 if (!opened && _active) {
                   setState(
-                    () => _error =
-                        'Windows ayarları açılamadı. Ayarlar > Gizlilik ve güvenlik > $name bölümünü açın.',
+                    () => _error = AppException.localized(
+                      AppError.windowsDevicePrivacyUnavailable,
+                      details: widget.camera,
+                    ),
                   );
                 }
               },
               icon: const Icon(Icons.privacy_tip_outlined),
-              label: Text('Windows $name gizlilik ayarlarını aç'),
+              label: Text(l10n.openWindowsDevicePrivacy(name)),
             ),
           ],
         ],

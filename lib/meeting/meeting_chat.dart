@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class MeetingChatController extends ChangeNotifier {
   bool _hasLoaded = false;
   bool _isChatOpen = false;
   bool _isDisposed = false;
-  String? error;
+  Object? error;
 
   bool get hasUnreadMessages => _unreadMessageIds.isNotEmpty;
 
@@ -83,7 +84,7 @@ class MeetingChatController extends ChangeNotifier {
       }
     } catch (exception) {
       if (_isDisposed) return;
-      error = exception.toString();
+      error = exception;
       isLoading = false;
       notifyListeners();
     } finally {
@@ -111,7 +112,7 @@ class MeetingChatController extends ChangeNotifier {
       return true;
     } catch (exception) {
       if (_isDisposed) return false;
-      error = exception.toString();
+      error = exception;
       isSending = false;
       notifyListeners();
       return false;
@@ -225,7 +226,7 @@ class _MeetingChatSheetState extends State<MeetingChatSheet> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  controller.error!,
+                  localizeError(controller.error!, l10n),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(color: Colors.redAccent, fontSize: 12),
@@ -258,7 +259,7 @@ class _MeetingChatSheetState extends State<MeetingChatSheet> {
                     ),
                     const SizedBox(width: 8),
                     IconButton.filled(
-                      tooltip: 'Gönder',
+                      tooltip: AppLocalizations.of(context)!.send,
                       onPressed: controller.isSending ? null : _sendMessage,
                       icon: controller.isSending
                           ? const SizedBox.square(
@@ -282,8 +283,11 @@ class _MeetingChatSheetState extends State<MeetingChatSheet> {
       return const Center(child: CircularProgressIndicator());
     }
     if (controller.messages.isEmpty) {
-      return const Center(
-        child: Text('Henüz mesaj yok', style: TextStyle(color: Colors.white54)),
+      return Center(
+        child: Text(
+          AppLocalizations.of(context)!.noMessagesYet,
+          style: TextStyle(color: Colors.white54),
+        ),
       );
     }
     return ListView.separated(

@@ -1,3 +1,4 @@
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 
@@ -66,18 +67,21 @@ class _MeetingScreenState extends State<MeetingScreen>
   bool _isCameraEnabled = true;
   bool _showControls = true;
   bool _isConnecting = true;
-  String? _connectionError;
+  Object? _connectionError;
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
   final _media = MeetingMedia();
   bool _deviceSettingsOpen = false;
   DeviceTestController? _deviceTestController;
-  String? _microphoneError;
-  String? _cameraError;
+  Object? _microphoneError;
+  Object? _cameraError;
   String? get _meetingError {
     final errors = [
-      _connectionError,
-      _microphoneError,
-      _cameraError,
-    ].whereType<String>().toList();
+      if (_connectionError != null) localizeError(_connectionError!, _l10n),
+      if (_microphoneError != null)
+        mediaCaptureError(_microphoneError!, camera: false, l10n: _l10n),
+      if (_cameraError != null)
+        mediaCaptureError(_cameraError!, camera: true, l10n: _l10n),
+    ];
     return errors.isEmpty ? null : errors.join('\n');
   }
 
@@ -200,9 +204,13 @@ class _MeetingScreenState extends State<MeetingScreen>
     if (credentials == null) {
       setState(() {
         _isConnecting = false;
-        _connectionError = 'Toplantı bilgileri bulunamadı';
+        _connectionError = const AppException.localized(
+          AppError.missingMeetingDetails,
+        );
       });
-      _connection.fail('Toplantı bilgileri bulunamadı');
+      _connection.fail(
+        const AppException.localized(AppError.missingMeetingDetails),
+      );
       return;
     }
 
@@ -213,9 +221,9 @@ class _MeetingScreenState extends State<MeetingScreen>
       if (mounted && !_leavingMeeting) {
         setState(() {
           _isConnecting = false;
-          _connectionError =
-              'Telefon tarayıcısında kamera ve mikrofon için HTTPS gerekir. '
-              'Uygulamayı güvenli bir HTTPS adresinden açın.';
+          _connectionError = const AppException.localized(
+            AppError.mediaRequiresHttps,
+          );
         });
       }
       return;
@@ -249,7 +257,7 @@ class _MeetingScreenState extends State<MeetingScreen>
         _isMicEnabled = startMic;
       } catch (error) {
         _isMicEnabled = false;
-        _microphoneError = mediaCaptureError(error, camera: false);
+        _microphoneError = error;
       }
       if (!mounted || _leavingMeeting) return;
       try {
@@ -259,7 +267,7 @@ class _MeetingScreenState extends State<MeetingScreen>
         }
       } catch (error) {
         _isCameraEnabled = false;
-        _cameraError = mediaCaptureError(error, camera: true);
+        _cameraError = error;
       }
       if (mounted && !_leavingMeeting) {
         setState(() {
@@ -285,7 +293,9 @@ class _MeetingScreenState extends State<MeetingScreen>
     if (_connection.phase == MeetingConnectionPhase.disconnected &&
         !_connection.canRejoin) {
       _leaveMeeting(
-        notice: _endingRoom ? 'Toplantıyı bitirdiniz.' : _connection.message,
+        notice: _endingRoom
+            ? _l10n.meetingEndedByYou
+            : _connection.message(_l10n),
       );
       return;
     }
@@ -384,7 +394,7 @@ class _MeetingScreenState extends State<MeetingScreen>
     return [
       MemberEntry(
         id: local?.sid ?? 'local',
-        name: widget.credentials?.participant ?? 'Sen',
+        name: widget.credentials?.participant ?? _l10n.you,
         identity: local?.identity ?? '',
         isMicrophoneLocked: _microphoneLocked,
         isLocal: true,
@@ -461,7 +471,12 @@ class _MeetingScreenState extends State<MeetingScreen>
       await local.setMicrophoneEnabled(false);
     } catch (error) {
       if (mounted) {
-        setState(() => _connectionError = 'Mikrofon kapatılamadı: $error');
+        setState(
+          () => _connectionError = AppException.localized(
+            AppError.microphoneDisableFailed,
+            details: error,
+          ),
+        );
       }
     } finally {
       _applyingMicLock = false;
@@ -473,18 +488,16 @@ class _MeetingScreenState extends State<MeetingScreen>
       final accepted = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Mikrofon açma isteği'),
-          content: const Text(
-            'Yönetici mikrofonunuzu açmanızı istiyor. Açmak istiyor musunuz?',
-          ),
+          title: Text(_l10n.unmuteRequestTitle),
+          content: Text(_l10n.unmuteRequestBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Şimdi değil'),
+              child: Text(_l10n.notNow),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Mikrofonu aç'),
+              child: Text(_l10n.unmuteMicrophone),
             ),
           ],
         ),
@@ -509,9 +522,7 @@ class _MeetingScreenState extends State<MeetingScreen>
       }
     } catch (error) {
       if (mounted) {
-        setState(
-          () => _microphoneError = mediaCaptureError(error, camera: false),
-        );
+        setState(() => _microphoneError = error);
       }
     } finally {
       _unmuteDialogOpen = false;
@@ -543,20 +554,17 @@ class _MeetingScreenState extends State<MeetingScreen>
     final action = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Toplantıdan çık'),
-        content: const Text(
-          'Toplantıyı bitirirseniz tüm katılımcılar çıkarılır ve oda kapanır. '
-          'Yalnızca ayrılırsanız toplantı devam eder.',
-        ),
+        title: Text(_l10n.leaveMeeting),
+        content: Text(_l10n.hostLeaveBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, 'leave'),
-            child: const Text('Ayrıl'),
+            child: Text(_l10n.leave),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(context, 'end'),
-            child: const Text('Toplantıyı bitir'),
+            child: Text(_l10n.endMeeting),
           ),
         ],
       ),
@@ -577,13 +585,13 @@ class _MeetingScreenState extends State<MeetingScreen>
     try {
       await _api.closeRoom(credentials.roomId);
       if (mounted && !_leavingMeeting) {
-        _leaveMeeting(notice: 'Toplantıyı bitirdiniz.');
+        _leaveMeeting(notice: _l10n.meetingEndedByYou);
       }
     } catch (error) {
       if (mounted && !_leavingMeeting) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        ).showSnackBar(SnackBar(content: Text(localizeError(error, _l10n))));
       }
     } finally {
       if (mounted && !_leavingMeeting) setState(() => _endingRoom = false);
@@ -592,11 +600,9 @@ class _MeetingScreenState extends State<MeetingScreen>
 
   Future<void> _toggleMicrophone() async {
     if (_microphoneLocked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mikrofonunuz yönetici tarafından kilitlendi.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_l10n.microphoneLocked)));
       return;
     }
     final enabled = !_isMicEnabled;
@@ -616,9 +622,7 @@ class _MeetingScreenState extends State<MeetingScreen>
       }
     } catch (error) {
       if (mounted) {
-        setState(
-          () => _microphoneError = mediaCaptureError(error, camera: false),
-        );
+        setState(() => _microphoneError = error);
       }
     }
   }
@@ -637,7 +641,7 @@ class _MeetingScreenState extends State<MeetingScreen>
       }
     } catch (error) {
       if (mounted) {
-        setState(() => _cameraError = mediaCaptureError(error, camera: true));
+        setState(() => _cameraError = error);
       }
     }
   }
@@ -645,13 +649,9 @@ class _MeetingScreenState extends State<MeetingScreen>
   Future<void> _openPrivacySettings({required bool camera}) async {
     final opened = await openMediaPrivacy(camera: camera);
     if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Windows ayarları açılamadı. Ayarlar > Gizlilik ve güvenlik bölümünü açın.',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_l10n.windowsPrivacyUnavailable)));
     }
   }
 
@@ -753,7 +753,7 @@ class _MeetingScreenState extends State<MeetingScreen>
       if (mounted && !_leavingMeeting) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        ).showSnackBar(SnackBar(content: Text(localizeError(error, _l10n))));
       }
     } finally {
       if (mounted) setState(() => _changingScreenShare = false);
@@ -780,11 +780,11 @@ class _MeetingScreenState extends State<MeetingScreen>
         final source = await showDialog<rtc.DesktopCapturerSource>(
           context: context,
           builder: (_) => ScreenSelectDialog(
-            titleText: 'Paylaşılacak ekranı seç',
-            screenTabText: 'Ekran',
-            windowTabText: 'Pencere',
-            cancelText: 'Vazgeç',
-            shareText: 'Paylaş',
+            titleText: _l10n.selectScreenToShare,
+            screenTabText: _l10n.screen,
+            windowTabText: _l10n.window,
+            cancelText: _l10n.cancel,
+            shareText: _l10n.share,
           ),
         );
         sourceId = source?.id;
@@ -808,7 +808,11 @@ class _MeetingScreenState extends State<MeetingScreen>
         if (!mounted || _leavingMeeting) return;
       }
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-        await _displayChannel.invokeMethod<void>('startScreenShareService');
+        await _displayChannel.invokeMethod<void>('startScreenShareService', {
+          'channelName': _l10n.screenShareLabel,
+          'title': _l10n.screenShareNotificationTitle,
+          'body': _l10n.screenShareNotificationBody,
+        });
         _screenServiceRunning = true;
       }
       if (!mounted || _leavingMeeting) return;
@@ -821,7 +825,9 @@ class _MeetingScreenState extends State<MeetingScreen>
         ),
       );
       if (publication == null) {
-        throw const MeetingApiException('Ekran paylaşımı başlatılamadı.');
+        throw const MeetingApiException.localized(
+          AppError.screenShareStartFailed,
+        );
       }
       if (!mounted || _leavingMeeting) {
         await local.setScreenShareEnabled(false);
@@ -833,7 +839,7 @@ class _MeetingScreenState extends State<MeetingScreen>
       if (mounted && !_leavingMeeting) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        ).showSnackBar(SnackBar(content: Text(localizeError(error, _l10n))));
       }
     } finally {
       if (reserved) {
@@ -898,7 +904,11 @@ class _MeetingScreenState extends State<MeetingScreen>
     } catch (error) {
       if (mounted && !_leavingMeeting) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(mediaCaptureError(error, camera: camera))),
+          SnackBar(
+            content: Text(
+              mediaCaptureError(error, camera: camera, l10n: _l10n),
+            ),
+          ),
         );
       }
     } finally {
@@ -939,10 +949,10 @@ class _MeetingScreenState extends State<MeetingScreen>
           setState(() {
             if (camera) {
               _isCameraEnabled = false;
-              _cameraError = mediaCaptureError(error, camera: true);
+              _cameraError = error;
             } else {
               _isMicEnabled = false;
-              _microphoneError = mediaCaptureError(error, camera: false);
+              _microphoneError = error;
             }
           });
         }
@@ -1122,14 +1132,14 @@ class _MeetingScreenState extends State<MeetingScreen>
                               const SizedBox(width: 16),
                               IconButton(
                                 tooltip: _localScreenSharing || _ownsScreenShare
-                                    ? 'Paylaşımı durdur'
+                                    ? _l10n.stopScreenSharing
                                     : (_credentials?.isHost ?? false) ||
                                           (_sharing
                                                   ?.state
                                                   .allowParticipantScreenShare ??
                                               false)
-                                    ? 'Ekranı paylaş'
-                                    : 'Ekran paylaşımı oda sahibi tarafından kapatıldı',
+                                    ? _l10n.shareScreen
+                                    : _l10n.screenSharingDisabled,
                                 onPressed:
                                     !_changingScreenShare &&
                                         _connection.isConnected &&
@@ -1157,7 +1167,7 @@ class _MeetingScreenState extends State<MeetingScreen>
                               ),
                               const SizedBox(width: 16),
                               PopupMenuButton<String>(
-                                tooltip: 'Daha fazla',
+                                tooltip: _l10n.moreOptions,
                                 color: const Color(0xFF2C2C2E),
                                 icon: const Icon(
                                   Icons.more_horiz_rounded,
@@ -1172,10 +1182,10 @@ class _MeetingScreenState extends State<MeetingScreen>
                                   }
                                 },
                                 itemBuilder: (context) => [
-                                  const PopupMenuItem<String>(
+                                  PopupMenuItem<String>(
                                     value: 'meeting_settings',
                                     child: Text(
-                                      'Toplantı ayarları',
+                                      _l10n.meetingSettings,
                                       style: TextStyle(color: Colors.white),
                                     ),
                                   ),
@@ -1204,7 +1214,7 @@ class _MeetingScreenState extends State<MeetingScreen>
                                 onPressed: _endingRoom
                                     ? null
                                     : _requestLeaveMeeting,
-                                tooltip: 'Toplantıdan çık',
+                                tooltip: _l10n.leaveMeeting,
                                 style: IconButton.styleFrom(
                                   backgroundColor: Colors.redAccent,
                                   foregroundColor: Colors.white,
@@ -1220,7 +1230,7 @@ class _MeetingScreenState extends State<MeetingScreen>
                 ),
               ),
             ),
-            if (_connection.message != null)
+            if (_connection.message(_l10n) != null)
               Positioned(
                 top: 16,
                 left: 24,
@@ -1240,8 +1250,8 @@ class _MeetingScreenState extends State<MeetingScreen>
                         children: [
                           Text(
                             _isRejoining
-                                ? 'Toplantıya tekrar katılınıyor…'
-                                : _connection.message!,
+                                ? _l10n.rejoiningMeeting
+                                : _connection.message(_l10n)!,
                             textAlign: TextAlign.center,
                             style: const TextStyle(color: Colors.white),
                           ),
@@ -1252,8 +1262,8 @@ class _MeetingScreenState extends State<MeetingScreen>
                               !_isRejoining)
                             TextButton(
                               onPressed: _rejoinRoom,
-                              child: const Text(
-                                'Tekrar katıl',
+                              child: Text(
+                                _l10n.rejoinMeeting,
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
@@ -1263,7 +1273,7 @@ class _MeetingScreenState extends State<MeetingScreen>
                   ),
                 ),
               ),
-            if (_meetingError != null && _connection.message == null)
+            if (_meetingError != null && _connection.message(_l10n) == null)
               Positioned(
                 top: 16,
                 left: 24,
@@ -1289,8 +1299,8 @@ class _MeetingScreenState extends State<MeetingScreen>
                                 TextButton(
                                   onPressed: () =>
                                       _openPrivacySettings(camera: false),
-                                  child: const Text(
-                                    'Mikrofon gizlilik ayarları',
+                                  child: Text(
+                                    _l10n.microphonePrivacySettings,
                                     style: TextStyle(color: Colors.white),
                                   ),
                                 ),
@@ -1298,8 +1308,8 @@ class _MeetingScreenState extends State<MeetingScreen>
                                 TextButton(
                                   onPressed: () =>
                                       _openPrivacySettings(camera: true),
-                                  child: const Text(
-                                    'Kamera gizlilik ayarları',
+                                  child: Text(
+                                    _l10n.cameraPrivacySettings,
                                     style: TextStyle(color: Colors.white),
                                   ),
                                 ),
@@ -1352,14 +1362,14 @@ class _MeetingScreenState extends State<MeetingScreen>
                           ),
                         ),
                         Text(
-                          '$_roomCodeSeconds sn',
+                          _l10n.secondsRemaining(_roomCodeSeconds),
                           style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 12,
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Kapat',
+                          tooltip: _l10n.close,
                           onPressed: _closeRoomCode,
                           icon: const Icon(
                             Icons.close_rounded,

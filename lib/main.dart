@@ -7,14 +7,10 @@ import 'auth/host_screen.dart';
 import 'auth/login_screen.dart';
 import 'auth/server_config.dart';
 
-// GLOBAL DÄ°L DURUMU: VarsayÄ±lan olarak TÃ¼rkÃ§e baÅŸlatÄ±yoruz
-final localeProvider = StateProvider<Locale>((ref) => const Locale('tr'));
+final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
 
 void main() {
-  runApp(
-    // Riverpod'u projeye dahil etmek iÃ§in en dÄ±ÅŸtan ProviderScope ile sarÄ±yoruz
-    const ProviderScope(child: VMeetingApp()),
-  );
+  runApp(const ProviderScope(child: VMeetingApp()));
 }
 
 class VMeetingApp extends ConsumerWidget {
@@ -22,13 +18,12 @@ class VMeetingApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Riverpod'daki anlÄ±k dil durumunu dinliyoruz
     final currentLocale = ref.watch(localeProvider);
 
     return MaterialApp(
       title: 'REISUB Meeting',
       debugShowCheckedModeBanner: false,
-      locale: currentLocale, // Dili buraya baÄŸlÄ±yoruz
+      locale: currentLocale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
