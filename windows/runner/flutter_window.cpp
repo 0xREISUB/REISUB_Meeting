@@ -1,10 +1,58 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <mmdeviceapi.h>
 #include <shellapi.h>
+#include <wrl/client.h>
 #include <flutter/standard_method_codec.h>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "utils.h"
+
+namespace {
+
+class ComApartment {
+ public:
+  ComApartment() : status_(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED)) {}
+  ~ComApartment() {
+    if (SUCCEEDED(status_)) CoUninitialize();
+  }
+  bool available() const {
+    return SUCCEEDED(status_) || status_ == RPC_E_CHANGED_MODE;
+  }
+
+ private:
+  HRESULT status_;
+};
+
+std::optional<std::string> DefaultMicrophoneId() {
+  ComApartment apartment;
+  if (!apartment.available()) return std::nullopt;
+
+  Microsoft::WRL::ComPtr<IMMDeviceEnumerator> enumerator;
+  if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr,
+                              CLSCTX_INPROC_SERVER,
+                              IID_PPV_ARGS(enumerator.GetAddressOf())))) {
+    return std::nullopt;
+  }
+  Microsoft::WRL::ComPtr<IMMDevice> microphone;
+  // Voice calls should use the communications default, not device-list index 0.
+  HRESULT status = enumerator->GetDefaultAudioEndpoint(
+      eCapture, eCommunications, microphone.GetAddressOf());
+  if (FAILED(status)) {
+    status = enumerator->GetDefaultAudioEndpoint(
+        eCapture, eConsole, microphone.ReleaseAndGetAddressOf());
+  }
+  if (FAILED(status)) return std::nullopt;
+
+  LPWSTR endpoint_id = nullptr;
+  if (FAILED(microphone->GetId(&endpoint_id))) return std::nullopt;
+  const std::string id = Utf8FromUtf16(endpoint_id);
+  CoTaskMemFree(endpoint_id);
+  return id.empty() ? std::nullopt : std::make_optional(id);
+}
+
+}  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -27,6 +75,25 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  audio_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "reisub_meeting/audio",
+      &flutter::StandardMethodCodec::GetInstance());
+  audio_channel_->SetMethodCallHandler(
+      [](const flutter::MethodCall<flutter::EncodableValue>& call,
+         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+        if (call.method_name() != "getDefaultMicrophoneId") {
+          result->NotImplemented();
+          return;
+        }
+        const auto id = DefaultMicrophoneId();
+        if (!id) {
+          result->Error("NotFoundError",
+                        "Windows varsayilan mikrofonu bulunamadi. "
+                        "Ses ayarlarindan bir giris aygiti secin.");
+          return;
+        }
+        result->Success(flutter::EncodableValue(*id));
+      });
   privacy_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
       flutter_controller_->engine()->messenger(), "reisub_meeting/privacy",
       &flutter::StandardMethodCodec::GetInstance());
@@ -62,6 +129,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  audio_channel_ = nullptr;
   privacy_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;

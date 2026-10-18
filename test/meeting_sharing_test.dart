@@ -28,6 +28,26 @@ class _SharingApi extends MeetingApi {
 }
 
 void main() {
+  testWidgets('every participant can open microphone and camera tests', (
+    tester,
+  ) async {
+    final opened = <bool>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MeetingSettingsDialog(
+            onDeviceTest: (camera) async => opened.add(camera),
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(SwitchListTile), findsNothing);
+    await tester.tap(find.text('Mikrofon seçimi ve testi'));
+    await tester.tap(find.text('Kamera seçimi ve testi'));
+    expect(opened, [false, true]);
+    expect(tester.takeException(), isNull);
+  });
+
   test('a stale poll cannot overwrite a newly granted screen share', () async {
     final api = _SharingApi()..pendingRead = Completer<MeetingState>();
     final sharing = MeetingSharing(roomId: '123-456-789', api: api);

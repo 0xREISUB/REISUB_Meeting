@@ -1,5 +1,6 @@
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:livekit_client/livekit_client.dart';
+import 'microphone_input.dart';
 
 /// A local-only capture test. The microphone peers exchange media within this
 /// process so WebRTC starts its audio engine; no meeting/server is contacted.
@@ -14,15 +15,20 @@ class DeviceTestSession {
     String? deviceId,
     Future<rtc.MediaStream> Function(Map<String, dynamic>)? getUserMedia,
     Future<rtc.RTCPeerConnection> Function(Map<String, dynamic>)? createPeer,
+    MicrophoneInput? microphoneInput,
   }) async {
     final session = DeviceTestSession();
     try {
+      final input = microphoneInput ?? MicrophoneInput();
+      final resolvedDeviceId = camera
+          ? deviceId
+          : await input.resolve(deviceId);
       session.stream =
           await (getUserMedia ?? rtc.navigator.mediaDevices.getUserMedia)({
             'audio': camera
                 ? false
                 : AudioCaptureOptions(
-                    deviceId: deviceId,
+                    deviceId: resolvedDeviceId,
                   ).toMediaConstraintsMap(),
             'video': camera
                 ? CameraCaptureOptions(
@@ -36,6 +42,7 @@ class DeviceTestSession {
           : session.stream!.getAudioTracks();
       if (tracks.isEmpty) throw TrackCreateException();
       if (!camera) {
+        await input.select(resolvedDeviceId);
         await session._startMicrophoneMeter(
           createPeer ?? rtc.createPeerConnection,
         );

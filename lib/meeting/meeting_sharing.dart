@@ -76,46 +76,78 @@ class MeetingSharing extends ChangeNotifier {
 }
 
 class MeetingSettingsDialog extends StatelessWidget {
-  const MeetingSettingsDialog({super.key, required this.sharing});
-  final MeetingSharing sharing;
+  const MeetingSettingsDialog({super.key, this.sharing, this.onDeviceTest});
+  final MeetingSharing? sharing;
+  final Future<void> Function(bool camera)? onDeviceTest;
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: sharing,
-    builder: (context, _) => AlertDialog(
+  Widget build(BuildContext context) {
+    final sharing = this.sharing;
+    return sharing == null
+        ? _dialog(context)
+        : ListenableBuilder(
+            listenable: sharing,
+            builder: (context, _) => _dialog(context),
+          );
+  }
+
+  Widget _dialog(BuildContext context) {
+    final sharing = this.sharing;
+    return AlertDialog(
       title: const Text('Toplantı ayarları'),
       content: SizedBox(
         width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Başkalarının ekran paylaşmasına izin ver'),
-              subtitle: const Text(
-                'Aynı anda yalnızca bir kişi ekran paylaşabilir.',
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.mic_rounded),
+                title: const Text('Mikrofon seçimi ve testi'),
+                subtitle: const Text('Giriş aygıtı ve canlı ses seviyesi'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: onDeviceTest == null ? null : () => onDeviceTest!(false),
               ),
-              value: sharing.state.allowParticipantScreenShare,
-              onChanged: !sharing.loaded || sharing.updating
-                  ? null
-                  : (value) async {
-                      try {
-                        await sharing.setAllowed(value);
-                      } catch (error) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error.toString())),
-                          );
-                        }
-                      }
-                    },
-            ),
-            if (sharing.error != null)
-              Text(
-                sharing.error!,
-                style: const TextStyle(color: Colors.redAccent),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.videocam_rounded),
+                title: const Text('Kamera seçimi ve testi'),
+                subtitle: const Text('Kamera aygıtı ve canlı önizleme'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: onDeviceTest == null ? null : () => onDeviceTest!(true),
               ),
-          ],
+              if (sharing != null) ...[
+                const Divider(),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Başkalarının ekran paylaşmasına izin ver'),
+                  subtitle: const Text(
+                    'Aynı anda yalnızca bir kişi ekran paylaşabilir.',
+                  ),
+                  value: sharing.state.allowParticipantScreenShare,
+                  onChanged: !sharing.loaded || sharing.updating
+                      ? null
+                      : (value) async {
+                          try {
+                            await sharing.setAllowed(value);
+                          } catch (error) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(error.toString())),
+                              );
+                            }
+                          }
+                        },
+                ),
+                if (sharing.error != null)
+                  Text(
+                    sharing.error!,
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+              ],
+            ],
+          ),
         ),
       ),
       actions: [
@@ -124,6 +156,6 @@ class MeetingSettingsDialog extends StatelessWidget {
           child: const Text('Kapat'),
         ),
       ],
-    ),
-  );
+    );
+  }
 }

@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/settings/device_test_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 
 class _TestRoom extends ChangeNotifier implements Room {
@@ -56,6 +58,11 @@ class _TestLocal implements LocalParticipant {
   final values = <String, String>{};
   final microphoneChanges = <bool>[];
   bool microphone = false;
+  final cameraChanges = <bool>[];
+  final microphoneDevices = <String?>[];
+  final cameraDevices = <String?>[];
+  final publications = <TrackSource, LocalTrackPublication>{};
+  final removed = <String>[];
   @override
   UnmodifiableMapView<String, String> get attributes =>
       UnmodifiableMapView(values);
@@ -69,19 +76,50 @@ class _TestLocal implements LocalParticipant {
   bool isMicrophoneEnabled() => microphone;
   @override
   LocalTrackPublication? getTrackPublicationBySource(TrackSource source) =>
-      null;
+      publications[source];
+  @override
+  Future<void> removePublishedTrack(String sid, {bool notify = true}) async {
+    removed.add(sid);
+    publications.removeWhere((source, publication) {
+      if (publication.sid != sid) return false;
+      if (source == TrackSource.microphone) microphone = false;
+      return true;
+    });
+  }
+
   @override
   Future<LocalTrackPublication?> setMicrophoneEnabled(
     bool enabled, {
     AudioCaptureOptions? audioCaptureOptions,
   }) async {
     microphoneChanges.add(enabled);
+    microphoneDevices.add(audioCaptureOptions?.deviceId);
     microphone = enabled;
     return null;
   }
 
   @override
+  Future<LocalTrackPublication?> setCameraEnabled(
+    bool enabled, {
+    CameraCaptureOptions? cameraCaptureOptions,
+  }) async {
+    cameraChanges.add(enabled);
+    cameraDevices.add(cameraCaptureOptions?.deviceId);
+    return null;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _TestPublication extends Fake implements LocalTrackPublication {
+  _TestPublication(this.sid);
+  @override
+  final String sid;
+  @override
+  LocalTrack? get track => null;
+  @override
+  bool get muted => false;
 }
 
 class _ModerationApi extends MeetingApi {
@@ -157,6 +195,102 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+  }
+
+  for (final deviceCase in [
+    (camera: false, enabled: true, locked: false),
+    (camera: true, enabled: true, locked: false),
+    (camera: false, enabled: false, locked: false),
+    (camera: false, enabled: true, locked: true),
+  ]) {
+    final camera = deviceCase.camera;
+    testWidgets(
+      'meeting device selection camera=$camera enabled=${deviceCase.enabled} lockDuringTest=${deviceCase.locked}',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        const channel = MethodChannel('FlutterWebRTC.Method');
+        messenger.setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'getSources') {
+            return {
+              'sources': [
+                {
+                  'deviceId': 'new-mic',
+                  'label': 'USB mikrofon',
+                  'kind': 'audioinput',
+                },
+                {
+                  'deviceId': 'new-camera',
+                  'label': 'USB kamera',
+                  'kind': 'videoinput',
+                },
+              ],
+            };
+          }
+          if (call.method == 'createVideoRenderer') return {'textureId': 42};
+          return null;
+        });
+        addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+        final source = camera ? TrackSource.camera : TrackSource.microphone;
+        final local = _TestLocal()..microphone = deviceCase.enabled;
+        local.publications[source] = _TestPublication('old-device');
+        local.publications[TrackSource.screenShareAudio] = _TestPublication(
+          'screen-audio',
+        );
+        final room = _TestRoom(local: local);
+        await openExitTest(tester, room);
+        room.events.streamCtrl.add(
+          RoomConnectedEvent(room: room, metadata: null),
+        );
+        room.changed();
+        await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Toplantı ayarları'));
+        await tester.pumpAndSettle();
+        expect(find.byType(SwitchListTile), findsNothing);
+        await tester.tap(
+          find.text(
+            camera ? 'Kamera seçimi ve testi' : 'Mikrofon seçimi ve testi',
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(DeviceTestScreen), findsOneWidget);
+        expect(find.byType(MeetingScreen), findsOneWidget);
+        expect(local.removed, ['old-device']);
+        expect(
+          local.publications.containsKey(TrackSource.screenShareAudio),
+          isTrue,
+        );
+        await tester.tap(find.byType(DropdownButtonFormField<String>));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.text(camera ? 'USB kamera' : 'USB mikrofon').last,
+        );
+        await tester.pumpAndSettle();
+        if (deviceCase.locked) {
+          local.values['meeting.microphone_locked'] = 'true';
+          room.changed();
+          await tester.pump();
+        }
+        await tester.tap(find.byType(CloseButton));
+        await tester.pumpAndSettle();
+        expect(find.byType(DeviceTestScreen), findsNothing);
+        expect(
+          camera ? local.cameraChanges.last : local.microphoneChanges.last,
+          deviceCase.enabled && !deviceCase.locked,
+        );
+        expect(
+          camera ? local.cameraDevices.last : local.microphoneDevices.last,
+          camera ? 'new-camera' : 'new-mic',
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.linux),
+    );
   }
 
   for (final reason in [

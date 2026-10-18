@@ -14,6 +14,7 @@ import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
 import 'package:v_meeting/meeting/meeting_media.dart';
 import 'package:v_meeting/settings/media_preferences.dart';
+import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/media_privacy.dart';
 import 'package:v_meeting/meeting/meeting_sharing.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
@@ -67,6 +68,8 @@ class _MeetingScreenState extends State<MeetingScreen>
   bool _isConnecting = true;
   String? _connectionError;
   final _media = MeetingMedia();
+  bool _deviceSettingsOpen = false;
+  DeviceTestController? _deviceTestController;
   String? _microphoneError;
   String? _cameraError;
   String? get _meetingError {
@@ -432,6 +435,7 @@ class _MeetingScreenState extends State<MeetingScreen>
       return;
     }
     if (!_isConnecting) _isMicEnabled = local.isMicrophoneEnabled();
+    if (_deviceSettingsOpen) return;
     final request = local.attributes[_micRequestAttribute];
     if (_isConnecting ||
         request == null ||
@@ -847,12 +851,107 @@ class _MeetingScreenState extends State<MeetingScreen>
 
   void _openMeetingSettings() {
     final sharing = _sharing;
-    if (sharing == null || !(_credentials?.isHost ?? false)) return;
-    unawaited(sharing.refresh());
+    final isHost = _credentials?.isHost ?? false;
+    if (isHost && sharing != null) unawaited(sharing.refresh());
     showDialog<void>(
       context: context,
-      builder: (_) => MeetingSettingsDialog(sharing: sharing),
+      builder: (_) => MeetingSettingsDialog(
+        sharing: isHost ? sharing : null,
+        onDeviceTest: _openMeetingDeviceTest,
+      ),
     );
+  }
+
+  Future<void> _openMeetingDeviceTest(bool camera) async {
+    final participant = _room.localParticipant;
+    if (_deviceSettingsOpen ||
+        participant == null ||
+        !_connection.isConnected) {
+      return;
+    }
+    final wasEnabled = camera ? _isCameraEnabled : _isMicEnabled;
+    final controller = _deviceTestController = DeviceTestController();
+    _deviceSettingsOpen = true;
+    try {
+      await _media.releaseDevice(participant, camera: camera);
+      if (!mounted || _leavingMeeting) return;
+      setState(() {
+        if (camera) {
+          _isCameraEnabled = false;
+        } else {
+          _isMicEnabled = false;
+        }
+      });
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (context) => SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.9,
+          child: DeviceTestScreen(
+            camera: camera,
+            inMeeting: true,
+            controller: controller,
+          ),
+        ),
+      );
+    } catch (error) {
+      if (mounted && !_leavingMeeting) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mediaCaptureError(error, camera: camera))),
+        );
+      }
+    } finally {
+      try {
+        await controller.close();
+        if (mounted &&
+            !_leavingMeeting &&
+            identical(participant, _room.localParticipant)) {
+          final preferences = await MediaPreferences.load();
+          if (mounted && !_leavingMeeting && _connection.isConnected) {
+            if (camera) {
+              _media.cameraId = preferences.cameraId;
+              await _media.setCameraEnabled(participant, wasEnabled);
+              if (mounted) {
+                setState(() {
+                  _isCameraEnabled = wasEnabled;
+                  _cameraError = null;
+                });
+              }
+            } else {
+              _media.microphoneId = preferences.microphoneId;
+              final enable = wasEnabled && !_microphoneLocked;
+              await _media.setMicrophoneEnabled(participant, enable);
+              if (_microphoneLocked && enable) {
+                await participant.setMicrophoneEnabled(false);
+              }
+              if (mounted) {
+                setState(() {
+                  _isMicEnabled = enable && !_microphoneLocked;
+                  _microphoneError = null;
+                });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        if (mounted && !_leavingMeeting) {
+          setState(() {
+            if (camera) {
+              _isCameraEnabled = false;
+              _cameraError = mediaCaptureError(error, camera: true);
+            } else {
+              _isMicEnabled = false;
+              _microphoneError = mediaCaptureError(error, camera: false);
+            }
+          });
+        }
+      } finally {
+        _deviceSettingsOpen = false;
+        _deviceTestController = null;
+        if (mounted && !_leavingMeeting) _handleMicrophonePolicy();
+      }
+    }
   }
 
   void _openChatSheet() {
@@ -873,6 +972,7 @@ class _MeetingScreenState extends State<MeetingScreen>
   void _leaveMeeting({String? notice}) {
     if (!mounted || _leavingMeeting) return;
     _leavingMeeting = true;
+    unawaited(_deviceTestController?.close());
     _controlsTimer?.cancel();
     if (_ownsScreenShare) {
       final identity = _room.localParticipant?.identity;
@@ -899,6 +999,7 @@ class _MeetingScreenState extends State<MeetingScreen>
 
   @override
   void dispose() {
+    unawaited(_deviceTestController?.close());
     WidgetsBinding.instance.removeObserver(this);
     _controlsTimer?.cancel();
     _systemUiTimer?.cancel();
@@ -1071,14 +1172,13 @@ class _MeetingScreenState extends State<MeetingScreen>
                                   }
                                 },
                                 itemBuilder: (context) => [
-                                  if (_credentials?.isHost ?? false)
-                                    const PopupMenuItem<String>(
-                                      value: 'meeting_settings',
-                                      child: Text(
-                                        'Toplantı ayarları',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
+                                  const PopupMenuItem<String>(
+                                    value: 'meeting_settings',
+                                    child: Text(
+                                      'Toplantı ayarları',
+                                      style: TextStyle(color: Colors.white),
                                     ),
+                                  ),
                                   PopupMenuItem<String>(
                                     value: 'room_id',
                                     child: Row(

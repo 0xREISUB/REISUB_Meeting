@@ -11,6 +11,7 @@ import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/device_test_session.dart';
 import 'package:v_meeting/settings/media_preferences.dart';
 import 'package:v_meeting/settings/media_privacy.dart';
+import 'package:v_meeting/settings/microphone_input.dart';
 
 class _Track extends Fake implements rtc.MediaStreamTrack {
   int stops = 0;
@@ -44,6 +45,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const webRtcChannel = MethodChannel('FlutterWebRTC.Method');
   const privacyChannel = MethodChannel('reisub_meeting/privacy');
+  const audioChannel = MethodChannel('reisub_meeting/audio');
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -52,8 +54,91 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       ..setMockMethodCallHandler(webRtcChannel, null)
+      ..setMockMethodCallHandler(audioChannel, null)
       ..setMockMethodCallHandler(privacyChannel, null);
   });
+
+  test(
+    'Windows microphone resolves the native default and routes the same input',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      final routed = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(audioChannel, (call) async {
+            expect(call.method, 'getDefaultMicrophoneId');
+            return 'communications-microphone';
+          });
+      final input = MicrophoneInput(selectInput: (id) async => routed.add(id));
+      final id = await input.resolve(null);
+      expect(id, 'communications-microphone');
+      await input.select(id);
+      expect(routed, ['communications-microphone']);
+    },
+  );
+
+  test('non-Windows capture never invokes native Windows routing', () async {
+    final input = MicrophoneInput(
+      isWindows: false,
+      defaultDeviceId: () async =>
+          throw StateError('unexpected Windows lookup'),
+      selectInput: (_) async => throw StateError('unexpected Windows routing'),
+    );
+    expect(await input.resolve(null), isNull);
+    expect(await input.resolve('saved'), 'saved');
+    await input.select('saved');
+  });
+
+  test(
+    'an older Windows runner requests a rebuild instead of a silent input',
+    () async {
+      await expectLater(
+        MicrophoneInput(isWindows: true).resolve(null),
+        throwsA(
+          isA<PlatformException>().having(
+            (error) => error.code,
+            'code',
+            'WindowsAudioRestartRequired',
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'microphone meter uses the meeting input before starting audio peers',
+    () async {
+      final events = <String>[];
+      final stream = _Stream();
+      await expectLater(
+        DeviceTestSession.start(
+          camera: false,
+          microphoneInput: MicrophoneInput(
+            isWindows: true,
+            defaultDeviceId: () async => 'system-input',
+            selectInput: (id) async => events.add('select:$id'),
+          ),
+          getUserMedia: (constraints) async {
+            final audio = constraints['audio'] as Map;
+            expect(
+              audio['optional'],
+              contains(equals({'sourceId': 'system-input'})),
+            );
+            expect(constraints['video'], false);
+            events.add('capture');
+            return stream;
+          },
+          createPeer: (_) async {
+            events.add('peer');
+            throw StateError('end test after routing');
+          },
+        ),
+        throwsStateError,
+      );
+      expect(events, ['capture', 'select:system-input', 'peer']);
+      expect(stream.track.stops, 1);
+      expect(stream.disposals, 1);
+    },
+  );
 
   test(
     'camera and microphone preferences persist independently and reset',
@@ -187,6 +272,7 @@ void main() {
     tester,
   ) async {
     final capture = Completer<Map<String, dynamic>>();
+    final controller = DeviceTestController();
     final calls = <String>[];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(webRtcChannel, (call) async {
@@ -196,13 +282,19 @@ void main() {
           return null;
         });
     await tester.pumpWidget(
-      const MaterialApp(home: DeviceTestScreen(camera: false)),
+      MaterialApp(
+        home: DeviceTestScreen(camera: false, controller: controller),
+      ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Testi başlat'));
     await tester.pump();
     expect(calls, contains('getUserMedia'));
     await tester.pumpWidget(const SizedBox());
+    var released = false;
+    controller.close().then((_) => released = true);
+    await tester.pump();
+    expect(released, isFalse);
     capture.complete({
       'streamId': 'test-stream',
       'audioTracks': [],
@@ -210,6 +302,7 @@ void main() {
     });
     await tester.pumpAndSettle();
     expect(calls, contains('streamDispose'));
+    expect(released, isTrue);
     expect(tester.takeException(), isNull);
   });
 }

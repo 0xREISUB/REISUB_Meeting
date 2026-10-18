@@ -8,9 +8,25 @@ import 'device_test_session.dart';
 import 'media_preferences.dart';
 import 'media_privacy.dart';
 
+/// Lets the meeting await capture cleanup, including a pending device open,
+/// before restoring its own publication.
+class DeviceTestController {
+  Future<void> Function()? _release;
+  Future<void>? _closing;
+
+  Future<void> close() => _closing ??= _release?.call() ?? Future.value();
+}
+
 class DeviceTestScreen extends StatefulWidget {
-  const DeviceTestScreen({super.key, required this.camera});
+  const DeviceTestScreen({
+    super.key,
+    required this.camera,
+    this.controller,
+    this.inMeeting = false,
+  });
   final bool camera;
+  final DeviceTestController? controller;
+  final bool inMeeting;
 
   @override
   State<DeviceTestScreen> createState() => _DeviceTestScreenState();
@@ -32,10 +48,19 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
   DeviceTestSession? _session;
   Timer? _timer;
   int _generation = 0;
+  late final DeviceTestController _controller;
+  Completer<void>? _openingComplete;
+  Completer<void>? _selectionComplete;
+  bool _closing = false;
+  bool _disposing = false;
+  bool get _active => mounted && !_disposing;
+  Future<void>? _stopping;
 
   @override
   void initState() {
     super.initState();
+    _controller = widget.controller ?? DeviceTestController();
+    _controller._release = _releaseForClose;
     WidgetsBinding.instance.addObserver(this);
     _rendererReady = widget.camera
         ? _renderer.initialize().catchError((Object error) {
@@ -59,7 +84,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
       final selected = widget.camera
           ? preferences.cameraId
           : preferences.microphoneId;
-      if (!mounted) return;
+      if (!_active) return;
       setState(() {
         _devices = unique.values.toList();
         _selected = selected;
@@ -67,7 +92,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
         _error = null;
       });
     } catch (error) {
-      if (mounted) {
+      if (_active) {
         setState(() {
           _loading = false;
           _error = mediaCaptureError(error, camera: widget.camera);
@@ -77,7 +102,8 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
   }
 
   Future<void> _start() async {
-    if (_busy || _releasing || _session != null) return;
+    if (_closing || _busy || _releasing || _session != null) return;
+    final complete = _openingComplete = Completer<void>();
     final generation = ++_generation;
     setState(() {
       _busy = true;
@@ -87,13 +113,13 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
     DeviceTestSession? session;
     try {
       await _rendererReady;
-      if (!mounted || generation != _generation) return;
+      if (!_active || generation != _generation) return;
       if (_rendererFailure != null) throw _rendererFailure!;
       session = await DeviceTestSession.start(
         camera: widget.camera,
         deviceId: _selected,
       );
-      if (!mounted || generation != _generation) {
+      if (!_active || generation != _generation) {
         await session.stop();
         return;
       }
@@ -110,14 +136,45 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
     } catch (error) {
       await session?.stop();
       if (identical(_session, session)) _session = null;
-      if (mounted && generation == _generation) {
+      if (_active && generation == _generation) {
         setState(
           () => _error = mediaCaptureError(error, camera: widget.camera),
         );
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (_active) setState(() => _busy = false);
+      complete.complete();
     }
+  }
+
+  Future<void> _selectDevice(String? value) async {
+    if (_closing || _busy) return;
+    final complete = _selectionComplete = Completer<void>();
+    final selected = value == '' ? null : value;
+    setState(() => _busy = true);
+    try {
+      await MediaPreferences.select(camera: widget.camera, deviceId: selected);
+      if (_active) {
+        setState(() {
+          _selected = selected;
+          _error = null;
+        });
+      }
+    } catch (_) {
+      if (_active) {
+        setState(() => _error = 'Cihaz tercihi kaydedilemedi. Tekrar deneyin.');
+      }
+    } finally {
+      if (_active) setState(() => _busy = false);
+      complete.complete();
+    }
+  }
+
+  Future<void> _releaseForClose() async {
+    _closing = true;
+    await _stop();
+    await _openingComplete?.future;
+    await _selectionComplete?.future;
   }
 
   Future<void> _readLevel() async {
@@ -126,7 +183,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
     _readingLevel = true;
     try {
       final level = await session.readLevel();
-      if (mounted && identical(session, _session)) {
+      if (_active && identical(session, _session)) {
         setState(() => _level = level);
       }
     } catch (_) {
@@ -136,7 +193,16 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
     }
   }
 
-  Future<void> _stop() async {
+  Future<void> _stop() {
+    final pending = _stopping;
+    if (pending != null) return pending;
+    final stopping = _stopping = _stopCapture();
+    return stopping.whenComplete(() {
+      if (identical(_stopping, stopping)) _stopping = null;
+    });
+  }
+
+  Future<void> _stopCapture() async {
     ++_generation;
     _timer?.cancel();
     final session = _session;
@@ -145,13 +211,13 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
     if (widget.camera && _renderer.textureId != null) {
       _renderer.srcObject = null;
     }
-    if (mounted) {
+    if (_active) {
       setState(() {
         _level = null;
       });
     }
     await session?.stop();
-    if (session != null && mounted) setState(() => _releasing = false);
+    if (session != null && _active) setState(() => _releasing = false);
   }
 
   @override
@@ -162,15 +228,16 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
 
   @override
   void dispose() {
+    _disposing = true;
     WidgetsBinding.instance.removeObserver(this);
     ++_generation;
     _timer?.cancel();
-    final session = _session;
-    _session = null;
-    unawaited(session?.stop());
+    final released = _controller.close();
+    unawaited(released);
     if (widget.camera) {
       unawaited(
-        _rendererReady
+        released
+            .then((_) => _rendererReady)
             .then((_) => _renderer.dispose())
             .catchError((Object _) {}),
       );
@@ -182,16 +249,28 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
   Widget build(BuildContext context) {
     final name = widget.camera ? 'Kamera' : 'Mikrofon';
     final running = _session != null;
-    final busy = _busy || _releasing;
+    final busy = _busy || _releasing || _closing;
     final selectedMissing =
         _selected != null && !_devices.any((d) => d.deviceId == _selected);
     return Scaffold(
-      appBar: AppBar(title: Text('$name testi ve cihaz seçimi')),
+      appBar: AppBar(
+        title: Text('$name testi ve cihaz seçimi'),
+        leading: widget.inMeeting
+            ? CloseButton(
+                onPressed: () async {
+                  await _controller.close();
+                  if (context.mounted) Navigator.pop(context);
+                },
+              )
+            : null,
+      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
           Text(
-            'Seçiminiz kaydedilir ve bir sonraki toplantıda kullanılır. Test yalnızca bu cihazda çalışır; sunucuya ses veya görüntü gönderilmez.',
+            widget.inMeeting
+                ? 'Bu panel açıkken toplantıdaki ${widget.camera ? 'kamera' : 'mikrofon'} yayının duraklatılır. Test yalnızca bu cihazda çalışır. Paneli kapatınca seçtiğin cihaz toplantıya uygulanır; önceden kapalı olan yayın kapalı kalır.'
+                : 'Seçiminiz kaydedilir ve bir sonraki toplantıda kullanılır. Test yalnızca bu cihazda çalışır; sunucuya ses veya görüntü gönderilmez.',
           ),
           const SizedBox(height: 20),
           if (_loading) const LinearProgressIndicator(),
@@ -222,30 +301,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
                 ),
               ),
             ],
-            onChanged: busy || running || _loading
-                ? null
-                : (value) async {
-                    final selected = value == '' ? null : value;
-                    try {
-                      await MediaPreferences.select(
-                        camera: widget.camera,
-                        deviceId: selected,
-                      );
-                      if (mounted) {
-                        setState(() {
-                          _selected = selected;
-                          _error = null;
-                        });
-                      }
-                    } catch (_) {
-                      if (mounted) {
-                        setState(
-                          () => _error =
-                              'Cihaz tercihi kaydedilemedi. Tekrar deneyin.',
-                        );
-                      }
-                    }
-                  },
+            onChanged: busy || running || _loading ? null : _selectDevice,
           ),
           Align(
             alignment: Alignment.centerRight,
@@ -333,7 +389,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
               onPressed: () async {
                 await _stop();
                 final opened = await openMediaPrivacy(camera: widget.camera);
-                if (!opened && mounted) {
+                if (!opened && _active) {
                   setState(
                     () => _error =
                         'Windows ayarları açılamadı. Ayarlar > Gizlilik ve güvenlik > $name bölümünü açın.',
