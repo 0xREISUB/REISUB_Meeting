@@ -4,6 +4,7 @@ import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/home/home_screen.dart'; // Giriş başarılı olunca yönlendirilecek sayfa
 import 'package:dio/dio.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/widgets/app_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -92,11 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.video_chat_rounded,
-                  size: 100,
-                  color: Colors.deepPurpleAccent,
-                ),
+                const AppLogo(),
                 const SizedBox(height: 24),
                 Text(
                   l10n.welcome,

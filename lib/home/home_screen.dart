@@ -8,6 +8,7 @@ import 'package:v_meeting/settings/about_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
 import 'package:v_meeting/settings/settings_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/widgets/app_logo.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -164,11 +165,7 @@ class HomeScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // LOGO
-                        Icon(
-                          Icons.video_chat_rounded,
-                          size: isCompact ? 72 : 100,
-                          color: Colors.deepPurpleAccent,
-                        ),
+                        AppLogo(size: isCompact ? 112 : 144),
                         SizedBox(height: isCompact ? 16 : 24),
                         Text(
                           'REISUB Meeting',

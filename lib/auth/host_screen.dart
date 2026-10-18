@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/widgets/app_logo.dart';
 
 class HostScreen extends StatefulWidget {
   const HostScreen({super.key, this.dio});
@@ -125,11 +126,7 @@ class _HostScreenState extends State<HostScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.dns_rounded,
-                  size: 100,
-                  color: Colors.deepPurpleAccent,
-                ),
+                const AppLogo(),
                 const SizedBox(height: 24),
                 Text(
                   l10n.serverSettings,

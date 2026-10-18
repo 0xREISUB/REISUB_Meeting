@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/widgets/app_logo.dart';
 
 class AboutScreen extends ConsumerWidget {
   const AboutScreen({super.key});
@@ -8,46 +9,26 @@ class AboutScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.about),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.about), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             /// Logo
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: colorScheme.primaryContainer,
-              child: Icon(
-                Icons.video_chat_rounded,
-                size: 50,
-                color: colorScheme.primary,
-              ),
-            ),
+            const AppLogo(size: 128),
 
             const SizedBox(height: 20),
 
             const Text(
               "REISUB Meeting",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 6),
 
-            Text(
-              "v1.0.0",
-              style: TextStyle(
-                color: Colors.grey.shade400,
-              ),
-            ),
+            Text("v1.0.0", style: TextStyle(color: Colors.grey.shade400)),
 
             const SizedBox(height: 30),
 
@@ -115,18 +96,14 @@ class AboutScreen extends ConsumerWidget {
 
             Text(
               l10n.madeWithFlutter,
-              style: TextStyle(
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(color: Colors.grey.shade500),
             ),
 
             const SizedBox(height: 8),
 
             Text(
               "© 2026 Yusuf Enes Metin",
-              style: TextStyle(
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(color: Colors.grey.shade600),
             ),
           ],
         ),
