@@ -4,7 +4,11 @@ project(v_meeting LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "v_meeting")
+set(BINARY_NAME "REISUB Meeting")
+# Flutter reads the executable name above. CMake target identifiers cannot
+# contain spaces; keep a separate output name for the executable.
+set(APPLICATION_NAME "${BINARY_NAME}")
+string(REPLACE " " "_" BINARY_NAME "${BINARY_NAME}")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

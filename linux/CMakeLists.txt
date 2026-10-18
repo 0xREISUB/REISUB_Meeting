@@ -4,7 +4,10 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "v_meeting")
+set(BINARY_NAME "REISUB Meeting")
+# Preserve Flutter's executable discovery while using a valid CMake target.
+set(APPLICATION_NAME "${BINARY_NAME}")
+string(REPLACE " " "_" BINARY_NAME "${BINARY_NAME}")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "com.example.v_meeting")
@@ -56,6 +59,7 @@ pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
 
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
+set_target_properties(${BINARY_NAME} PROPERTIES OUTPUT_NAME "${APPLICATION_NAME}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)

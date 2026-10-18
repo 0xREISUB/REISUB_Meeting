@@ -5,7 +5,8 @@ import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 
 class HostScreen extends StatefulWidget {
-  const HostScreen({super.key});
+  const HostScreen({super.key, this.dio});
+  final Dio? dio;
 
   @override
   State<HostScreen> createState() => _HostScreenState();
@@ -13,7 +14,10 @@ class HostScreen extends StatefulWidget {
 
 class _HostScreenState extends State<HostScreen> {
   final _hostController = TextEditingController();
-  final _portController = TextEditingController(text: '8080');
+  final _portController = TextEditingController(
+    text: '${ServerConfig.defaultPort}',
+  );
+  bool _isLoading = true;
   bool _isConnecting = false;
 
   @override
@@ -23,50 +27,45 @@ class _HostScreenState extends State<HostScreen> {
   }
 
   Future<void> _loadSavedHost() async {
-    final savedHost = await ServerConfig.readUrl();
-    if (mounted && savedHost != null) {
-      final uri = Uri.tryParse(savedHost);
-      if (uri != null && uri.host.isNotEmpty) {
-        _hostController.text = uri.host;
-        _portController.text = (uri.hasPort ? uri.port : 8080).toString();
-      } else {
-        _hostController.text = savedHost;
+    try {
+      final savedHost = await ServerConfig.readUrl();
+      if (!mounted || savedHost == null) return;
+      final uri = ServerConfig.parseUrl(savedHost);
+      if (uri != null) {
+        _hostController.text = ServerConfig.editableHost(uri);
+        _portController.text = uri.port.toString();
       }
+    } catch (_) {
+      if (mounted) _showError('Kayıtlı sunucu ayarları okunamadı.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  String _buildServerUrl() {
-    final address = _hostController.text.trim().replaceFirst(
-      RegExp(r'/+$'),
-      '',
-    );
-    final port = int.tryParse(_portController.text.trim());
-    if (address.isEmpty || port == null || port < 1 || port > 65535) {
-      return '';
-    }
-
-    final hasProtocol =
-        address.startsWith('http://') || address.startsWith('https://');
-    final protocol = hasProtocol ? Uri.tryParse(address)?.scheme : 'http';
-    final host = hasProtocol ? Uri.tryParse(address)?.host : address;
-    if (protocol == null || host == null || host.isEmpty) {
-      return '';
-    }
-    return '$protocol://$host:$port';
   }
 
   Future<void> _connect() async {
+    if (_isLoading || _isConnecting) return;
     final l10n = AppLocalizations.of(context)!;
-    final host = _buildServerUrl();
+    final host = ServerConfig.buildUrl(
+      address: _hostController.text,
+      port: _portController.text,
+    );
 
-    if (host.isEmpty) {
+    if (host == null) {
       _showError(l10n.connectionError);
       return;
     }
 
     setState(() => _isConnecting = true);
     try {
-      final response = await Dio().get<Map<String, dynamic>>('$host/ping');
+      final dio =
+          widget.dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 10),
+            ),
+          );
+      final response = await dio.get<Map<String, dynamic>>('$host/ping');
       final pingResponse = response.data;
 
       if (response.statusCode != 200 ||
@@ -90,6 +89,8 @@ class _HostScreenState extends State<HostScreen> {
       if (mounted) {
         _showError(l10n.connectionError);
       }
+    } catch (_) {
+      if (mounted) _showError('Sunucu ayarları kaydedilemedi. Tekrar deneyin.');
     } finally {
       if (mounted) {
         setState(() => _isConnecting = false);
@@ -140,6 +141,8 @@ class _HostScreenState extends State<HostScreen> {
                 ),
                 const SizedBox(height: 40),
                 TextField(
+                  key: const Key('server-host'),
+                  enabled: !_isLoading && !_isConnecting,
                   controller: _hostController,
                   keyboardType: TextInputType.url,
                   decoration: InputDecoration(
@@ -153,6 +156,8 @@ class _HostScreenState extends State<HostScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextField(
+                  key: const Key('server-port'),
+                  enabled: !_isLoading && !_isConnecting,
                   controller: _portController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
@@ -174,7 +179,7 @@ class _HostScreenState extends State<HostScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _isConnecting ? null : _connect,
+                  onPressed: _isLoading || _isConnecting ? null : _connect,
                   icon: _isConnecting
                       ? const SizedBox(
                           width: 20,

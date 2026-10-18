@@ -7,24 +7,24 @@ import 'package:v_meeting/auth/server_config.dart';
 import 'device_test_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.dio});
+  final Dio? dio;
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final TextEditingController _serverHostController = TextEditingController(
-    text: '192.168.1.10',
-  );
+  final TextEditingController _serverHostController = TextEditingController();
   final TextEditingController _serverPortController = TextEditingController(
-    text: '3000',
+    text: '${ServerConfig.defaultPort}',
   );
 
   bool startWithMic = true;
   bool startWithCamera = true;
   bool mirrorCamera = false;
   bool _isSavingServerSettings = false;
+  bool _isLoadingServerSettings = true;
 
   @override
   void initState() {
@@ -33,20 +33,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _loadServerSettings() async {
-    final savedUrl = await ServerConfig.readUrl();
-    if (!mounted || savedUrl == null) {
-      return;
+    try {
+      final savedUrl = await ServerConfig.readUrl();
+      if (!mounted || savedUrl == null) return;
+      final uri = ServerConfig.parseUrl(savedUrl);
+      if (uri == null) return;
+      _serverHostController.text = ServerConfig.editableHost(uri);
+      _serverPortController.text = uri.port.toString();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kayıtlı sunucu ayarları okunamadı.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingServerSettings = false);
     }
-
-    final uri = Uri.tryParse(savedUrl);
-    if (uri == null || uri.host.isEmpty) {
-      return;
-    }
-
-    setState(() {
-      _serverHostController.text = uri.host;
-      _serverPortController.text = (uri.hasPort ? uri.port : 8080).toString();
-    });
   }
 
   @override
@@ -57,14 +59,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _saveServerSettings() async {
-    if (_isSavingServerSettings) {
+    if (_isLoadingServerSettings || _isSavingServerSettings) {
       return;
     }
 
-    final host = _serverHostController.text.trim();
-    final port = int.tryParse(_serverPortController.text.trim());
-
-    if (host.isEmpty || port == null || port <= 0 || port > 65535) {
+    final newUrl = ServerConfig.buildUrl(
+      address: _serverHostController.text,
+      port: _serverPortController.text,
+    );
+    if (newUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Lütfen geçerli bir sunucu IP/host ve port girin.'),
@@ -73,27 +76,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
 
-    final address = host.startsWith('http://') || host.startsWith('https://')
-        ? host
-        : 'http://$host';
-    final uri = Uri.tryParse(address);
-    if (uri == null || uri.host.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen geçerli bir sunucu adresi girin.'),
-        ),
-      );
-      return;
-    }
-
-    final newUrl = ServerConfig.normalizeUrl(
-      '${uri.scheme}://${uri.host}:$port',
-    );
-    final currentUrl = await ServerConfig.readUrl();
-
     setState(() => _isSavingServerSettings = true);
     try {
-      final response = await Dio().get<Map<String, dynamic>>('$newUrl/ping');
+      final currentUrl = await ServerConfig.readUrl();
+      final dio =
+          widget.dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 10),
+            ),
+          );
+      final response = await dio.get<Map<String, dynamic>>('$newUrl/ping');
       final pingResponse = response.data;
       if (response.statusCode != 200 ||
           pingResponse?['message'] != 'pong' ||
@@ -102,17 +96,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
 
       await ServerConfig.saveUrl(newUrl);
+      final serverChanged =
+          currentUrl != null &&
+          ServerConfig.parseUrl(currentUrl) != Uri.parse(newUrl);
+      if (serverChanged) await ServerConfig.clearToken();
       if (!mounted) {
         return;
       }
 
-      final serverChanged =
-          currentUrl != null && ServerConfig.normalizeUrl(currentUrl) != newUrl;
       if (serverChanged) {
-        await ServerConfig.clearToken();
-        if (!mounted) {
-          return;
-        }
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -122,7 +114,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sunucu ayarları kaydedildi: $host:$port')),
+        SnackBar(content: Text('Sunucu ayarları kaydedildi: $newUrl')),
       );
     } on DioException catch (_) {
       if (mounted) {
@@ -137,6 +129,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.connectionError),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sunucu ayarları kaydedilemedi. Tekrar deneyin.'),
           ),
         );
       }
@@ -236,6 +236,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: Column(
                   children: [
                     TextFormField(
+                      key: const Key('server-host'),
+                      enabled:
+                          !_isLoadingServerSettings && !_isSavingServerSettings,
                       controller: _serverHostController,
                       keyboardType: TextInputType.text,
                       decoration: InputDecoration(
@@ -246,11 +249,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      key: const Key('server-port'),
+                      enabled:
+                          !_isLoadingServerSettings && !_isSavingServerSettings,
                       controller: _serverPortController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: l10n.serverPort,
-                        hintText: '3000',
+                        hintText: '${ServerConfig.defaultPort}',
                         prefixIcon: const Icon(Icons.numbers_outlined),
                       ),
                     ),
@@ -258,7 +264,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _isSavingServerSettings
+                        onPressed:
+                            _isLoadingServerSettings || _isSavingServerSettings
                             ? null
                             : _saveServerSettings,
                         icon: _isSavingServerSettings
