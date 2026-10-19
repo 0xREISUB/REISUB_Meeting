@@ -18,7 +18,7 @@
 
 ## English
 
-REISUB Meeting connects you to your own REISUB Meeting server for video calls,
+REISUB Meeting connects you to a REISUB Meeting server for video calls,
 chat and screen sharing. The application has Windows, Linux, Android and web
 clients, with English and Turkish interfaces.
 
@@ -41,8 +41,19 @@ clients, with English and Turkish interfaces.
    [Releases page](https://github.com/0xREISUB/REISUB_Meeting/releases).
 2. On Windows, extract the entire archive and run **REISUB Meeting.exe**, keeping
    the accompanying files and folders beside it. On Android, install the APK.
-3. On first launch, enter your REISUB Meeting server address and port.
+3. On first launch, enter the public server details below or your own REISUB
+   Meeting server address and port.
 4. Sign in or create an account, then create a meeting or join with a room code.
+
+### Public server
+
+A public REISUB Meeting server will be available to everyone for **one month**.
+Enter these values in the application's server settings:
+
+| Setting | Value |
+| --- | --- |
+| Server address | [https://api.meeting.reisub.xyz](https://api.meeting.reisub.xyz) |
+| Port | `443` |
 
 A REISUB Meeting server with LiveKit configured is required. The desktop and
 mobile downloads contain the client application. Host controls require the
@@ -61,7 +72,7 @@ In a browser, use HTTPS for camera and microphone access outside localhost.
 
 ## Türkçe
 
-REISUB Meeting, kendi REISUB Meeting sunucunuza bağlanarak görüntülü görüşme,
+REISUB Meeting, bir REISUB Meeting sunucusuna bağlanarak görüntülü görüşme,
 sohbet ve ekran paylaşımı yapmanızı sağlar. Windows, Linux, Android ve web
 istemcilerinde Türkçe ve İngilizce arayüz sunar.
 
@@ -85,8 +96,19 @@ istemcilerinde Türkçe ve İngilizce arayüz sunar.
    işletim sisteminize uygun paketi indirin.
 2. Windows'ta arşivin tamamını çıkarıp **REISUB Meeting.exe** dosyasını açın;
    diğer dosya ve klasörleri yanında tutun. Android'de APK dosyasını yükleyin.
-3. İlk açılışta REISUB Meeting sunucunuzun adresini ve portunu girin.
+3. İlk açılışta aşağıdaki herkese açık sunucu bilgilerini veya kendi REISUB
+   Meeting sunucunuzun adresini ve portunu girin.
 4. Giriş yapın veya hesap oluşturun; ardından toplantı oluşturun ya da oda koduyla katılın.
+
+### Herkese açık sunucu
+
+REISUB Meeting sunucusu **bir ay boyunca** herkesin kullanımına açık olacak.
+Uygulamanın sunucu ayarlarına şu bilgileri girin:
+
+| Ayar | Değer |
+| --- | --- |
+| Sunucu adresi | [https://api.meeting.reisub.xyz](https://api.meeting.reisub.xyz) |
+| Port | `443` |
 
 LiveKit yapılandırması tamamlanmış bir REISUB Meeting sunucusu gerekir. Masaüstü
 ve mobil indirmeler istemci uygulamasını içerir. Yönetici kontrolleri için
