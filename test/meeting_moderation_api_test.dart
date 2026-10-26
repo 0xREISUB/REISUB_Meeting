@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 
 void main() {
@@ -11,6 +12,37 @@ void main() {
       'server_url': 'https://meeting.example.test',
       'auth_token': 'app-session-token',
     });
+  });
+
+  test('unauthorized responses clear the session and request login', () async {
+    final dio = Dio()
+      ..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) => handler.reject(
+            DioException(
+              requestOptions: options,
+              response: Response<dynamic>(
+                requestOptions: options,
+                statusCode: 401,
+                data: {'error': 'expired'},
+              ),
+            ),
+          ),
+        ),
+      );
+    final api = MeetingApi(dio: dio);
+    await expectLater(
+      api.createRoom('Test'),
+      throwsA(
+        isA<MeetingApiException>().having(
+          (error) => error.sessionExpired,
+          'sessionExpired',
+          isTrue,
+        ),
+      ),
+    );
+    expect(await ServerConfig.readToken(), isNull);
+    dio.close();
   });
 
   test(

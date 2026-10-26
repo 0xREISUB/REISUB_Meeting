@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
+import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
 
@@ -106,6 +107,14 @@ class _JoinScreenState extends State<JoinScreen> {
       );
     } on MeetingApiException catch (error) {
       if (mounted) {
+        if (error.sessionExpired) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (_) => false,
+          );
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(localizeError(error, AppLocalizations.of(context)!)),

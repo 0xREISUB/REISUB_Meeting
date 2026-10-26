@@ -10,6 +10,7 @@ import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
+import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
@@ -339,7 +340,13 @@ class _MeetingScreenState extends State<MeetingScreen>
       if (!mounted) return;
       await _connectToRoom();
     } catch (error) {
-      if (mounted) _connection.fail(error);
+      if (mounted) {
+        if (error is MeetingApiException && error.sessionExpired) {
+          _leaveMeeting(login: true);
+        } else {
+          _connection.fail(error);
+        }
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -990,7 +997,7 @@ class _MeetingScreenState extends State<MeetingScreen>
     );
   }
 
-  void _leaveMeeting({String? notice}) {
+  void _leaveMeeting({String? notice, bool login = false}) {
     if (!mounted || _leavingMeeting) return;
     _leavingMeeting = true;
     unawaited(_deviceTestController?.close());
@@ -1006,7 +1013,9 @@ class _MeetingScreenState extends State<MeetingScreen>
     unawaited(_room.disconnect());
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+      MaterialPageRoute<void>(
+        builder: (_) => login ? const LoginScreen() : const HomeScreen(),
+      ),
       (_) => false,
     );
     if (notice != null) {

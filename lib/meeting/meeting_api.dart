@@ -97,7 +97,7 @@ class MeetingApi {
       );
       return MeetingState.fromJson(response.data!);
     } on DioException catch (error) {
-      throw _errorMessage(error);
+      throw await _errorMessage(error);
     }
   }
 
@@ -127,7 +127,7 @@ class MeetingApi {
       );
       return MeetingState.fromJson(response.data!);
     } on DioException catch (error) {
-      throw _errorMessage(error);
+      throw await _errorMessage(error);
     }
   }
 
@@ -159,7 +159,7 @@ class MeetingApi {
         options: await _authorizedOptions(),
       );
     } on DioException catch (error) {
-      throw _errorMessage(error);
+      throw await _errorMessage(error);
     }
   }
 
@@ -175,7 +175,7 @@ class MeetingApi {
           )
           .toList();
     } on DioException catch (error) {
-      throw _errorMessage(error);
+      throw await _errorMessage(error);
     } on TypeError {
       throw const MeetingApiException.localized(AppError.invalidMessageData);
     } on FormatException {
@@ -201,7 +201,7 @@ class MeetingApi {
       }
       return MeetingChatMessage.fromJson(responseData);
     } on DioException catch (error) {
-      throw _errorMessage(error);
+      throw await _errorMessage(error);
     } on TypeError {
       throw const MeetingApiException.localized(AppError.invalidMessageData);
     } on FormatException {
@@ -213,7 +213,10 @@ class MeetingApi {
     final serverUrl = await ServerConfig.readUrl();
     final authToken = await ServerConfig.readToken();
     if (serverUrl == null || authToken == null) {
-      throw const MeetingApiException.localized(AppError.missingServerSession);
+      throw const MeetingApiException.localized(
+        AppError.missingServerSession,
+        sessionExpired: true,
+      );
     }
     return serverUrl;
   }
@@ -221,12 +224,22 @@ class MeetingApi {
   Future<Options> _authorizedOptions() async {
     final authToken = await ServerConfig.readToken();
     if (authToken == null) {
-      throw const MeetingApiException.localized(AppError.missingServerSession);
+      throw const MeetingApiException.localized(
+        AppError.missingServerSession,
+        sessionExpired: true,
+      );
     }
     return Options(headers: {'Authorization': 'Bearer $authToken'});
   }
 
-  MeetingApiException _errorMessage(DioException error) {
+  Future<MeetingApiException> _errorMessage(DioException error) async {
+    if (error.response?.statusCode == 401) {
+      await ServerConfig.clearToken();
+      return const MeetingApiException.localized(
+        AppError.missingServerSession,
+        sessionExpired: true,
+      );
+    }
     final responseData = error.response?.data;
     final message = responseData is Map<String, dynamic>
         ? responseData['error'] as String?
@@ -243,7 +256,10 @@ class MeetingApi {
     final serverUrl = await ServerConfig.readUrl();
     final authToken = await ServerConfig.readToken();
     if (serverUrl == null || authToken == null) {
-      throw const MeetingApiException.localized(AppError.missingServerSession);
+      throw const MeetingApiException.localized(
+        AppError.missingServerSession,
+        sessionExpired: true,
+      );
     }
 
     try {
@@ -260,15 +276,7 @@ class MeetingApi {
       }
       return RoomCredentials.fromJson(responseData);
     } on DioException catch (error) {
-      final responseData = error.response?.data;
-      final message = responseData is Map<String, dynamic>
-          ? responseData['error'] as String?
-          : null;
-      throw message == null
-          ? const MeetingApiException.localized(
-              AppError.meetingServerUnavailable,
-            )
-          : MeetingApiException(message);
+      throw await _errorMessage(error);
     } on TypeError {
       throw const MeetingApiException.localized(AppError.invalidRoomData);
     }
@@ -276,6 +284,9 @@ class MeetingApi {
 }
 
 class MeetingApiException extends AppException {
-  const MeetingApiException(super.message);
-  const MeetingApiException.localized(super.code) : super.localized();
+  const MeetingApiException(super.message, {this.sessionExpired = false});
+  const MeetingApiException.localized(super.code, {this.sessionExpired = false})
+    : super.localized();
+
+  final bool sessionExpired;
 }
