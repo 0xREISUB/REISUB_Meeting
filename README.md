@@ -150,6 +150,13 @@ flutter run
 | Web | `flutter build web --release` |
 | Linux `.deb` | `python3 tool/package_deb.py` after the Linux build / Linux derlemesinden sonra |
 
+For Android release builds, provide a private signing keystore and set
+`REISUB_ANDROID_KEYSTORE`, `REISUB_ANDROID_STORE_PASSWORD`,
+`REISUB_ANDROID_KEY_ALIAS`, and `REISUB_ANDROID_KEY_PASSWORD` in the build
+environment. Release builds fail when these are missing; never commit the
+keystore or its passwords. Android sürüm derlemeleri için aynı dört ortam
+değişkeniyle özel imza anahtarını sağlayın.
+
 ## Screenshots / Ekran görüntüleri
 
 | Home / Ana sayfa | Join / Toplantıya katıl |

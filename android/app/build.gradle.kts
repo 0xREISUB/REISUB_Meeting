@@ -4,6 +4,21 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val releaseKeystorePath = System.getenv("REISUB_ANDROID_KEYSTORE")
+val releaseStorePassword = System.getenv("REISUB_ANDROID_STORE_PASSWORD")
+val releaseKeyAlias = System.getenv("REISUB_ANDROID_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("REISUB_ANDROID_KEY_PASSWORD")
+val releaseSigningReady = listOf(
+    releaseKeystorePath,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+).all { !it.isNullOrBlank() }
+
+if (gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) } && !releaseSigningReady) {
+    throw GradleException("Android release signing requires REISUB_ANDROID_KEYSTORE, REISUB_ANDROID_STORE_PASSWORD, REISUB_ANDROID_KEY_ALIAS and REISUB_ANDROID_KEY_PASSWORD")
+}
+
 android {
     namespace = "com.example.v_meeting"
     compileSdk = flutter.compileSdkVersion
@@ -25,11 +40,20 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (releaseSigningReady) {
+                storeFile = file(releaseKeystorePath!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
