@@ -16,6 +16,7 @@ class MemberEntry {
   final VideoTrack? screenShareTrack;
   final bool isScreenSharing;
   final bool isScreenShare;
+  final bool mirrorCamera;
 
   const MemberEntry({
     required this.id,
@@ -29,6 +30,7 @@ class MemberEntry {
     this.screenShareTrack,
     this.isScreenSharing = false,
     this.isScreenShare = false,
+    this.mirrorCamera = true,
   });
 }
 
@@ -103,7 +105,8 @@ class MeetingParticipantTile extends StatelessWidget {
               member.videoTrack!,
               key: ObjectKey(member.videoTrack),
               fit: isMain ? VideoViewFit.contain : VideoViewFit.cover,
-              mirrorMode: member.isLocal && !member.isScreenShare
+              mirrorMode:
+                  member.isLocal && !member.isScreenShare && member.mirrorCamera
                   ? VideoViewMirrorMode.mirror
                   : VideoViewMirrorMode.off,
             )

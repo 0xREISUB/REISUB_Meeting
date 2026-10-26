@@ -15,6 +15,7 @@ import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
 import 'package:v_meeting/meeting/meeting_media.dart';
 import 'package:v_meeting/settings/media_preferences.dart';
+import 'package:v_meeting/settings/meeting_preferences.dart';
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/media_privacy.dart';
 import 'package:v_meeting/meeting/meeting_sharing.dart';
@@ -65,6 +66,8 @@ class _MeetingScreenState extends State<MeetingScreen>
   bool _readingVideoStats = false;
   bool _isMicEnabled = true;
   bool _isCameraEnabled = true;
+  bool _mirrorCamera = true;
+  bool _initialMeetingPreferencesLoaded = false;
   bool _showControls = true;
   bool _isConnecting = true;
   Object? _connectionError;
@@ -233,8 +236,15 @@ class _MeetingScreenState extends State<MeetingScreen>
     _connection.startConnecting();
     try {
       final mediaPreferences = await MediaPreferences.load();
+      final meetingPreferences = await MeetingPreferences.load();
       _media.microphoneId = mediaPreferences.microphoneId;
       _media.cameraId = mediaPreferences.cameraId;
+      if (!_initialMeetingPreferencesLoaded) {
+        _isMicEnabled = meetingPreferences.startWithMicrophone;
+        _isCameraEnabled = meetingPreferences.startWithCamera;
+        _initialMeetingPreferencesLoaded = true;
+      }
+      _mirrorCamera = meetingPreferences.mirrorCamera;
       if (!mounted || _leavingMeeting) return;
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         // Android 12+ requires runtime permission for Bluetooth headsets.
@@ -398,6 +408,7 @@ class _MeetingScreenState extends State<MeetingScreen>
         identity: local?.identity ?? '',
         isMicrophoneLocked: _microphoneLocked,
         isLocal: true,
+        mirrorCamera: _mirrorCamera,
         isMicEnabled: local?.isMicrophoneEnabled() ?? _isMicEnabled,
         isSpeaking: local?.isSpeaking ?? false,
         videoTrack: local == null ? null : _participantVideoTrack(local),

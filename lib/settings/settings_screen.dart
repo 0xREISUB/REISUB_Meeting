@@ -5,6 +5,7 @@ import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'device_test_screen.dart';
+import 'meeting_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key, this.dio});
@@ -22,7 +23,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   bool startWithMic = true;
   bool startWithCamera = true;
-  bool mirrorCamera = false;
+  bool mirrorCamera = true;
   bool _isSavingServerSettings = false;
   bool _isLoadingServerSettings = true;
 
@@ -30,6 +31,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void initState() {
     super.initState();
     _loadServerSettings();
+    _loadMeetingPreferences();
+  }
+
+  Future<void> _loadMeetingPreferences() async {
+    final preferences = await MeetingPreferences.load();
+    if (!mounted) return;
+    setState(() {
+      startWithMic = preferences.startWithMicrophone;
+      startWithCamera = preferences.startWithCamera;
+      mirrorCamera = preferences.mirrorCamera;
+    });
   }
 
   Future<void> _loadServerSettings() async {
@@ -195,6 +207,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             value: startWithMic,
             onChanged: (value) {
               setState(() => startWithMic = value);
+              MeetingPreferences.save(startWithMicrophone: value);
             },
           ),
 
@@ -204,6 +217,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             value: startWithCamera,
             onChanged: (value) {
               setState(() => startWithCamera = value);
+              MeetingPreferences.save(startWithCamera: value);
             },
           ),
 
@@ -213,6 +227,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             value: mirrorCamera,
             onChanged: (value) {
               setState(() => mirrorCamera = value);
+              MeetingPreferences.save(mirrorCamera: value);
             },
           ),
 
