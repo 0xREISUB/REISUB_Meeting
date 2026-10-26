@@ -26,6 +26,10 @@ Packaging requires Python 3, `dpkg-deb`, `dpkg-shlibdeps`, and binutils. Build a
 package on the same architecture. Use `--bundle PATH` to package another release
 bundle, and `--output-dir PATH` to choose the destination.
 
+Secure session storage requires `libsecret-1-dev` when building and a Secret
+Service/keyring on the desktop when running. The generated package dependency
+list includes the `libsecret-1-0` runtime library.
+
 The current amd64 build uses Ubuntu 24.04/Zorin OS 18 system libraries, including
 `libc6 >= 2.38`, `libglib2.0-0t64 >= 2.79.0` and `libstdc++6 >= 13.1`. It is not an
 Ubuntu 22.04 or Debian 12 build. For older distributions, rebuild and package on

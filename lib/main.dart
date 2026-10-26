@@ -47,7 +47,13 @@ class _StartupScreen extends StatelessWidget {
       return const HostScreen();
     }
 
-    final token = await ServerConfig.readToken();
+    String? token;
+    try {
+      token = await ServerConfig.readToken();
+    } catch (_) {
+      // A locked or unavailable platform key store requires a new login.
+      return const LoginScreen();
+    }
     return token == null ? const LoginScreen() : const HomeScreen();
   }
 

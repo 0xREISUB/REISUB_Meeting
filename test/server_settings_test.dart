@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:v_meeting/auth/host_screen.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
@@ -68,6 +69,23 @@ Future<void> saveSettings(WidgetTester tester) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => FlutterSecureStorage.setMockInitialValues({}));
+
+  test(
+    'legacy session migrates to secure storage and can be cleared',
+    () async {
+      SharedPreferences.setMockInitialValues({'auth_token': 'legacy-session'});
+      expect(await ServerConfig.readToken(), 'legacy-session');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('auth_token'), isNull);
+      expect(
+        await const FlutterSecureStorage().read(key: 'auth_token'),
+        'legacy-session',
+      );
+      await ServerConfig.clearToken();
+      expect(await ServerConfig.readToken(), isNull);
+    },
+  );
 
   test('address and port share one builder, including HTTPS and IPv6', () {
     for (final entry in {

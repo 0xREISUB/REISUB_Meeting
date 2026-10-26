@@ -1,10 +1,12 @@
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ServerConfig {
   static const defaultPort = 8080;
   static const _serverUrlKey = 'server_url';
   static const _authTokenKey = 'auth_token';
+  static const _secureStorage = FlutterSecureStorage();
 
   static String normalizeUrl(String value) {
     var url = value.trim();
@@ -86,21 +88,31 @@ class ServerConfig {
   }
 
   static Future<void> saveToken(String token) async {
+    await _secureStorage.write(key: _authTokenKey, value: token);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_authTokenKey, token);
+    await prefs.remove(_authTokenKey);
   }
 
   static Future<String?> readToken() async {
+    final secureToken = await _secureStorage.read(key: _authTokenKey);
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_authTokenKey);
-    if (token == null || token.trim().isEmpty) {
-      return null;
+    if (secureToken != null && secureToken.trim().isNotEmpty) {
+      await prefs.remove(_authTokenKey);
+      return secureToken;
     }
-    return token;
+    final legacyToken = prefs.getString(_authTokenKey);
+    if (legacyToken == null || legacyToken.trim().isEmpty) return null;
+    await _secureStorage.write(key: _authTokenKey, value: legacyToken);
+    await prefs.remove(_authTokenKey);
+    return legacyToken;
   }
 
   static Future<void> clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_authTokenKey);
+    try {
+      await _secureStorage.delete(key: _authTokenKey);
+    } finally {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_authTokenKey);
+    }
   }
 }
