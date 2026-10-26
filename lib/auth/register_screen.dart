@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/widgets/language_menu_button.dart';
+import 'auth_error.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -56,14 +57,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
     } on DioException catch (e) {
-      // Go sunucumuzdan dönen hata mesajını (örn: "Bu nick kullanımda") ekrana basıyoruz
-      final errorMessage = e.response?.data['error'] ?? (l10n.connectionError);
+      final errorMessage = authErrorMessage(
+        e.response?.data,
+        l10n.connectionError,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
         );
       }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.connectionError),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _nickController.dispose();
+    _passwordController.dispose();
+    _passwordConfirmController.dispose();
+    super.dispose();
   }
 
   @override

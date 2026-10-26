@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
 import 'package:v_meeting/widgets/language_menu_button.dart';
+import 'auth_error.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -41,8 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         // 1. Go'dan gelen tokeni al
-        final token = response.data['token'] as String?;
-        if (token == null || token.isEmpty) {
+        final responseData = response.data;
+        final token = responseData is Map ? responseData['token'] : null;
+        if (token is! String || token.isEmpty) {
           throw const FormatException('Missing authentication token');
         }
 
@@ -58,7 +60,10 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } on DioException catch (e) {
-      final errorMessage = e.response?.data['error'] ?? (l10n.connectionError);
+      final errorMessage = authErrorMessage(
+        e.response?.data,
+        l10n.connectionError,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
@@ -73,7 +78,23 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.connectionError),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _nickController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
