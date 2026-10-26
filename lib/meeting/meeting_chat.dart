@@ -14,6 +14,7 @@ class MeetingChatController extends ChangeNotifier {
   final MeetingApi _api;
   final List<MeetingChatMessage> messages = [];
   final Set<int> _knownMessageIds = {};
+  final Map<int, MeetingChatMessage> _pendingSentMessages = {};
   final Set<int> _unreadMessageIds = {};
   Timer? _refreshTimer;
   bool isLoading = true;
@@ -51,16 +52,22 @@ class MeetingChatController extends ChangeNotifier {
     try {
       final latestMessages = await _api.getRoomMessages(roomId);
       if (_isDisposed) return;
+      final serverIds = latestMessages.map((message) => message.id).toSet();
+      _pendingSentMessages.removeWhere((id, _) => serverIds.contains(id));
+      final visibleMessages = [
+        ...latestMessages,
+        ..._pendingSentMessages.values,
+      ]..sort((left, right) => left.id.compareTo(right.id));
       final hadUnreadMessages = hasUnreadMessages;
       final wasLoading = isLoading;
       final previousError = error;
       final messagesChanged =
-          latestMessages.length != messages.length ||
+          visibleMessages.length != messages.length ||
           List.generate(
-            latestMessages.length < messages.length
-                ? latestMessages.length
+            visibleMessages.length < messages.length
+                ? visibleMessages.length
                 : messages.length,
-            (index) => latestMessages[index].id == messages[index].id,
+            (index) => visibleMessages[index].id == messages[index].id,
           ).any((isSameMessage) => !isSameMessage);
       if (_hasLoaded && !_isChatOpen) {
         for (final message in latestMessages) {
@@ -72,7 +79,7 @@ class MeetingChatController extends ChangeNotifier {
       _knownMessageIds.addAll(latestMessages.map((message) => message.id));
       messages
         ..clear()
-        ..addAll(latestMessages);
+        ..addAll(visibleMessages);
       isLoading = false;
       error = null;
       _hasLoaded = true;
@@ -102,6 +109,7 @@ class MeetingChatController extends ChangeNotifier {
     try {
       final message = await _api.sendRoomMessage(roomId, trimmedContent);
       if (_isDisposed) return false;
+      _pendingSentMessages[message.id] = message;
       _knownMessageIds.add(message.id);
       messages
         ..removeWhere((existing) => existing.id == message.id)
