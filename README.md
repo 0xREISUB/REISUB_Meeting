@@ -34,6 +34,8 @@ clients, with English and Turkish interfaces.
 - **Host controls:** mute and lock participant microphones, request permission to
   unmute, manage screen-sharing permissions, and end a meeting for everyone.
 - **Server settings:** save your server address and port, including HTTPS connections.
+- Public server connections require HTTPS. HTTP is available only for local
+  addresses such as `localhost` and private network IPs.
 
 ### Download and connect
 
@@ -89,6 +91,8 @@ istemcilerinde Türkçe ve İngilizce arayüz sunar.
   açma isteği gönderin, ekran paylaşımı izinlerini yönetin ve toplantıyı herkes
   için bitirin. Mikrofon açma isteği katılımcının onayını gerektirir.
 - **Sunucu ayarları:** HTTPS desteğiyle sunucu adresinizi ve portunuzu kaydedin.
+- Herkese açık sunucu bağlantılarında HTTPS gerekir. HTTP yalnızca `localhost`
+  ve özel ağ IP adresleri gibi yerel adreslerde kullanılabilir.
 
 ### İndirme ve bağlantı
 

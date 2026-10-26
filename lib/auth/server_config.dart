@@ -12,7 +12,8 @@ class ServerConfig {
       return url;
     }
     if (!RegExp(r'^https?://', caseSensitive: false).hasMatch(url)) {
-      url = 'http://$url';
+      final host = Uri.tryParse('http://$url')?.host ?? '';
+      url = '${_isLocalHost(host) ? 'http' : 'https'}://$url';
     }
     return url.replaceFirst(RegExp(r'/+$'), '');
   }
@@ -22,10 +23,38 @@ class ServerConfig {
     if (uri == null ||
         !['http', 'https'].contains(uri.scheme) ||
         uri.host.isEmpty ||
+        (uri.scheme == 'http' && !_isLocalHost(uri.host)) ||
         uri.userInfo.isNotEmpty) {
       return null;
     }
     return uri;
+  }
+
+  static bool _isLocalHost(String host) {
+    final value = host.toLowerCase();
+    if (value == 'localhost' ||
+        value.endsWith('.localhost') ||
+        value.endsWith('.local') ||
+        value == '::1' ||
+        value == '[::1]' ||
+        (value.contains(':') &&
+            (value.startsWith('fc') ||
+                value.startsWith('fd') ||
+                RegExp(r'^fe[89ab]').hasMatch(value)))) {
+      return true;
+    }
+    final octets = value.split('.').map(int.tryParse).toList();
+    if (octets.length != 4 ||
+        octets.any((part) => part == null || part < 0 || part > 255)) {
+      return false;
+    }
+    final first = octets[0]!;
+    final second = octets[1]!;
+    return first == 10 ||
+        first == 127 ||
+        (first == 169 && second == 254) ||
+        (first == 172 && second >= 16 && second <= 31) ||
+        (first == 192 && second == 168);
   }
 
   static String? buildUrl({required String address, required String port}) {
@@ -52,7 +81,8 @@ class ServerConfig {
     if (url == null || url.trim().isEmpty) {
       return null;
     }
-    return normalizeUrl(url);
+    final normalized = normalizeUrl(url);
+    return parseUrl(normalized) == null ? null : normalized;
   }
 
   static Future<void> saveToken(String token) async {

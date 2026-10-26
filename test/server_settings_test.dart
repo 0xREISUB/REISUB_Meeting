@@ -72,6 +72,7 @@ void main() {
   test('address and port share one builder, including HTTPS and IPv6', () {
     for (final entry in {
       '192.168.1.20': 'http://192.168.1.20:9000',
+      'meeting.test': 'https://meeting.test:9000',
       'https://meeting.test:8443/': 'https://meeting.test:9000',
       'HTTPS://meeting.test/': 'https://meeting.test:9000',
       '[::1]': 'http://[::1]:9000',
@@ -85,12 +86,20 @@ void main() {
       expect(ServerConfig.buildUrl(address: 'localhost', port: port), isNull);
     }
     expect(ServerConfig.buildUrl(address: '', port: '8080'), isNull);
+    expect(
+      ServerConfig.buildUrl(address: 'http://meeting.test', port: '8080'),
+      isNull,
+    );
+    expect(
+      ServerConfig.buildUrl(address: 'http://fc-public.test', port: '8080'),
+      isNull,
+    );
   });
 
   for (final url in [
     'http://192.168.1.20:4567',
     'https://meeting.test:8443',
-    'http://meeting.test:80',
+    'http://localhost:80',
     'https://meeting.test:443',
   ]) {
     testWidgets('startup and settings show the same saved endpoint: $url', (
