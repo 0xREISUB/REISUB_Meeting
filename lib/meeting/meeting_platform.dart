@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:v_meeting/meeting/web_wake_lock.dart';
 
 /// Creates the LiveKit room for a meeting. Tests override this with a fake.
 final meetingRoomFactoryProvider = Provider<Room Function()>(
@@ -135,9 +136,12 @@ class MeetingPlatform {
     }
   }
 
-  /// Android: no screen timeout while a meeting is on screen.
+  /// No screen timeout while a meeting is on screen: Android natively, and
+  /// in browsers that support the Screen Wake Lock API.
   Future<void> setKeepScreenOn(bool enabled) async {
-    if (_isAndroid) {
+    if (kIsWeb) {
+      await _quietly(() => setWebWakeLock(enabled));
+    } else if (_isAndroid) {
       await _quietly(
         () => _display.invokeMethod<void>('setKeepScreenOn', enabled),
       );
