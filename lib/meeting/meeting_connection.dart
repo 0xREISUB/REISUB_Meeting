@@ -14,7 +14,7 @@ enum MeetingConnectionPhase {
 
 /// Keeps transport state separate from camera/microphone permission errors.
 class MeetingConnection extends ChangeNotifier {
-  MeetingConnection(Room room) {
+  MeetingConnection(Room room, {this.weakAfter = const Duration(seconds: 10)}) {
     _events = room.createListener()
       ..on<RoomConnectedEvent>((_) => markConnected())
       ..on<RoomReconnectedEvent>((_) => markConnected())
@@ -42,8 +42,7 @@ class MeetingConnection extends ChangeNotifier {
       })
       ..on<ParticipantConnectionQualityUpdatedEvent>((event) {
         if (event.participant is! LocalParticipant) return;
-        quality = event.connectionQuality;
-        notifyListeners();
+        _updateQuality(event.connectionQuality);
       });
   }
 
@@ -52,6 +51,38 @@ class MeetingConnection extends ChangeNotifier {
   DisconnectReason? disconnectReason;
   ConnectionQuality quality = ConnectionQuality.unknown;
   Object? problem;
+
+  /// How long the quality must stay poor before the user is warned. LiveKit
+  /// rates the connection every few seconds, and a single brief packet-loss
+  /// or bitrate dip rates it poor while the call sounds fine.
+  final Duration weakAfter;
+  Timer? _weakTimer;
+  bool _weak = false;
+
+  /// Whether the connection has stayed poor for [weakAfter].
+  bool get isWeak => _weak;
+
+  void _updateQuality(ConnectionQuality value) {
+    quality = value;
+    final poor =
+        value == ConnectionQuality.poor || value == ConnectionQuality.lost;
+    if (!poor) {
+      _clearWeak();
+    } else if (!_weak && _weakTimer == null) {
+      _weakTimer = Timer(weakAfter, () {
+        _weakTimer = null;
+        _weak = true;
+        notifyListeners();
+      });
+    }
+    notifyListeners();
+  }
+
+  void _clearWeak() {
+    _weakTimer?.cancel();
+    _weakTimer = null;
+    _weak = false;
+  }
 
   bool get isConnected => phase == MeetingConnectionPhase.connected;
   bool get canRejoin =>
@@ -80,10 +111,7 @@ class MeetingConnection extends ChangeNotifier {
         };
       case MeetingConnectionPhase.connected:
         if (problem != null) return localizeError(problem!, l10n);
-        if (quality == ConnectionQuality.poor ||
-            quality == ConnectionQuality.lost) {
-          return l10n.poorMediaConnection;
-        }
+        if (_weak) return l10n.poorMediaConnection;
         return null;
     }
   }
@@ -93,6 +121,7 @@ class MeetingConnection extends ChangeNotifier {
     disconnectReason = null;
     problem = null;
     quality = ConnectionQuality.unknown;
+    _clearWeak();
     notifyListeners();
   }
 
@@ -101,6 +130,7 @@ class MeetingConnection extends ChangeNotifier {
     disconnectReason = null;
     problem = null;
     quality = ConnectionQuality.unknown;
+    _clearWeak();
     notifyListeners();
   }
 
@@ -116,6 +146,7 @@ class MeetingConnection extends ChangeNotifier {
 
   @override
   void dispose() {
+    _clearWeak();
     unawaited(_events.dispose());
     super.dispose();
   }

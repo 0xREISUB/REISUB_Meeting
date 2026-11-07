@@ -16,6 +16,11 @@ class _EventRoom implements Room {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _Local implements LocalParticipant {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   late _EventRoom room;
   late MeetingConnection connection;
@@ -149,4 +154,40 @@ void main() {
       expect(connection.canRejoin, isTrue);
     },
   );
+
+  test('a brief poor quality rating does not warn the user', () async {
+    final weakRoom = _EventRoom();
+    final weak = MeetingConnection(
+      weakRoom,
+      weakAfter: const Duration(milliseconds: 80),
+    )..markConnected();
+    final local = _Local();
+    Future<void> rate(ConnectionQuality quality) async {
+      weakRoom.events.streamCtrl.add(
+        ParticipantConnectionQualityUpdatedEvent(
+          participant: local,
+          connectionQuality: quality,
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    await rate(ConnectionQuality.poor);
+    expect(weak.message(AppLocalizationsEn()), isNull);
+    await rate(ConnectionQuality.good);
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    expect(weak.message(AppLocalizationsEn()), isNull);
+
+    await rate(ConnectionQuality.poor);
+    await rate(ConnectionQuality.lost);
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    expect(weak.isWeak, isTrue);
+    expect(weak.message(AppLocalizationsEn()), contains('weak'));
+
+    await rate(ConnectionQuality.excellent);
+    expect(weak.message(AppLocalizationsEn()), isNull);
+
+    weak.dispose();
+    await weakRoom.events.dispose();
+  });
 }
