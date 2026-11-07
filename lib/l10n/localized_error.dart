@@ -16,6 +16,7 @@ enum AppError {
   microphoneDisableFailed,
   devicePreferenceSaveFailed,
   windowsDevicePrivacyUnavailable,
+  screenShareStoppedByHost,
 }
 
 /// Keep application errors as data so an already visible error follows a locale
@@ -50,6 +51,7 @@ class AppException implements Exception {
       l10n.windowsDevicePrivacyUnavailable(
         details == true ? l10n.cameraName : l10n.microphoneName,
       ),
+    AppError.screenShareStoppedByHost => l10n.screenShareStoppedByHost,
     null => message!,
   };
 

@@ -12,6 +12,7 @@ class MeetingControlsBar extends StatelessWidget {
     required this.hasUnreadMessages,
     required this.sharingScreen,
     required this.screenSharingAllowed,
+    this.screenShareBusy = false,
     required this.onToggleMicrophone,
     required this.onToggleCamera,
     required this.onOpenMembers,
@@ -28,6 +29,9 @@ class MeetingControlsBar extends StatelessWidget {
   final bool hasUnreadMessages;
   final bool sharingScreen;
   final bool screenSharingAllowed;
+
+  /// Someone else is sharing; only one share is allowed at a time.
+  final bool screenShareBusy;
   final VoidCallback onToggleMicrophone;
   final VoidCallback onToggleCamera;
   final VoidCallback onOpenMembers;
@@ -84,6 +88,8 @@ class MeetingControlsBar extends StatelessWidget {
           IconButton(
             tooltip: sharingScreen
                 ? l10n.stopScreenSharing
+                : screenShareBusy
+                ? l10n.screenShareInUse
                 : screenSharingAllowed
                 ? l10n.shareScreen
                 : l10n.screenSharingDisabled,

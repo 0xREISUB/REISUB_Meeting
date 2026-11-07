@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
-import 'package:livekit_client/livekit_client.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -21,6 +19,7 @@ import 'package:v_meeting/meeting/widgets/meeting_controls_bar.dart';
 import 'package:v_meeting/meeting/widgets/meeting_joining_overlay.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 import 'package:v_meeting/meeting/widgets/meeting_settings_dialog.dart';
+import 'package:v_meeting/meeting/widgets/screen_source_picker.dart';
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/media_privacy.dart';
 
@@ -162,19 +161,14 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   void showError(Object error) => _showMessage(localizeError(error, _l10n));
 
   @override
-  Future<String?> pickDesktopScreen() async {
+  Future<ScreenShareChoice?> pickDesktopScreen() async {
     if (!mounted) return null;
-    final source = await showDialog<rtc.DesktopCapturerSource>(
-      context: context,
-      builder: (_) => ScreenSelectDialog(
-        titleText: _l10n.selectScreenToShare,
-        screenTabText: _l10n.screen,
-        windowTabText: _l10n.window,
-        cancelText: _l10n.cancel,
-        shareText: _l10n.share,
-      ),
+    final platform = _session.platform;
+    return ScreenSourcePicker.show(
+      context,
+      capturer: platform.desktopCapturer,
+      audioSupport: platform.systemAudioSupport,
     );
-    return source?.id;
   }
 
   @override
@@ -401,6 +395,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                               session.chat?.hasUnreadMessages ?? false,
                           sharingScreen: session.isSharingScreen,
                           screenSharingAllowed: session.screenSharingAllowed,
+                          screenShareBusy: session.screenShareBusy,
                           onToggleMicrophone: _toggleMicrophone,
                           onToggleCamera: session.toggleCamera,
                           onOpenMembers: _openMembersSheet,

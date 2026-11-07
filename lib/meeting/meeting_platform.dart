@@ -28,6 +28,26 @@ Room createMeetingRoom() => Room(
   ),
 );
 
+/// How a desktop can capture computer audio together with the screen.
+enum SystemAudioSupport {
+  /// No computer audio capture.
+  none,
+
+  /// Windows: every app except this one, or only the shared window's app.
+  excludesMeeting,
+
+  /// Linux: everything the speakers play, including the meeting itself.
+  includesMeeting,
+}
+
+/// What the user picked in the screen picker.
+class ScreenShareChoice {
+  const ScreenShareChoice({required this.sourceId, required this.shareAudio});
+
+  final String sourceId;
+  final bool shareAudio;
+}
+
 /// Text for the Android notification shown while the screen is shared.
 typedef ScreenShareNotificationText = ({
   String channelName,
@@ -48,6 +68,18 @@ class MeetingPlatform {
       (defaultTargetPlatform == TargetPlatform.linux ||
           defaultTargetPlatform == TargetPlatform.windows ||
           defaultTargetPlatform == TargetPlatform.macOS);
+
+  SystemAudioSupport get systemAudioSupport {
+    if (kIsWeb) return SystemAudioSupport.none;
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.windows => SystemAudioSupport.excludesMeeting,
+      TargetPlatform.linux => SystemAudioSupport.includesMeeting,
+      _ => SystemAudioSupport.none,
+    };
+  }
+
+  /// Lists screens and windows on desktop platforms.
+  rtc.DesktopCapturer get desktopCapturer => rtc.desktopCapturer;
 
   /// Android 12+ requires runtime permission for Bluetooth headsets. Denial
   /// still allows using the phone's microphone and speaker.

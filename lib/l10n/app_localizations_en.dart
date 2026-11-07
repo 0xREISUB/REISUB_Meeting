@@ -327,6 +327,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
+  String get shareSystemAudio => 'Share computer audio';
+
+  @override
+  String get shareSystemAudioScreenHint =>
+      'All computer audio except this meeting is shared.';
+
+  @override
+  String get shareSystemAudioWindowHint =>
+      'Only the selected window\'s audio is shared.';
+
+  @override
+  String get shareSystemAudioEchoHint =>
+      'Meeting audio is captured too. Use headphones so others don\'t hear an echo.';
+
+  @override
+  String get noShareSources => 'No screens or windows were found.';
+
+  @override
+  String get screenShareInUse => 'Someone else is already sharing their screen';
+
+  @override
+  String get screenShareStoppedByHost =>
+      'The host turned off screen sharing, so your share was stopped.';
+
+  @override
   String get screenShareLabel => 'Screen sharing';
 
   @override

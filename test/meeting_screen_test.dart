@@ -173,6 +173,15 @@ class _ModerationApi extends MeetingApi {
   }
 }
 
+class _BusySharingApi extends _ModerationApi {
+  @override
+  Future<MeetingState> getMeetingState(String roomId) async =>
+      const MeetingState(
+        allowParticipantScreenShare: true,
+        screenShareIdentity: 'someone-else',
+      );
+}
+
 const local = MemberEntry(
   id: 'local',
   name: 'Ali',
@@ -459,6 +468,30 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pumpAndSettle();
   }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+  for (final host in [false, true]) {
+    testWidgets('screen share is unavailable while someone else shares '
+        '(host=$host)', (tester) async {
+      final room = _TestRoom(local: _TestLocal());
+      await openExitTest(tester, room, host: host, api: _BusySharingApi());
+      room.events.streamCtrl.add(
+        RoomConnectedEvent(room: room, metadata: null),
+      );
+      await tester.pumpAndSettle();
+      final button = find.byTooltip('Şu anda başka biri ekranını paylaşıyor');
+      expect(button, findsOneWidget);
+      expect(
+        tester
+            .widget<IconButton>(
+              find.ancestor(of: button, matching: find.byType(IconButton)),
+            )
+            .onPressed,
+        isNull,
+      );
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+    }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+  }
 
   testWidgets('host exit offers end and leave; leave does not close the room', (
     tester,

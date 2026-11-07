@@ -326,6 +326,32 @@ class AppLocalizationsTr extends AppLocalizations {
   String get share => 'Paylaş';
 
   @override
+  String get shareSystemAudio => 'Bilgisayar sesini paylaş';
+
+  @override
+  String get shareSystemAudioScreenHint =>
+      'Bu toplantı dışındaki tüm bilgisayar sesleri paylaşılır.';
+
+  @override
+  String get shareSystemAudioWindowHint =>
+      'Yalnızca seçilen pencerenin sesi paylaşılır.';
+
+  @override
+  String get shareSystemAudioEchoHint =>
+      'Toplantının sesi de yakalanır. Diğerleri yankı duymasın diye kulaklık kullanın.';
+
+  @override
+  String get noShareSources =>
+      'Paylaşılabilecek ekran veya pencere bulunamadı.';
+
+  @override
+  String get screenShareInUse => 'Şu anda başka biri ekranını paylaşıyor';
+
+  @override
+  String get screenShareStoppedByHost =>
+      'Oda sahibi ekran paylaşımını kapattığı için paylaşımınız durduruldu.';
+
+  @override
   String get screenShareLabel => 'Ekran paylaşımı';
 
   @override

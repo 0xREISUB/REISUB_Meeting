@@ -704,6 +704,48 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
+  /// No description provided for @shareSystemAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Share computer audio'**
+  String get shareSystemAudio;
+
+  /// No description provided for @shareSystemAudioScreenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All computer audio except this meeting is shared.'**
+  String get shareSystemAudioScreenHint;
+
+  /// No description provided for @shareSystemAudioWindowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the selected window\'s audio is shared.'**
+  String get shareSystemAudioWindowHint;
+
+  /// No description provided for @shareSystemAudioEchoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting audio is captured too. Use headphones so others don\'t hear an echo.'**
+  String get shareSystemAudioEchoHint;
+
+  /// No description provided for @noShareSources.
+  ///
+  /// In en, this message translates to:
+  /// **'No screens or windows were found.'**
+  String get noShareSources;
+
+  /// No description provided for @screenShareInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else is already sharing their screen'**
+  String get screenShareInUse;
+
+  /// No description provided for @screenShareStoppedByHost.
+  ///
+  /// In en, this message translates to:
+  /// **'The host turned off screen sharing, so your share was stopped.'**
+  String get screenShareStoppedByHost;
+
   /// No description provided for @screenShareLabel.
   ///
   /// In en, this message translates to:

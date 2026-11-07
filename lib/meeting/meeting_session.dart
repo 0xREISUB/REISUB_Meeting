@@ -40,7 +40,7 @@ abstract interface class MeetingUi {
   void showError(Object error);
 
   /// Lets a desktop user choose a screen or window. Null means cancelled.
-  Future<String?> pickDesktopScreen();
+  Future<ScreenShareChoice?> pickDesktopScreen();
   ScreenShareNotificationText screenShareNotification();
 }
 
@@ -71,6 +71,12 @@ class MeetingSession extends ChangeNotifier {
        connection = MeetingConnection(room) {
     connection.addListener(_onConnectionChanged);
     room.addListener(_onRoomChanged);
+    _roomEvents = room.createListener()
+      ..on<ParticipantPermissionsUpdatedEvent>((event) {
+        if (event.participant is LocalParticipant) {
+          _onLocalPermissionsChanged(event.permissions);
+        }
+      });
     entryGate = MeetingEntryGate(
       enabled: showEntryGate && credentials != null,
       connection: connection,
@@ -103,6 +109,7 @@ class MeetingSession extends ChangeNotifier {
   final MeetingPlatform platform;
   final MeetingConnection connection;
   final MeetingUi _ui;
+  late final EventsListener<RoomEvent> _roomEvents;
   late final MeetingEntryGate entryGate;
   MeetingSharing? sharing;
   MeetingChatController? chat;
@@ -366,10 +373,15 @@ class MeetingSession extends ChangeNotifier {
 
   void _onSharingChanged() {
     if (_inactive) return;
+    final state = sharing!.state;
     if (_ownsScreenShare &&
         !changingScreenShare &&
-        sharing!.state.screenShareIdentity != room.localParticipant?.identity) {
-      unawaited(stopScreenShare());
+        state.screenShareIdentity != room.localParticipant?.identity) {
+      if (!isHost && !state.allowParticipantScreenShare) {
+        _stopRevokedScreenShare();
+      } else {
+        unawaited(stopScreenShare());
+      }
     }
     notifyListeners();
   }
@@ -682,13 +694,42 @@ class MeetingSession extends ChangeNotifier {
 
   bool get canToggleScreenShare {
     final state = sharing?.state;
-    return !changingScreenShare &&
-        connection.isConnected &&
-        (isSharingScreen ||
-            isHost ||
-            (sharing?.loaded == true &&
-                state!.allowParticipantScreenShare &&
-                state.screenShareIdentity.isEmpty));
+    if (changingScreenShare || !connection.isConnected) return false;
+    if (isSharingScreen) return true;
+    // Only one person can share at a time, the host included.
+    if (screenShareBusy) return false;
+    return isHost ||
+        (sharing?.loaded == true && state!.allowParticipantScreenShare);
+  }
+
+  /// Another participant holds the room's single screen share.
+  bool get screenShareBusy {
+    final holder = sharing?.state.screenShareIdentity ?? '';
+    if (holder.isNotEmpty && holder != room.localParticipant?.identity) {
+      return true;
+    }
+    return connection.isConnected &&
+        room.remoteParticipants.values.any(_hasScreenShare);
+  }
+
+  static bool _maySharescreen(ParticipantPermissions permissions) =>
+      permissions.canPublish &&
+      (permissions.canPublishSources.isEmpty ||
+          permissions.canPublishSources.any((s) => s.name == 'SCREEN_SHARE'));
+
+  /// The server revokes the permission when the host turns sharing off; stop
+  /// at once instead of waiting for the next state poll.
+  void _onLocalPermissionsChanged(ParticipantPermissions permissions) {
+    if (_inactive || changingScreenShare || !isSharingScreen) return;
+    if (_maySharescreen(permissions)) return;
+    _stopRevokedScreenShare();
+  }
+
+  void _stopRevokedScreenShare() {
+    _ui.showError(
+      const AppException.localized(AppError.screenShareStoppedByHost),
+    );
+    unawaited(stopScreenShare());
   }
 
   Future<void> _stopScreenService() async {
@@ -730,10 +771,10 @@ class MeetingSession extends ChangeNotifier {
     notifyListeners();
     var reserved = false;
     try {
-      String? sourceId;
+      ScreenShareChoice? choice;
       if (platform.isDesktop) {
-        sourceId = await _ui.pickDesktopScreen();
-        if (sourceId == null || _inactive) return;
+        choice = await _ui.pickDesktopScreen();
+        if (choice == null || _inactive) return;
       } else if (!await platform.requestScreenCapturePermission() ||
           _inactive) {
         return;
@@ -744,12 +785,7 @@ class MeetingSession extends ChangeNotifier {
       if (_inactive) return;
       // Wait for the permission update on the signaling channel as well as HTTP.
       for (var i = 0; i < 30; i++) {
-        if (local.permissions.canPublish &&
-            local.permissions.canPublishSources.any(
-              (s) => s.name == 'SCREEN_SHARE',
-            )) {
-          break;
-        }
+        if (_maySharescreen(local.permissions)) break;
         await Future<void>.delayed(const Duration(milliseconds: 100));
         if (_inactive) return;
       }
@@ -757,12 +793,15 @@ class MeetingSession extends ChangeNotifier {
         _ui.screenShareNotification(),
       );
       if (_inactive) return;
+      // Browsers offer their own "share audio" choice.
+      final shareAudio = choice?.shareAudio ?? kIsWeb;
       final publication = await local.setScreenShareEnabled(
         true,
-        captureScreenAudio: false,
+        captureScreenAudio: shareAudio,
         screenShareCaptureOptions: ScreenShareCaptureOptions(
-          sourceId: sourceId,
+          sourceId: choice?.sourceId,
           maxFrameRate: 15,
+          captureScreenAudio: shareAudio,
         ),
       );
       if (publication == null) {
@@ -844,6 +883,7 @@ class MeetingSession extends ChangeNotifier {
       ..removeListener(_onConnectionChanged)
       ..dispose();
     room.removeListener(_onRoomChanged);
+    unawaited(_roomEvents.dispose());
     chat
       ?..removeListener(notifyListeners)
       ..dispose();
