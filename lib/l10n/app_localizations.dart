@@ -134,6 +134,30 @@ abstract class AppLocalizations {
   /// **'Invite link copied'**
   String get inviteLinkCopied;
 
+  /// No description provided for @inviteServerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch server?'**
+  String get inviteServerTitle;
+
+  /// No description provided for @inviteServerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite is for a meeting on {server}. Switching signs you out of your current server.'**
+  String inviteServerBody(String server);
+
+  /// No description provided for @switchServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get switchServer;
+
+  /// No description provided for @inviteFinishMeetingFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the current meeting to open the invite.'**
+  String get inviteFinishMeetingFirst;
+
   /// No description provided for @nameError.
   ///
   /// In en, this message translates to:

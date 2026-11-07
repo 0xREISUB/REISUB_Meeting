@@ -7,15 +7,19 @@ import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/auth/account.dart';
+import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
 
 class JoinScreen extends ConsumerStatefulWidget {
-  const JoinScreen({super.key, this.initialRoomId});
+  const JoinScreen({super.key, this.initialRoomId, this.inviteServerUrl});
 
   /// Prefilled room code, e.g. from an invite link.
   final String? initialRoomId;
+
+  /// Server named by the invite; the user confirms switching to it.
+  final String? inviteServerUrl;
 
   @override
   ConsumerState<JoinScreen> createState() => _JoinScreenState();
@@ -40,9 +44,51 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     if (widget.initialRoomId != null) {
       // The invite has been used; providers can't change during a build.
       Future.microtask(() {
-        if (mounted) ref.read(inviteRoomProvider.notifier).clear();
+        if (mounted) ref.read(pendingInviteProvider.notifier).clear();
       });
     }
+    final inviteServer = widget.inviteServerUrl;
+    if (inviteServer != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _offerInviteServer(inviteServer),
+      );
+    }
+  }
+
+  /// A link must never move the user to another server silently: a forged
+  /// invite could otherwise collect their password on a fake server.
+  Future<void> _offerInviteServer(String inviteServer) async {
+    final current = await ServerConfig.readUrl();
+    if (!mounted || current == inviteServer) return;
+    if (current == null) {
+      // No server yet, so there is nothing to replace.
+      await ServerConfig.saveUrl(inviteServer);
+      return;
+    }
+    final l10n = AppLocalizations.of(context)!;
+    final host = Uri.parse(inviteServer).host;
+    final switchServer = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.inviteServerTitle),
+        content: Text(l10n.inviteServerBody(host)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            key: const ValueKey('switch-invite-server'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.switchServer),
+          ),
+        ],
+      ),
+    );
+    if (switchServer != true || !mounted) return;
+    await ServerConfig.saveUrl(inviteServer);
+    await ServerConfig.clearSessions();
+    ref.read(signedInProvider.notifier).refresh();
   }
 
   @override

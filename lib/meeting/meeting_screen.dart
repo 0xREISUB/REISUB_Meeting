@@ -34,6 +34,11 @@ class MeetingScreen extends ConsumerStatefulWidget {
   final RoomCredentials? credentials;
   final bool skipJoiningScreen;
 
+  static int _open = 0;
+
+  /// Whether a meeting is on screen; invite links wait until it ends.
+  static bool get isOpen => _open > 0;
+
   @override
   ConsumerState<MeetingScreen> createState() => _MeetingScreenState();
 }
@@ -55,6 +60,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    MeetingScreen._open++;
     final platform = ref.read(meetingPlatformProvider);
     _display = MeetingDisplayMode(platform);
     _session = MeetingSession(
@@ -316,6 +322,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    MeetingScreen._open--;
     _controlsTimer?.cancel();
     _display.exit();
     _session

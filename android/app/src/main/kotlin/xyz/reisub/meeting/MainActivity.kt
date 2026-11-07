@@ -11,9 +11,25 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var meetingFullscreen = false
+    private var links: MethodChannel? = null
+
+    /** Invite link the activity was started with, handed to Dart once. */
+    private var launchLink: String? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        launchLink = inviteLink(intent)
+        links = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "reisub_meeting/links")
+            .apply {
+                setMethodCallHandler { call, result ->
+                    if (call.method == "getInitialLink") {
+                        result.success(launchLink)
+                        launchLink = null
+                    } else {
+                        result.notImplemented()
+                    }
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "reisub_meeting/display")
             .setMethodCallHandler { call, result ->
                 if (call.method == "setFullscreen") {
@@ -44,6 +60,16 @@ class MainActivity : FlutterActivity() {
                 }
             }
     }
+
+    /** Invites opened while the app is running (launchMode is singleTop). */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        inviteLink(intent)?.let { links?.invokeMethod("onLink", it) }
+    }
+
+    private fun inviteLink(intent: Intent?): String? =
+        if (intent?.action == Intent.ACTION_VIEW) intent.dataString else null
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)

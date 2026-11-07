@@ -38,6 +38,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Host whose https invite links open in the app (App Links). Override
+        // with -PreisubInviteHost=meeting.example.com for another server.
+        manifestPlaceholders["inviteHost"] =
+            (project.findProperty("reisubInviteHost") as String?) ?: "meeting.reisub.xyz"
     }
 
     signingConfigs {

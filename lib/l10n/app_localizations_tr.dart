@@ -27,6 +27,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inviteLinkCopied => 'Davet bağlantısı kopyalandı';
 
   @override
+  String get inviteServerTitle => 'Sunucu değiştirilsin mi?';
+
+  @override
+  String inviteServerBody(String server) {
+    return 'Bu davet $server sunucusundaki bir toplantı için. Geçerseniz şu anki sunucudaki oturumunuz kapanır.';
+  }
+
+  @override
+  String get switchServer => 'Geç';
+
+  @override
+  String get inviteFinishMeetingFirst =>
+      'Daveti açmak için önce bu toplantıdan ayrılın.';
+
+  @override
   String get nameError => 'Bir ad girmelisin';
 
   @override

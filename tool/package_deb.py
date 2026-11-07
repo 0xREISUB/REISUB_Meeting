@@ -81,11 +81,12 @@ GenericName=Video Conferencing
 GenericName[tr]=Görüntülü Toplantı
 Comment=Connect to your REISUB Meeting server
 Comment[tr]=REISUB Meeting sunucunuza bağlanın
-Exec={PACKAGE}
+Exec={PACKAGE} %u
 TryExec={PACKAGE}
 Icon={APP_ID}
 Terminal=false
 Categories=Network;VideoConference;
+MimeType=x-scheme-handler/reisub-meeting;
 StartupNotify=true
 StartupWMClass={APP_ID}
 """)

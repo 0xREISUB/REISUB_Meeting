@@ -22,12 +22,18 @@ final appStartupProvider = FutureProvider<StartDestination>((ref) async {
   await ref.read(localeProvider.notifier).restore();
 
   var serverUrl = await ServerConfig.readUrl();
+  final invite = ref.read(pendingInviteProvider);
   if (kIsWeb) {
     serverUrl = await _useWebServer(
       saved: serverUrl,
       // An invite belongs to the server that hosts the web app.
-      forInvite: ref.read(inviteRoomProvider) != null,
+      forInvite: invite != null,
     );
+  } else if (serverUrl == null && invite?.serverUrl != null) {
+    // First launch from an invite: nothing to replace, so use its server.
+    // Switching from a saved server is confirmed on the join screen.
+    serverUrl = invite!.serverUrl;
+    await ServerConfig.saveUrl(serverUrl!);
   }
   return serverUrl == null
       ? StartDestination.serverSetup

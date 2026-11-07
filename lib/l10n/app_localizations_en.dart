@@ -27,6 +27,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteLinkCopied => 'Invite link copied';
 
   @override
+  String get inviteServerTitle => 'Switch server?';
+
+  @override
+  String inviteServerBody(String server) {
+    return 'This invite is for a meeting on $server. Switching signs you out of your current server.';
+  }
+
+  @override
+  String get switchServer => 'Switch';
+
+  @override
+  String get inviteFinishMeetingFirst =>
+      'Leave the current meeting to open the invite.';
+
+  @override
   String get nameError => 'You must enter a name';
 
   @override
