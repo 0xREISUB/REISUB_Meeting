@@ -5,7 +5,7 @@ publish_to: 'none'
 
 # build-name is the user-visible version; build-number is the Android
 # versionCode / iOS CFBundleVersion / Windows build suffix.
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.12.0

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/version.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
 
@@ -28,7 +29,7 @@ class AboutScreen extends ConsumerWidget {
 
             const SizedBox(height: 6),
 
-            Text("v1.0.0", style: TextStyle(color: Colors.grey.shade400)),
+            Text("v$appVersion", style: TextStyle(color: Colors.grey.shade400)),
 
             const SizedBox(height: 30),
 
@@ -76,7 +77,7 @@ class AboutScreen extends ConsumerWidget {
                   showLicensePage(
                     context: context,
                     applicationName: "REISUB Meeting",
-                    applicationVersion: "1.0.0",
+                    applicationVersion: appVersion,
                   );
                 },
               ),

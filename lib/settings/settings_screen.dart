@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/auth_api.dart';
 import 'package:v_meeting/auth/account.dart';
+import 'package:v_meeting/app/version.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'device_test_screen.dart';
@@ -333,7 +334,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: Text(l10n.version),
-            subtitle: const Text("1.0.0"),
+            subtitle: const Text(appVersion),
           ),
 
           ListTile(
