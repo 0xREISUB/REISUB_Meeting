@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.view.View
+import android.view.WindowManager
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import io.flutter.embedding.android.FlutterActivity
@@ -57,6 +58,32 @@ class MainActivity : FlutterActivity() {
                 } else if (call.method == "stopScreenShareService") {
                     stopService(Intent(this, ScreenShareService::class.java))
                     result.success(null)
+                } else if (call.method == "startMeetingService") {
+                    try {
+                        val intent = Intent(this, MeetingService::class.java)
+                            .putExtra("channelName", call.argument<String>("channelName"))
+                            .putExtra("title", call.argument<String>("title"))
+                            .putExtra("body", call.argument<String>("body"))
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+                        else startService(intent)
+                        result.success(null)
+                    } catch (error: Exception) {
+                        result.error("meeting_service", error.message, null)
+                    }
+                } else if (call.method == "stopMeetingService") {
+                    stopService(Intent(this, MeetingService::class.java))
+                    result.success(null)
+                } else if (call.method == "setKeepScreenOn") {
+                    // No screen timeout while a meeting is on screen.
+                    if (call.arguments == true) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    }
+                    result.success(null)
+                } else if (call.method == "moveToBackground") {
+                    // Back in a meeting leaves the app running, like Home.
+                    result.success(moveTaskToBack(true))
                 } else {
                     result.notImplemented()
                 }

@@ -48,12 +48,8 @@ class ScreenShareChoice {
   final bool shareAudio;
 }
 
-/// Text for the Android notification shown while the screen is shared.
-typedef ScreenShareNotificationText = ({
-  String channelName,
-  String title,
-  String body,
-});
+/// Text for an Android foreground-service notification.
+typedef NotificationText = ({String channelName, String title, String body});
 
 class MeetingPlatform {
   const MeetingPlatform();
@@ -104,7 +100,7 @@ class MeetingPlatform {
 
   /// Android requires a foreground service while the screen is captured.
   /// Returns whether a service was started.
-  Future<bool> startScreenShareService(ScreenShareNotificationText text) async {
+  Future<bool> startScreenShareService(NotificationText text) async {
     if (!_isAndroid) return false;
     await _display.invokeMethod<void>('startScreenShareService', {
       'channelName': text.channelName,
@@ -116,4 +112,50 @@ class MeetingPlatform {
 
   Future<void> stopScreenShareService() =>
       _display.invokeMethod<void>('stopScreenShareService');
+
+  /// Android: keeps the app, its microphone and the meeting's audio running
+  /// while it is in the background, with an ongoing notification.
+  Future<void> startMeetingService(NotificationText text) async {
+    if (!_isAndroid) return;
+    // Android 13+ hides the notification unless the user allows it; the
+    // service itself runs either way.
+    await _quietly(() => Permission.notification.request());
+    await _quietly(
+      () => _display.invokeMethod<void>('startMeetingService', {
+        'channelName': text.channelName,
+        'title': text.title,
+        'body': text.body,
+      }),
+    );
+  }
+
+  Future<void> stopMeetingService() async {
+    if (_isAndroid) {
+      await _quietly(() => _display.invokeMethod<void>('stopMeetingService'));
+    }
+  }
+
+  /// Android: no screen timeout while a meeting is on screen.
+  Future<void> setKeepScreenOn(bool enabled) async {
+    if (_isAndroid) {
+      await _quietly(
+        () => _display.invokeMethod<void>('setKeepScreenOn', enabled),
+      );
+    }
+  }
+
+  /// Android: sends the app to the background, like the Home button, so the
+  /// back button does not end the meeting.
+  Future<void> moveToBackground() async {
+    if (_isAndroid) {
+      await _quietly(() => _display.invokeMethod<bool>('moveToBackground'));
+    }
+  }
+
+  /// Background support must never break the meeting itself.
+  static Future<void> _quietly(Future<Object?> Function() action) async {
+    try {
+      await action();
+    } catch (_) {}
+  }
 }

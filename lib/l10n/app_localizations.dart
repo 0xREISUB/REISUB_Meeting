@@ -728,6 +728,24 @@ abstract class AppLocalizations {
   /// **'End meeting'**
   String get endMeeting;
 
+  /// No description provided for @meetingNotificationChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting'**
+  String get meetingNotificationChannel;
+
+  /// No description provided for @meetingNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting in progress'**
+  String get meetingNotificationTitle;
+
+  /// No description provided for @meetingNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to return to the meeting.'**
+  String get meetingNotificationBody;
+
   /// No description provided for @roleOwner.
   ///
   /// In en, this message translates to:

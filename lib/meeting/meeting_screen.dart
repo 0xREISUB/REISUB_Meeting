@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/home/home_screen.dart';
@@ -72,7 +73,11 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
       showEntryGate: !widget.skipJoiningScreen,
     )..addListener(_onSessionChanged);
     _scheduleControlsHide();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _session.connect());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _startBackgroundSupport();
+      _session.connect();
+    });
   }
 
   @override
@@ -83,7 +88,39 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _display.onResumed();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _display.onResumed();
+        unawaited(_session.resumeCameraFromBackground());
+      case AppLifecycleState.paused:
+        unawaited(_session.pauseCameraForBackground());
+      default:
+    }
+  }
+
+  /// Keeps the screen awake and, on Android, the meeting running in the
+  /// background.
+  void _startBackgroundSupport() {
+    final platform = _session.platform;
+    unawaited(platform.setKeepScreenOn(true));
+    unawaited(
+      platform.startMeetingService((
+        channelName: _l10n.meetingNotificationChannel,
+        title: _l10n.meetingNotificationTitle,
+        body: _l10n.meetingNotificationBody,
+      )),
+    );
+  }
+
+  /// System back leaves the meeting running on Android (the app goes to the
+  /// background) and asks before leaving elsewhere.
+  void _onBack(bool didPop, Object? _) {
+    if (didPop) return;
+    if (defaultTargetPlatform == TargetPlatform.android && !kIsWeb) {
+      unawaited(_session.platform.moveToBackground());
+    } else {
+      unawaited(_requestLeaveMeeting());
+    }
   }
 
   @override
@@ -174,7 +211,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   @override
-  ScreenShareNotificationText screenShareNotification() => (
+  NotificationText screenShareNotification() => (
     channelName: _l10n.screenShareLabel,
     title: _l10n.screenShareNotificationTitle,
     body: _l10n.screenShareNotificationBody,
@@ -323,6 +360,9 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     MeetingScreen._open--;
+    final platform = _session.platform;
+    unawaited(platform.setKeepScreenOn(false));
+    unawaited(platform.stopMeetingService());
     _controlsTimer?.cancel();
     _display.exit();
     _session
@@ -358,137 +398,142 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     final roomId = widget.credentials?.roomId;
     final isPhone = MediaQuery.sizeOf(context).shortestSide < 600;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        top: !isPhone,
-        bottom: !isPhone,
-        left: !isPhone,
-        right: !isPhone,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Padding(
-                padding: isPhone ? EdgeInsets.zero : const EdgeInsets.all(16),
-                child: MeetingVideoLayout(
-                  members: members,
-                  mainMember: mainMember,
-                  connecting:
-                      session.isConnecting ||
-                      connection.phase == MeetingConnectionPhase.reconnecting,
-                  onMainPageTap: _showMeetingControls,
-                  onStopScreenShare: session.changingScreenShare
-                      ? null
-                      : session.stopScreenShare,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: _onBack,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          top: !isPhone,
+          bottom: !isPhone,
+          left: !isPhone,
+          right: !isPhone,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Padding(
+                  padding: isPhone ? EdgeInsets.zero : const EdgeInsets.all(16),
+                  child: MeetingVideoLayout(
+                    members: members,
+                    mainMember: mainMember,
+                    connecting:
+                        session.isConnecting ||
+                        connection.phase == MeetingConnectionPhase.reconnecting,
+                    onMainPageTap: _showMeetingControls,
+                    onStopScreenShare: session.changingScreenShare
+                        ? null
+                        : session.stopScreenShare,
+                  ),
                 ),
               ),
-            ),
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              bottom: _showControls ? (isPhone ? 16 : 32) : -100,
-              left: 0,
-              right: 0,
-              child: Listener(
-                onPointerDown: (_) => _scheduleControlsHide(),
-                child: SafeArea(
-                  top: false,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: MeetingControlsBar(
-                          microphoneLocked: session.microphoneLocked,
-                          microphoneEnabled: session.isMicEnabled,
-                          cameraEnabled: session.isCameraEnabled,
-                          hasUnreadMessages:
-                              session.chat?.hasUnreadMessages ?? false,
-                          sharingScreen: session.isSharingScreen,
-                          screenSharingAllowed: session.screenSharingAllowed,
-                          screenShareBusy: session.screenShareBusy,
-                          onToggleMicrophone: _toggleMicrophone,
-                          onToggleCamera: session.toggleCamera,
-                          onOpenMembers: _openMembersSheet,
-                          onOpenChat: _openChatSheet,
-                          onToggleScreenShare: session.canToggleScreenShare
-                              ? session.toggleScreenShare
-                              : null,
-                          onOpenSettings: _openMeetingSettings,
-                          onShowRoomCode: () => setState(() {
-                            _showRoomCode = true;
-                            _roomCodeRequests++;
-                          }),
-                          onLeave: session.endingRoom
-                              ? null
-                              : _requestLeaveMeeting,
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                bottom: _showControls ? (isPhone ? 16 : 32) : -100,
+                left: 0,
+                right: 0,
+                child: Listener(
+                  onPointerDown: (_) => _scheduleControlsHide(),
+                  child: SafeArea(
+                    top: false,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: MeetingControlsBar(
+                            microphoneLocked: session.microphoneLocked,
+                            microphoneEnabled: session.isMicEnabled,
+                            cameraEnabled: session.isCameraEnabled,
+                            hasUnreadMessages:
+                                session.chat?.hasUnreadMessages ?? false,
+                            sharingScreen: session.isSharingScreen,
+                            screenSharingAllowed: session.screenSharingAllowed,
+                            screenShareBusy: session.screenShareBusy,
+                            onToggleMicrophone: _toggleMicrophone,
+                            onToggleCamera: session.toggleCamera,
+                            onOpenMembers: _openMembersSheet,
+                            onOpenChat: _openChatSheet,
+                            onToggleScreenShare: session.canToggleScreenShare
+                                ? session.toggleScreenShare
+                                : null,
+                            onOpenSettings: _openMeetingSettings,
+                            onShowRoomCode: () => setState(() {
+                              _showRoomCode = true;
+                              _roomCodeRequests++;
+                            }),
+                            onLeave: session.endingRoom
+                                ? null
+                                : _requestLeaveMeeting,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            if (connectionMessage != null)
-              Positioned(
-                top: 16,
-                left: 24,
-                right: 24,
-                child: MeetingConnectionBanner(
-                  message: session.isRejoining
-                      ? l10n.rejoiningMeeting
-                      : connectionMessage,
-                  disconnected:
-                      connection.phase == MeetingConnectionPhase.disconnected,
-                  onRejoin:
-                      connection.phase == MeetingConnectionPhase.disconnected &&
-                          connection.canRejoin &&
-                          session.credentials != null &&
-                          !session.isRejoining
-                      ? session.rejoin
-                      : null,
+              if (connectionMessage != null)
+                Positioned(
+                  top: 16,
+                  left: 24,
+                  right: 24,
+                  child: MeetingConnectionBanner(
+                    message: session.isRejoining
+                        ? l10n.rejoiningMeeting
+                        : connectionMessage,
+                    disconnected:
+                        connection.phase == MeetingConnectionPhase.disconnected,
+                    onRejoin:
+                        connection.phase ==
+                                MeetingConnectionPhase.disconnected &&
+                            connection.canRejoin &&
+                            session.credentials != null &&
+                            !session.isRejoining
+                        ? session.rejoin
+                        : null,
+                  ),
                 ),
-              ),
-            if (meetingError != null && connectionMessage == null)
-              Positioned(
-                top: 16,
-                left: 24,
-                right: 24,
-                child: MeetingErrorBanner(
-                  message: meetingError,
-                  onMicrophonePrivacy:
-                      isWindowsDesktop && session.microphoneError != null
-                      ? () => _openPrivacySettings(camera: false)
-                      : null,
-                  onCameraPrivacy:
-                      isWindowsDesktop && session.cameraError != null
-                      ? () => _openPrivacySettings(camera: true)
-                      : null,
+              if (meetingError != null && connectionMessage == null)
+                Positioned(
+                  top: 16,
+                  left: 24,
+                  right: 24,
+                  child: MeetingErrorBanner(
+                    message: meetingError,
+                    onMicrophonePrivacy:
+                        isWindowsDesktop && session.microphoneError != null
+                        ? () => _openPrivacySettings(camera: false)
+                        : null,
+                    onCameraPrivacy:
+                        isWindowsDesktop && session.cameraError != null
+                        ? () => _openPrivacySettings(camera: true)
+                        : null,
+                  ),
                 ),
-              ),
-            if (_showRoomCode && roomId != null)
-              Positioned(
-                top: 16,
-                left: 24,
-                right: 24,
-                child: RoomCodeBanner(
-                  // A new key restarts the countdown when shown again.
-                  key: ValueKey(_roomCodeRequests),
-                  roomId: roomId,
-                  inviteLink: _session.inviteLink,
-                  onClose: () => setState(() => _showRoomCode = false),
+              if (_showRoomCode && roomId != null)
+                Positioned(
+                  top: 16,
+                  left: 24,
+                  right: 24,
+                  child: RoomCodeBanner(
+                    // A new key restarts the countdown when shown again.
+                    key: ValueKey(_roomCodeRequests),
+                    roomId: roomId,
+                    inviteLink: _session.inviteLink,
+                    onClose: () => setState(() => _showRoomCode = false),
+                  ),
                 ),
-              ),
-            if (!session.entryGate.ready)
-              Positioned.fill(
-                child: MeetingJoiningOverlay(
-                  timedOut: session.entryGate.timedOut,
-                  onRetry: session.isJoining || session.isRejoining
-                      ? null
-                      : session.rejoin,
-                  onLeave: () => session.leave(MeetingExitReason.left),
+              if (!session.entryGate.ready)
+                Positioned.fill(
+                  child: MeetingJoiningOverlay(
+                    timedOut: session.entryGate.timedOut,
+                    onRetry: session.isJoining || session.isRejoining
+                        ? null
+                        : session.rejoin,
+                    onLeave: () => session.leave(MeetingExitReason.left),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

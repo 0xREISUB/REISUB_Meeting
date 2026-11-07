@@ -344,6 +344,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get endMeeting => 'End meeting';
 
   @override
+  String get meetingNotificationChannel => 'Meeting';
+
+  @override
+  String get meetingNotificationTitle => 'Meeting in progress';
+
+  @override
+  String get meetingNotificationBody => 'Tap to return to the meeting.';
+
+  @override
   String get roleOwner => 'Full admin';
 
   @override

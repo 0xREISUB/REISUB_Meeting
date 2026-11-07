@@ -227,11 +227,29 @@ const _guestCredentials = RoomCredentials(
 );
 
 /// Avoids the real Bluetooth permission prompt, which never answers in tests.
+/// Records background-support calls and avoids the real Bluetooth
+/// permission prompt, which never answers in tests.
 class _TestPlatform extends MeetingPlatform {
-  const _TestPlatform();
+  _TestPlatform();
+
+  final calls = <String>[];
 
   @override
   Future<void> requestBluetoothPermission() async {}
+
+  @override
+  Future<void> setKeepScreenOn(bool enabled) async =>
+      calls.add('keepScreenOn:$enabled');
+
+  @override
+  Future<void> startMeetingService(NotificationText text) async =>
+      calls.add('startService:${text.title}');
+
+  @override
+  Future<void> stopMeetingService() async => calls.add('stopService');
+
+  @override
+  Future<void> moveToBackground() async => calls.add('moveToBackground');
 }
 
 Widget meetingApp(
@@ -239,11 +257,12 @@ Widget meetingApp(
   MeetingApi? api,
   RoomCredentials? credentials,
   bool skipJoiningScreen = false,
+  MeetingPlatform? platform,
 }) => ProviderScope(
   overrides: [
     meetingRoomFactoryProvider.overrideWithValue(() => room),
     meetingApiProvider.overrideWithValue(api ?? _ModerationApi()),
-    meetingPlatformProvider.overrideWithValue(const _TestPlatform()),
+    meetingPlatformProvider.overrideWithValue(platform ?? _TestPlatform()),
   ],
   child: localized(
     MeetingScreen(
@@ -259,11 +278,13 @@ void main() {
     _TestRoom room, {
     bool host = false,
     _ModerationApi? api,
+    _TestPlatform? platform,
   }) async {
     await tester.pumpWidget(
       meetingApp(
         room,
         api: api,
+        platform: platform,
         skipJoiningScreen: true,
         credentials: RoomCredentials(
           roomId: '123-456-789',
@@ -1327,6 +1348,74 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(api.leaves, 1);
   }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+  group('background', () {
+    testWidgets('a meeting keeps the screen awake and runs in the background', (
+      tester,
+    ) async {
+      final platform = _TestPlatform();
+      await openExitTest(tester, _TestRoom(), platform: platform);
+      expect(platform.calls, [
+        'keepScreenOn:true',
+        'startService:Toplantı sürüyor',
+      ]);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+      expect(
+        platform.calls,
+        containsAll(['keepScreenOn:false', 'stopService']),
+      );
+    });
+
+    testWidgets('Android back keeps the meeting and leaves the app running', (
+      tester,
+    ) async {
+      final platform = _TestPlatform();
+      final api = _ModerationApi();
+      await openExitTest(tester, _TestRoom(), platform: platform, api: api);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(platform.calls.last, 'moveToBackground');
+      expect(find.byType(MeetingScreen), findsOneWidget);
+      expect(api.leaves, 0);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('desktop back leaves the meeting properly', (tester) async {
+      final api = _ModerationApi();
+      await openExitTest(tester, _TestRoom(), api: api);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(api.leaves, 1);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+    testWidgets('the camera pauses in the background and comes back', (
+      tester,
+    ) async {
+      final local = _TestLocal();
+      final room = _TestRoom(local: local);
+      await openExitTest(tester, room);
+      room.events.streamCtrl.add(
+        RoomConnectedEvent(room: room, metadata: null),
+      );
+      await tester.pumpAndSettle();
+      local.cameraChanges.clear();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pumpAndSettle();
+      expect(local.cameraChanges, [false]);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(local.cameraChanges, [false, true]);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+    }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+  });
 
   testWidgets('locked microphone stops capture and cannot be opened locally', (
     tester,

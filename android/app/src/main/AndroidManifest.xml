@@ -11,6 +11,10 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <!-- Meetings keep running in the background (MeetingService). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Allow joining without camera or microphone hardware (receive-only). -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -28,6 +32,10 @@
         <meta-data
             android:name="xyz.reisub.meeting.INVITE_SERVER"
             android:value="${inviteServer}" />
+        <service
+            android:name=".MeetingService"
+            android:exported="false"
+            android:foregroundServiceType="microphone|mediaPlayback" />
         <service
             android:name=".ScreenShareService"
             android:exported="false"

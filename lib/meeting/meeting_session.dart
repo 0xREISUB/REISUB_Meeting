@@ -42,7 +42,7 @@ abstract interface class MeetingUi {
 
   /// Lets a desktop user choose a screen or window. Null means cancelled.
   Future<ScreenShareChoice?> pickDesktopScreen();
-  ScreenShareNotificationText screenShareNotification();
+  NotificationText screenShareNotification();
 }
 
 /// A running in-meeting device test; see [MeetingSession.beginDeviceTest].
@@ -668,6 +668,47 @@ class MeetingSession extends ChangeNotifier {
       }
     } catch (error) {
       if (!_disposed) {
+        cameraError = error;
+        notifyListeners();
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Background
+
+  bool _cameraPausedInBackground = false;
+
+  /// Android blocks the camera in the background and the picture would
+  /// freeze, so the camera is turned off until the app returns. Audio keeps
+  /// running.
+  Future<void> pauseCameraForBackground() async {
+    final participant = room.localParticipant;
+    if (_inactive ||
+        !isCameraEnabled ||
+        _cameraPausedInBackground ||
+        participant == null ||
+        !connection.isConnected) {
+      return;
+    }
+    _cameraPausedInBackground = true;
+    try {
+      await media.setCameraEnabled(participant, false);
+    } catch (_) {
+      // The camera is released anyway when the app is in the background.
+    }
+  }
+
+  Future<void> resumeCameraFromBackground() async {
+    if (!_cameraPausedInBackground) return;
+    _cameraPausedInBackground = false;
+    final participant = room.localParticipant;
+    if (_inactive || participant == null || !isCameraEnabled) return;
+    try {
+      await media.setCameraEnabled(participant, true);
+    } catch (error) {
+      if (!_disposed) {
+        isCameraEnabled = false;
         cameraError = error;
         notifyListeners();
       }

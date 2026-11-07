@@ -343,6 +343,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get endMeeting => 'Toplantıyı bitir';
 
   @override
+  String get meetingNotificationChannel => 'Toplantı';
+
+  @override
+  String get meetingNotificationTitle => 'Toplantı sürüyor';
+
+  @override
+  String get meetingNotificationBody => 'Toplantıya dönmek için dokunun.';
+
+  @override
   String get roleOwner => 'Tam yönetici';
 
   @override
