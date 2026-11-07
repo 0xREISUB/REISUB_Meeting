@@ -1,6 +1,7 @@
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
@@ -129,6 +130,52 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
   int _page = 0;
   bool _fullscreen = false;
   bool _zoomed = false;
+  bool _pinching = false;
+  final _zoomRelay = ScreenZoomRelay();
+
+  /// Touch points tracked above the page view. Once a page drag starts, the
+  /// page view stops passing touches to its children, so a second finger
+  /// would never reach the shared screen's own zoom handling.
+  final _touches = <int, Offset>{};
+  double? _pinchDistance;
+
+  void _onPointerDown(PointerDownEvent event) {
+    if (event.kind != PointerDeviceKind.touch) return;
+    _touches[event.pointer] = event.position;
+    if (_touches.length == 2 && _page == 0 && widget.mainMember.isScreenShare) {
+      _pinchDistance = _touchDistance();
+      setState(() => _pinching = true);
+    }
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if (!_touches.containsKey(event.pointer)) return;
+    _touches[event.pointer] = event.position;
+    final previous = _pinchDistance;
+    if (!_pinching ||
+        _touches.length < 2 ||
+        previous == null ||
+        previous == 0) {
+      return;
+    }
+    final distance = _touchDistance();
+    _pinchDistance = distance;
+    final points = _touches.values.take(2).toList();
+    _zoomRelay.pinch(distance / previous, (points[0] + points[1]) / 2);
+  }
+
+  void _onPointerEnd(PointerEvent event) {
+    if (_touches.remove(event.pointer) == null) return;
+    if (_touches.length < 2 && _pinching) {
+      _pinchDistance = null;
+      setState(() => _pinching = false);
+    }
+  }
+
+  double _touchDistance() {
+    final points = _touches.values.take(2).toList();
+    return (points[0] - points[1]).distance;
+  }
 
   @override
   void dispose() {
@@ -183,7 +230,9 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
         final pages = PageView.builder(
           key: const ValueKey('meeting-pages'),
           controller: _controller,
-          physics: isWide || _zoomed
+          // Removing the scroll physics also cancels a page drag that the
+          // first finger of a pinch may already have started.
+          physics: isWide || _zoomed || _pinching
               ? const NeverScrollableScrollPhysics()
               : const PageScrollPhysics(),
           onPageChanged: (page) => setState(() => _page = page),
@@ -211,6 +260,7 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
                   onZoomChanged: (value) {
                     if (value != _zoomed) setState(() => _zoomed = value);
                   },
+                  zoomRelay: _zoomRelay,
                 ),
                 Positioned(
                   right: 12,
@@ -309,7 +359,16 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
             );
           },
         );
-        if (!isWide || pageCount == 1 || _fullscreen) return pages;
+        if (!isWide) {
+          return Listener(
+            onPointerDown: _onPointerDown,
+            onPointerMove: _onPointerMove,
+            onPointerUp: _onPointerEnd,
+            onPointerCancel: _onPointerEnd,
+            child: pages,
+          );
+        }
+        if (pageCount == 1 || _fullscreen) return pages;
         return Row(
           children: [
             SizedBox(
@@ -344,28 +403,87 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
   }
 }
 
+/// Carries two-finger pinches detected above the page view to the main
+/// video, which owns the zoom.
+class ScreenZoomRelay {
+  _MeetingMainVideoState? _target;
+
+  void pinch(double factor, Offset globalFocal) =>
+      _target?._applyPinch(factor, globalFocal);
+}
+
 class MeetingMainVideo extends StatefulWidget {
   const MeetingMainVideo({
     super.key,
     required this.member,
     this.connecting = false,
     this.onZoomChanged,
+    this.zoomRelay,
   });
   final MemberEntry member;
   final bool connecting;
   final ValueChanged<bool>? onZoomChanged;
+
+  /// Delivers pinches that the surrounding layout detected.
+  final ScreenZoomRelay? zoomRelay;
 
   @override
   State<MeetingMainVideo> createState() => _MeetingMainVideoState();
 }
 
 class _MeetingMainVideoState extends State<MeetingMainVideo> {
+  static const _maxScale = 6.0;
+
   final _transform = TransformationController();
   bool _zoomed = false;
+
+  bool _viewerPinching = false;
+
+  /// Applies a pinch reported by [ScreenZoomRelay], unless InteractiveViewer
+  /// already won the gesture and is zooming itself.
+  void _applyPinch(double factor, Offset globalFocal) {
+    if (!widget.member.isScreenShare || _viewerPinching) return;
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    _transform.value = _scaledAround(
+      factor,
+      box.globalToLocal(globalFocal),
+      box.size,
+    );
+  }
+
+  /// Scales by [factor] around [focal], keeping the scale within 1–6× and
+  /// the shared screen inside the viewport.
+  Matrix4 _scaledAround(double factor, Offset focal, Size size) {
+    final current = _transform.value;
+    final scale = current.getMaxScaleOnAxis();
+    final target = (scale * factor).clamp(1.0, _maxScale).toDouble();
+    if (target <= 1.0) return Matrix4.identity();
+    final step = target / scale;
+    final next =
+        (Matrix4.identity()
+          ..translateByDouble(focal.dx, focal.dy, 0.0, 1.0)
+          ..scaleByDouble(step, step, 1.0, 1.0)
+          ..translateByDouble(-focal.dx, -focal.dy, 0.0, 1.0)) *
+        current;
+    final translation = next.getTranslation();
+    next.setTranslationRaw(
+      translation.x.clamp(size.width * (1 - target), 0.0).toDouble(),
+      translation.y.clamp(size.height * (1 - target), 0.0).toDouble(),
+      0.0,
+    );
+    return next;
+  }
 
   @override
   void didUpdateWidget(covariant MeetingMainVideo oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.zoomRelay, widget.zoomRelay)) {
+      if (identical(oldWidget.zoomRelay?._target, this)) {
+        oldWidget.zoomRelay?._target = null;
+      }
+      widget.zoomRelay?._target = this;
+    }
     if (oldWidget.member.videoTrack != widget.member.videoTrack ||
         oldWidget.member.isScreenShare != widget.member.isScreenShare) {
       _transform.removeListener(_changed);
@@ -390,10 +508,14 @@ class _MeetingMainVideoState extends State<MeetingMainVideo> {
   void initState() {
     super.initState();
     _transform.addListener(_changed);
+    widget.zoomRelay?._target = this;
   }
 
   @override
   void dispose() {
+    if (identical(widget.zoomRelay?._target, this)) {
+      widget.zoomRelay?._target = null;
+    }
     _transform.dispose();
     super.dispose();
   }
@@ -415,9 +537,15 @@ class _MeetingMainVideoState extends State<MeetingMainVideo> {
           key: const ValueKey('main-video-zoom'),
           transformationController: _transform,
           minScale: 1,
-          maxScale: 6,
+          maxScale: _maxScale,
           panEnabled: _zoomed,
           trackpadScrollCausesScale: true,
+          onInteractionStart: (details) =>
+              _viewerPinching = details.pointerCount >= 2,
+          onInteractionUpdate: (details) {
+            if (details.pointerCount >= 2) _viewerPinching = true;
+          },
+          onInteractionEnd: (_) => _viewerPinching = false,
           child: tile,
         ),
         if (_zoomed)

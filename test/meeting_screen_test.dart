@@ -798,6 +798,61 @@ void main() {
     },
   );
 
+  testWidgets('phone pinch works when one finger lands and moves first', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(920, 400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      localized(
+        Scaffold(
+          body: MeetingVideoLayout(
+            members: const [local, shared],
+            mainMember: selectMainMember([local, shared], activeSpeakerIds: []),
+          ),
+        ),
+      ),
+    );
+    final zoom = find.byKey(const ValueKey('main-video-zoom'));
+    final center = tester.getCenter(zoom);
+    // Real fingers rarely land together: the first one has already slid
+    // sideways a little when the second touches the screen.
+    final first = await tester.startGesture(
+      center - const Offset(40, 0),
+      pointer: 1,
+    );
+    await tester.pump(const Duration(milliseconds: 16));
+    for (var i = 0; i < 4; i++) {
+      await first.moveBy(const Offset(-6, 0));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    final second = await tester.startGesture(
+      center + const Offset(40, 0),
+      pointer: 2,
+    );
+    await tester.pump(const Duration(milliseconds: 16));
+    for (var i = 0; i < 10; i++) {
+      await first.moveBy(const Offset(-10, 0));
+      await second.moveBy(const Offset(10, 0));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await first.up();
+    await second.up();
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<InteractiveViewer>(zoom)
+          .transformationController!
+          .value
+          .getMaxScaleOnAxis(),
+      greaterThan(1.5),
+    );
+    expect(find.byKey(const ValueKey('gallery-page-1')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('ending a zoomed share restores phone paging', (tester) async {
     tester.view.physicalSize = const Size(920, 400);
     tester.view.devicePixelRatio = 1;
