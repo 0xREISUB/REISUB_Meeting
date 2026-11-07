@@ -1,7 +1,7 @@
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'widgets/meeting_participant.dart';
+import 'package:v_meeting/meeting/meeting_member.dart';
 
 typedef MicrophoneModerationCallback =
     Future<void> Function(MemberEntry member, bool locked, bool requestUnmute);

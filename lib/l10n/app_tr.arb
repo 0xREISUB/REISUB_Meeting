@@ -126,6 +126,8 @@
   "missingMeetingDetails": "Toplantı bilgileri bulunamadı",
   "mediaRequiresHttps": "Telefon tarayıcısında kamera ve mikrofon için HTTPS gerekir. Uygulamayı güvenli bir HTTPS adresinden açın.",
   "joiningMeeting": "Toplantıya bağlanılıyor…",
+  "preparingMeetingMedia": "Ses ve görüntü hazırlanıyor…",
+  "meetingMediaTimeout": "Ses veya görüntü beklenenden uzun sürüyor. Bağlantınızı kontrol edip tekrar deneyin.",
   "reconnectingMeeting": "Bağlantı kesildi. Yeniden bağlanılıyor…",
   "duplicateSession": "Bu oturum başka bir cihazda açıldığı için bağlantı kesildi.",
   "meetingClosedByServer": "Toplantı sunucu tarafından kapatıldı.",

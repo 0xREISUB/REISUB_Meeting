@@ -126,6 +126,8 @@
   "missingMeetingDetails": "Meeting details are missing",
   "mediaRequiresHttps": "Camera and microphone access in a mobile browser requires HTTPS. Open the app using a secure HTTPS address.",
   "joiningMeeting": "Connecting to the meeting…",
+  "preparingMeetingMedia": "Preparing audio and video…",
+  "meetingMediaTimeout": "Audio or video is taking longer than expected. Check your connection and try again.",
   "reconnectingMeeting": "Connection lost. Reconnecting…",
   "duplicateSession": "Disconnected because this session was opened on another device.",
   "meetingClosedByServer": "The meeting was closed by the server.",

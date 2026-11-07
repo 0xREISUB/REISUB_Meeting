@@ -384,6 +384,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joiningMeeting => 'Connecting to the meeting…';
 
   @override
+  String get preparingMeetingMedia => 'Preparing audio and video…';
+
+  @override
+  String get meetingMediaTimeout =>
+      'Audio or video is taking longer than expected. Check your connection and try again.';
+
+  @override
   String get reconnectingMeeting => 'Connection lost. Reconnecting…';
 
   @override

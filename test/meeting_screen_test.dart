@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/home/home_screen.dart';
@@ -11,14 +12,19 @@ import 'package:livekit_client/livekit_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
+import 'package:v_meeting/meeting/meeting_member.dart';
+import 'package:v_meeting/meeting/meeting_platform.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 
 class _TestRoom extends ChangeNotifier implements Room {
-  _TestRoom({this.local});
+  _TestRoom({this.local, this.connectSuccessfully = false, this.connectResult});
   final LocalParticipant? local;
+  final bool connectSuccessfully;
+  final Completer<void>? connectResult;
+  int connectCalls = 0;
   void changed() => notifyListeners();
   @override
   final events = EventsEmitter<RoomEvent>();
@@ -36,6 +42,19 @@ class _TestRoom extends ChangeNotifier implements Room {
   @override
   UnmodifiableMapView<String, RemoteParticipant> get remoteParticipants =>
       UnmodifiableMapView({});
+
+  @override
+  Future<void> connect(
+    String url,
+    String token, {
+    ConnectOptions? connectOptions,
+    RoomOptions? roomOptions,
+    FastConnectOptions? fastConnectOptions,
+  }) async {
+    connectCalls++;
+    if (connectResult != null) return connectResult!.future;
+    if (!connectSuccessfully) throw StateError('Test connection failed');
+  }
 
   int disconnects = 0;
   @override
@@ -124,6 +143,22 @@ class _TestPublication extends Fake implements LocalTrackPublication {
 
 class _ModerationApi extends MeetingApi {
   int closes = 0;
+  int joins = 0;
+  @override
+  Future<RoomCredentials> joinRoom({
+    required String roomId,
+    required String name,
+  }) async {
+    joins++;
+    return RoomCredentials(
+      roomId: roomId,
+      liveKitUrl: 'wss://example.test',
+      token: 'test',
+      participant: name,
+      isHost: false,
+    );
+  }
+
   @override
   Future<MeetingState> getMeetingState(String roomId) async =>
       const MeetingState();
@@ -170,6 +205,41 @@ Widget localized(Widget child) => MaterialApp(
   home: child,
 );
 
+const _guestCredentials = RoomCredentials(
+  roomId: '123-456-789',
+  liveKitUrl: 'wss://example.test',
+  token: 'test',
+  participant: 'Test',
+  isHost: false,
+);
+
+/// Avoids the real Bluetooth permission prompt, which never answers in tests.
+class _TestPlatform extends MeetingPlatform {
+  const _TestPlatform();
+
+  @override
+  Future<void> requestBluetoothPermission() async {}
+}
+
+Widget meetingApp(
+  Room room, {
+  MeetingApi? api,
+  RoomCredentials? credentials,
+  bool skipJoiningScreen = false,
+}) => ProviderScope(
+  overrides: [
+    meetingRoomFactoryProvider.overrideWithValue(() => room),
+    meetingApiProvider.overrideWithValue(api ?? _ModerationApi()),
+    meetingPlatformProvider.overrideWithValue(const _TestPlatform()),
+  ],
+  child: localized(
+    MeetingScreen(
+      credentials: credentials,
+      skipJoiningScreen: skipJoiningScreen,
+    ),
+  ),
+);
+
 void main() {
   Future<void> openExitTest(
     WidgetTester tester,
@@ -178,24 +248,81 @@ void main() {
     _ModerationApi? api,
   }) async {
     await tester.pumpWidget(
-      ProviderScope(
-        child: localized(
-          MeetingScreen(
-            room: room,
-            api: api ?? _ModerationApi(),
-            credentials: RoomCredentials(
-              roomId: '123-456-789',
-              liveKitUrl: 'wss://example.test',
-              token: 'test',
-              participant: 'Test',
-              isHost: host,
-            ),
-          ),
+      meetingApp(
+        room,
+        api: api,
+        skipJoiningScreen: true,
+        credentials: RoomCredentials(
+          roomId: '123-456-789',
+          liveKitUrl: 'wss://example.test',
+          token: 'test',
+          participant: 'Test',
+          isHost: host,
         ),
       ),
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('joining screen stays until connection and media setup finish', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final room = _TestRoom(connectSuccessfully: true);
+    await tester.pumpWidget(
+      meetingApp(room, api: _ModerationApi(), credentials: _guestCredentials),
+    );
+    expect(
+      find.byKey(const ValueKey('meeting-joining-overlay')),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      find.byKey(const ValueKey('meeting-joining-overlay')),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('meeting-joining-overlay')), findsNothing);
+    expect(room.connectCalls, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('failed join shows retry and retries the connection', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final room = _TestRoom();
+    final api = _ModerationApi();
+    await tester.pumpWidget(
+      meetingApp(room, api: api, credentials: _guestCredentials),
+    );
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('meeting-joining-retry')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('meeting-joining-retry')));
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(api.joins, 1);
+    expect(room.connectCalls, 2);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('joining screen times out when signaling never finishes', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final room = _TestRoom(connectResult: Completer<void>());
+    await tester.pumpWidget(
+      meetingApp(room, api: _ModerationApi(), credentials: _guestCredentials),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 12));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('meeting-joining-retry')), findsOneWidget);
+    expect(room.disconnects, greaterThanOrEqualTo(1));
+    await tester.pumpWidget(const SizedBox());
+  });
 
   for (final deviceCase in [
     (camera: false, enabled: true, locked: false),
@@ -877,7 +1004,7 @@ void main() {
         messenger.setMockMethodCallHandler(SystemChannels.platform, null);
         messenger.setMockMethodCallHandler(display, null);
       });
-      await tester.pumpWidget(localized(MeetingScreen(room: _TestRoom())));
+      await tester.pumpWidget(meetingApp(_TestRoom()));
       await tester.pumpAndSettle();
       expect(
         calls.any(
@@ -984,7 +1111,7 @@ void main() {
     final participant = _TestLocal()..microphone = true;
     participant.values['meeting.microphone_locked'] = 'true';
     final room = _TestRoom(local: participant);
-    await tester.pumpWidget(localized(MeetingScreen(room: room)));
+    await tester.pumpWidget(meetingApp(room));
     await tester.pumpAndSettle();
     room.changed();
     await tester.pumpAndSettle();
@@ -1005,7 +1132,7 @@ void main() {
     (tester) async {
       final participant = _TestLocal();
       final room = _TestRoom(local: participant);
-      await tester.pumpWidget(localized(MeetingScreen(room: room)));
+      await tester.pumpWidget(meetingApp(room));
       await tester.pumpAndSettle();
       participant.values['meeting.microphone_request'] = 'request-1';
       room.changed();

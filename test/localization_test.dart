@@ -12,9 +12,9 @@ import 'package:v_meeting/app/app.dart';
 import 'package:v_meeting/app/locale.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_media.dart';
-import 'package:v_meeting/meeting/meeting_sharing.dart';
+import 'package:v_meeting/meeting/widgets/meeting_settings_dialog.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
-import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
+import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
 

@@ -812,6 +812,18 @@ abstract class AppLocalizations {
   /// **'Connecting to the meeting…'**
   String get joiningMeeting;
 
+  /// No description provided for @preparingMeetingMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing audio and video…'**
+  String get preparingMeetingMedia;
+
+  /// No description provided for @meetingMediaTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio or video is taking longer than expected. Check your connection and try again.'**
+  String get meetingMediaTimeout;
+
   /// No description provided for @reconnectingMeeting.
   ///
   /// In en, this message translates to:

@@ -383,6 +383,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get joiningMeeting => 'Toplantıya bağlanılıyor…';
 
   @override
+  String get preparingMeetingMedia => 'Ses ve görüntü hazırlanıyor…';
+
+  @override
+  String get meetingMediaTimeout =>
+      'Ses veya görüntü beklenenden uzun sürüyor. Bağlantınızı kontrol edip tekrar deneyin.';
+
+  @override
   String get reconnectingMeeting => 'Bağlantı kesildi. Yeniden bağlanılıyor…';
 
   @override

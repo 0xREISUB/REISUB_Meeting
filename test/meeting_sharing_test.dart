@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_sharing.dart';
+import 'package:v_meeting/meeting/widgets/meeting_settings_dialog.dart';
 
 class _SharingApi extends MeetingApi {
   MeetingState state = const MeetingState();
