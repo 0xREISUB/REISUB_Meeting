@@ -4,13 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:v_meeting/app/http.dart';
 import 'package:v_meeting/auth/host_screen.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/settings/settings_screen.dart';
 
-Widget app(Widget child) => ProviderScope(
+Widget app(Widget child, {Dio? dio}) => ProviderScope(
+  key: UniqueKey(),
+  overrides: [if (dio != null) dioProvider.overrideWithValue(dio)],
   child: MaterialApp(
     key: UniqueKey(),
     locale: const Locale('tr'),
@@ -31,7 +34,7 @@ String fieldText(WidgetTester tester, String key) => tester
     .text;
 
 Future<void> showSettings(WidgetTester tester, {Dio? dio}) async {
-  await tester.pumpWidget(app(SettingsScreen(dio: dio)));
+  await tester.pumpWidget(app(const SettingsScreen(), dio: dio));
   await tester.pumpAndSettle();
   await tester.scrollUntilVisible(find.byKey(const Key('server-host')), 250);
   await tester.pumpAndSettle();
@@ -158,7 +161,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final requests = <RequestOptions>[];
     final dio = pingClient(requests);
-    await tester.pumpWidget(app(HostScreen(dio: dio)));
+    await tester.pumpWidget(app(const HostScreen(), dio: dio));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('server-host')),

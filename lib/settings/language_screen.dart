@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'package:v_meeting/main.dart';
+import 'package:v_meeting/app/locale.dart';
 
 class LanguageScreen extends ConsumerWidget {
   const LanguageScreen({super.key});
@@ -25,7 +25,7 @@ class LanguageScreen extends ConsumerWidget {
               selected: currentLocale.languageCode == "tr",
               colorScheme: colorScheme,
               onTap: () {
-                ref.read(localeProvider.notifier).state = const Locale("tr");
+                ref.read(localeProvider.notifier).select(const Locale("tr"));
               },
             ),
 
@@ -38,7 +38,7 @@ class LanguageScreen extends ConsumerWidget {
               selected: currentLocale.languageCode == "en",
               colorScheme: colorScheme,
               onTap: () {
-                ref.read(localeProvider.notifier).state = const Locale("en");
+                ref.read(localeProvider.notifier).select(const Locale("en"));
               },
             ),
           ],

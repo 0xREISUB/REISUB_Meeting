@@ -1,20 +1,22 @@
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
 
-class JoinScreen extends StatefulWidget {
+class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key});
 
   @override
-  State<JoinScreen> createState() => _JoinScreenState();
+  ConsumerState<JoinScreen> createState() => _JoinScreenState();
 }
 
-class _JoinScreenState extends State<JoinScreen> {
+class _JoinScreenState extends ConsumerState<JoinScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _roomController = TextEditingController();
 
@@ -97,7 +99,9 @@ class _JoinScreenState extends State<JoinScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final credentials = await MeetingApi().joinRoom(roomId: room, name: name);
+      final credentials = await ref
+          .read(meetingApiProvider)
+          .joinRoom(roomId: room, name: name);
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -179,7 +183,7 @@ class _JoinScreenState extends State<JoinScreen> {
                           const Icon(
                             Icons.video_camera_front,
                             size: 80,
-                            color: Colors.deepPurpleAccent,
+                            color: brandColor,
                           ),
                           const SizedBox(height: 32),
                           Text(
@@ -209,9 +213,6 @@ class _JoinScreenState extends State<JoinScreen> {
                             decoration: InputDecoration(
                               labelText: l10n.yourName, // Dil paketinden
                               errorText: _isNameError ? l10n.nameError : null,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                               prefixIcon: const Icon(Icons.person),
                             ),
                           ),
@@ -236,9 +237,7 @@ class _JoinScreenState extends State<JoinScreen> {
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 4.0,
-                              color: _isRoomError
-                                  ? Colors.red
-                                  : Colors.deepPurpleAccent,
+                              color: _isRoomError ? Colors.red : brandColor,
                             ),
                             maxLength: 11,
                             inputFormatters: [
@@ -251,23 +250,12 @@ class _JoinScreenState extends State<JoinScreen> {
                               labelText: l10n.roomId, // Dil paketinden
                               counterText: "",
                               errorText: _isRoomError ? l10n.roomError : null,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                               prefixIcon: const Icon(Icons.meeting_room),
                             ),
                           ),
                           const SizedBox(height: 32),
 
                           ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              backgroundColor: Colors.deepPurpleAccent,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
                             onPressed: _isSubmitting ? null : _joinMeeting,
                             child: Text(
                               _isSubmitting

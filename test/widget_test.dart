@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod importu eklendi
-import 'package:v_meeting/main.dart';
+import 'package:v_meeting/app/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

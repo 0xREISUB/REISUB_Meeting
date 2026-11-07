@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'package:v_meeting/main.dart';
+import 'package:v_meeting/app/locale.dart';
 
 class LanguageMenuButton extends ConsumerWidget {
   const LanguageMenuButton({super.key});
@@ -14,7 +14,7 @@ class LanguageMenuButton extends ConsumerWidget {
       tooltip: AppLocalizations.of(context)!.language,
       icon: const Icon(Icons.language),
       onSelected: (value) {
-        ref.read(localeProvider.notifier).state = Locale(value);
+        ref.read(localeProvider.notifier).select(Locale(value));
       },
       itemBuilder: (_) => [
         CheckedPopupMenuItem(

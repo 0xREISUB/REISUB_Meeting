@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MeetingPreferences {
@@ -39,5 +40,36 @@ class MeetingPreferences {
     if (mirrorCamera != null) {
       await prefs.setBool(_mirrorKey, mirrorCamera);
     }
+  }
+}
+
+/// Meeting start-up choices, loaded once and kept in sync with storage.
+final meetingPreferencesProvider =
+    AsyncNotifierProvider<MeetingPreferencesController, MeetingPreferences>(
+      MeetingPreferencesController.new,
+    );
+
+class MeetingPreferencesController extends AsyncNotifier<MeetingPreferences> {
+  @override
+  Future<MeetingPreferences> build() => MeetingPreferences.load();
+
+  Future<void> change({
+    bool? startWithMicrophone,
+    bool? startWithCamera,
+    bool? mirrorCamera,
+  }) async {
+    final current = state.value ?? const MeetingPreferences();
+    state = AsyncData(
+      MeetingPreferences(
+        startWithMicrophone: startWithMicrophone ?? current.startWithMicrophone,
+        startWithCamera: startWithCamera ?? current.startWithCamera,
+        mirrorCamera: mirrorCamera ?? current.mirrorCamera,
+      ),
+    );
+    await MeetingPreferences.save(
+      startWithMicrophone: startWithMicrophone,
+      startWithCamera: startWithCamera,
+      mirrorCamera: mirrorCamera,
+    );
   }
 }

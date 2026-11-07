@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 
 void main() {
@@ -171,6 +172,59 @@ void main() {
         ),
       );
       dio.close();
+    },
+  );
+
+  test('room ids are encoded in chat routes', () async {
+    final requests = <RequestOptions>[];
+    final dio = Dio()
+      ..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            requests.add(options);
+            handler.resolve(
+              Response<dynamic>(requestOptions: options, statusCode: 200),
+            );
+          },
+        ),
+      );
+    expect(await MeetingApi(dio: dio).getRoomMessages('a/b?c'), isEmpty);
+    expect(requests.single.uri.path, '/rooms/a%2Fb%3Fc/messages');
+    dio.close();
+  });
+
+  test(
+    'an empty or malformed state response is an error, not a crash',
+    () async {
+      for (final body in [
+        null,
+        'unexpected',
+        {'allow_participant_screen_share': 'yes'},
+      ]) {
+        final dio = Dio()
+          ..interceptors.add(
+            InterceptorsWrapper(
+              onRequest: (options, handler) => handler.resolve(
+                Response<dynamic>(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: body,
+                ),
+              ),
+            ),
+          );
+        await expectLater(
+          MeetingApi(dio: dio).getMeetingState('123-456-789'),
+          throwsA(
+            isA<MeetingApiException>().having(
+              (error) => error.code,
+              'code',
+              AppError.invalidServerResponse,
+            ),
+          ),
+        );
+        dio.close();
+      }
     },
   );
 }

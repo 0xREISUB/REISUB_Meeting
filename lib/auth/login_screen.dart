@@ -1,92 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/auth/auth_api.dart';
 import 'package:v_meeting/auth/register_screen.dart';
-import 'package:v_meeting/auth/server_config.dart';
-import 'package:v_meeting/home/home_screen.dart'; // Giriş başarılı olunca yönlendirilecek sayfa
-import 'package:dio/dio.dart';
+import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
 import 'package:v_meeting/widgets/language_menu_button.dart';
-import 'auth_error.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _nickController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isSubmitting = false;
 
-  void _handleLogin() async {
+  Future<void> _handleLogin() async {
+    if (_isSubmitting) return;
     final l10n = AppLocalizations.of(context)!;
+    final nick = _nickController.text.trim();
+    final password = _passwordController.text;
+    if (nick.isEmpty || password.isEmpty) {
+      showErrorSnackBar(context, l10n.credentialsRequired);
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
     try {
-      final serverUrl = await ServerConfig.readUrl();
-      if (serverUrl == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.connectionError)));
-        }
-        return;
-      }
-      final dio = Dio();
-      final response = await dio.post(
-        '$serverUrl/login',
-        data: {
-          'nick': _nickController.text,
-          'password': _passwordController.text,
-        },
+      await ref.read(authApiProvider).login(nick: nick, password: password);
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
-
-      if (response.statusCode == 200) {
-        // 1. Go'dan gelen tokeni al
-        final responseData = response.data;
-        final token = responseData is Map ? responseData['token'] : null;
-        if (token is! String || token.isEmpty) {
-          throw const FormatException('Missing authentication token');
-        }
-
-        // 2. Tokeni cihaz hafızasına kaydet (Beni hatırla mantığı)
-        await ServerConfig.saveToken(token);
-
-        // 3. Ana sayfaya yönlendir
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
-      }
-    } on DioException catch (e) {
-      final errorMessage = authErrorMessage(
-        e.response?.data,
-        l10n.connectionError,
-      );
+    } on AuthException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-        );
-      }
-    } on FormatException catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.connectionError),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showErrorSnackBar(context, error.serverMessage ?? l10n.connectionError);
       }
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.connectionError),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) showErrorSnackBar(context, l10n.connectionError);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -113,73 +72,87 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.all(24.0),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const AppLogo(),
-                const SizedBox(height: 24),
-                Text(
-                  l10n.welcome,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+            child: AutofillGroup(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const AppLogo(),
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.welcome,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                TextField(
-                  controller: _nickController,
-                  decoration: InputDecoration(
-                    labelText: l10n.nickname,
-                    prefixIcon: const Icon(Icons.person),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 40),
+                  TextField(
+                    key: const Key('login-nick'),
+                    controller: _nickController,
+                    enabled: !_isSubmitting,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.username],
+                    decoration: InputDecoration(
+                      labelText: l10n.nickname,
+                      prefixIcon: const Icon(Icons.person),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.password,
-                    prefixIcon: const Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('login-password'),
+                    controller: _passwordController,
+                    enabled: !_isSubmitting,
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    onSubmitted: (_) => _handleLogin(),
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      prefixIcon: const Icon(Icons.lock),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.deepPurpleAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    key: const Key('login-submit'),
+                    onPressed: _isSubmitting ? null : _handleLogin,
+                    child: _isSubmitting
+                        ? const _ButtonProgress()
+                        : Text(
+                            l10n.login,
+                            style: const TextStyle(fontSize: 18),
+                          ),
                   ),
-                  onPressed: _handleLogin,
-                  child: Text(l10n.login, style: const TextStyle(fontSize: 18)),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RegisterScreen(),
-                      ),
-                    );
-                  },
-                  child: Text(l10n.noAccountRegister),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterScreen(),
+                            ),
+                          ),
+                    child: Text(l10n.noAccountRegister),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _ButtonProgress extends StatelessWidget {
+  const _ButtonProgress();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+    width: 22,
+    height: 22,
+    child: CircularProgressIndicator(strokeWidth: 2),
+  );
 }

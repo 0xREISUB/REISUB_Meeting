@@ -200,12 +200,6 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get language;
 
-  /// No description provided for @profile.
-  ///
-  /// In en, this message translates to:
-  /// **'Profile'**
-  String get profile;
-
   /// No description provided for @profileMenu.
   ///
   /// In en, this message translates to:
@@ -445,6 +439,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password'**
   String get password;
+
+  /// No description provided for @credentialsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your username and password.'**
+  String get credentialsRequired;
 
   /// No description provided for @login.
   ///

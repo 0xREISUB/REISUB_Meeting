@@ -1,80 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/auth/auth_api.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/widgets/language_menu_button.dart';
-import 'auth_error.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nickController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
+  bool _isSubmitting = false;
 
-  void _handleRegister() async {
+  Future<void> _handleRegister() async {
+    if (_isSubmitting) return;
     final l10n = AppLocalizations.of(context)!;
+    final nick = _nickController.text.trim();
+    final password = _passwordController.text;
 
-    if (_passwordController.text != _passwordConfirmController.text) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.passwordsNotMatch)));
-      }
+    if (nick.isEmpty || password.isEmpty) {
+      showErrorSnackBar(context, l10n.credentialsRequired);
+      return;
+    }
+    if (password != _passwordConfirmController.text) {
+      showErrorSnackBar(context, l10n.passwordsNotMatch);
       return;
     }
 
+    setState(() => _isSubmitting = true);
     try {
-      final serverUrl = await ServerConfig.readUrl();
-      if (serverUrl == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.connectionError)));
-        }
-        return;
-      }
-      final dio = Dio();
-      final response = await dio.post(
-        '$serverUrl/register',
-        data: {
-          'nick': _nickController.text,
-          'password': _passwordController.text,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.registerSuccess)));
-          Navigator.pop(context); // Login ekranına dön
-        }
-      }
-    } on DioException catch (e) {
-      final errorMessage = authErrorMessage(
-        e.response?.data,
-        l10n.connectionError,
-      );
+      await ref.read(authApiProvider).register(nick: nick, password: password);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.registerSuccess)));
+      Navigator.pop(context);
+    } on AuthException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-        );
+        showErrorSnackBar(context, error.serverMessage ?? l10n.connectionError);
       }
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.connectionError),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) showErrorSnackBar(context, l10n.connectionError);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -101,70 +75,74 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: const EdgeInsets.all(24.0),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.createAccount,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+            child: AutofillGroup(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.createAccount,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                TextField(
-                  controller: _nickController,
-                  decoration: InputDecoration(
-                    labelText: l10n.nickname,
-                    prefixIcon: const Icon(Icons.person),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 40),
+                  TextField(
+                    key: const Key('register-nick'),
+                    controller: _nickController,
+                    enabled: !_isSubmitting,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.newUsername],
+                    decoration: InputDecoration(
+                      labelText: l10n.nickname,
+                      prefixIcon: const Icon(Icons.person),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.password,
-                    prefixIcon: const Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('register-password'),
+                    controller: _passwordController,
+                    enabled: !_isSubmitting,
+                    obscureText: true,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.newPassword],
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      prefixIcon: const Icon(Icons.lock),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passwordConfirmController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.confirmPassword,
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('register-password-confirm'),
+                    controller: _passwordConfirmController,
+                    enabled: !_isSubmitting,
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _handleRegister(),
+                    decoration: InputDecoration(
+                      labelText: l10n.confirmPassword,
+                      prefixIcon: const Icon(Icons.lock_outline),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.deepPurpleAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    key: const Key('register-submit'),
+                    onPressed: _isSubmitting ? null : _handleRegister,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            l10n.register,
+                            style: const TextStyle(fontSize: 18),
+                          ),
                   ),
-                  onPressed: _handleRegister,
-                  child: Text(
-                    l10n.register,
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

@@ -61,9 +61,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
-  String get profile => 'Profile';
-
-  @override
   String get profileMenu => 'Profile menu';
 
   @override
@@ -190,6 +187,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get password => 'Password';
+
+  @override
+  String get credentialsRequired => 'Enter your username and password.';
 
   @override
   String get login => 'Log In';

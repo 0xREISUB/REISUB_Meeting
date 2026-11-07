@@ -1,5 +1,7 @@
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/http.dart';
 import 'package:v_meeting/auth/server_config.dart';
 
 class RoomCredentials {
@@ -73,33 +75,42 @@ class MeetingChatMessage {
   }
 }
 
+final meetingApiProvider = Provider<MeetingApi>(
+  (ref) => MeetingApi(dio: ref.watch(dioProvider)),
+);
+
 class MeetingApi {
-  MeetingApi({Dio? dio}) : _dio = dio ?? Dio();
+  MeetingApi({Dio? dio})
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 15),
+            ),
+          );
 
   final Dio _dio;
 
-  Future<RoomCredentials> createRoom(String name) async {
-    return _requestRoom('/rooms', {'name': name});
-  }
+  Future<RoomCredentials> createRoom(String name) async => _decode(
+    await _send('POST', '/rooms', data: {'name': name}),
+    RoomCredentials.fromJson,
+    invalid: AppError.invalidRoomData,
+  );
 
   Future<RoomCredentials> joinRoom({
     required String roomId,
     required String name,
-  }) async {
-    return _requestRoom('/rooms/join', {'room_id': roomId, 'name': name});
-  }
+  }) async => _decode(
+    await _send('POST', '/rooms/join', data: {'room_id': roomId, 'name': name}),
+    RoomCredentials.fromJson,
+    invalid: AppError.invalidRoomData,
+  );
 
-  Future<MeetingState> getMeetingState(String roomId) async {
-    try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '${await _authorizedUrl()}/rooms/${Uri.encodeComponent(roomId)}/state',
-        options: await _authorizedOptions(),
-      );
-      return MeetingState.fromJson(response.data!);
-    } on DioException catch (error) {
-      throw await _errorMessage(error);
-    }
-  }
+  Future<MeetingState> getMeetingState(String roomId) async => _decode(
+    await _send('GET', '${_room(roomId)}/state'),
+    MeetingState.fromJson,
+  );
 
   Future<MeetingState> updateMeetingSettings(
     String roomId, {
@@ -118,21 +129,13 @@ class MeetingApi {
     String roomId,
     String action,
     Map<String, dynamic> data,
-  ) async {
-    try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '${await _authorizedUrl()}/rooms/${Uri.encodeComponent(roomId)}/$action',
-        data: data,
-        options: await _authorizedOptions(),
-      );
-      return MeetingState.fromJson(response.data!);
-    } on DioException catch (error) {
-      throw await _errorMessage(error);
-    }
-  }
+  ) async => _decode(
+    await _send('POST', '${_room(roomId)}/$action', data: data),
+    MeetingState.fromJson,
+  );
 
   Future<void> closeRoom(String roomId) async {
-    await _moderationRequest('/rooms/${Uri.encodeComponent(roomId)}/close', {});
+    await _send('POST', '${_room(roomId)}/close', data: const {});
   }
 
   Future<void> setParticipantMicrophone({
@@ -141,98 +144,102 @@ class MeetingApi {
     required bool locked,
     bool requestUnmute = false,
   }) async {
-    await _moderationRequest(
-      '/rooms/${Uri.encodeComponent(roomId)}/participants/'
-      '${Uri.encodeComponent(identity)}/microphone',
-      {'locked': locked, 'request_unmute': requestUnmute},
+    await _send(
+      'POST',
+      '${_room(roomId)}/participants/${Uri.encodeComponent(identity)}/microphone',
+      data: {'locked': locked, 'request_unmute': requestUnmute},
     );
   }
 
-  Future<void> _moderationRequest(
-    String path,
-    Map<String, dynamic> data,
-  ) async {
-    try {
-      await _dio.post<dynamic>(
-        '${await _authorizedUrl()}$path',
-        data: data,
-        options: await _authorizedOptions(),
-      );
-    } on DioException catch (error) {
-      throw await _errorMessage(error);
-    }
-  }
-
   Future<List<MeetingChatMessage>> getRoomMessages(String roomId) async {
-    try {
-      final response = await _dio.get<List<dynamic>>(
-        '${await _authorizedUrl()}/rooms/$roomId/messages',
-        options: await _authorizedOptions(),
-      );
-      return (response.data ?? const [])
-          .map(
-            (item) => MeetingChatMessage.fromJson(item as Map<String, dynamic>),
-          )
-          .toList();
-    } on DioException catch (error) {
-      throw await _errorMessage(error);
-    } on TypeError {
-      throw const MeetingApiException.localized(AppError.invalidMessageData);
-    } on FormatException {
+    final data = await _send('GET', '${_room(roomId)}/messages');
+    if (data == null) return const [];
+    if (data is! List) {
       throw const MeetingApiException.localized(AppError.invalidMessageData);
     }
+    return [
+      for (final item in data)
+        _decode(
+          item,
+          MeetingChatMessage.fromJson,
+          invalid: AppError.invalidMessageData,
+        ),
+    ];
   }
 
   Future<MeetingChatMessage> sendRoomMessage(
     String roomId,
     String content,
-  ) async {
+  ) async => _decode(
+    await _send(
+      'POST',
+      '${_room(roomId)}/messages',
+      data: {'content': content},
+    ),
+    MeetingChatMessage.fromJson,
+    invalid: AppError.invalidMessageData,
+  );
+
+  static String _room(String roomId) => '/rooms/${Uri.encodeComponent(roomId)}';
+
+  /// Sends an authenticated request and returns the decoded response body.
+  Future<Object?> _send(String method, String path, {Object? data}) async {
+    final (serverUrl, token) = await _session();
     try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '${await _authorizedUrl()}/rooms/$roomId/messages',
-        data: {'content': content},
-        options: await _authorizedOptions(),
+      final response = await _dio.request<Object?>(
+        '$serverUrl$path',
+        data: data,
+        options: Options(
+          method: method,
+          headers: {'Authorization': 'Bearer $token'},
+        ),
       );
-      final responseData = response.data;
-      if (responseData == null) {
-        throw const MeetingApiException.localized(
-          AppError.invalidServerResponse,
-        );
-      }
-      return MeetingChatMessage.fromJson(responseData);
+      return response.data;
     } on DioException catch (error) {
-      throw await _errorMessage(error);
+      throw await _errorFor(error);
+    }
+  }
+
+  Future<(String, String)> _session() async {
+    String? serverUrl;
+    String? token;
+    try {
+      serverUrl = await ServerConfig.readUrl();
+      token = await ServerConfig.readToken();
+    } catch (_) {
+      // An unreadable key store is treated like a missing session.
+    }
+    if (serverUrl == null || token == null) {
+      throw const MeetingApiException.localized(
+        AppError.missingServerSession,
+        sessionExpired: true,
+      );
+    }
+    return (serverUrl, token);
+  }
+
+  /// Converts a JSON object, rejecting missing or malformed server data
+  /// instead of crashing on it.
+  static T _decode<T>(
+    Object? data,
+    T Function(Map<String, dynamic> json) fromJson, {
+    AppError invalid = AppError.invalidServerResponse,
+  }) {
+    if (data is! Map) {
+      throw MeetingApiException.localized(
+        data == null ? AppError.invalidServerResponse : invalid,
+      );
+    }
+    try {
+      return fromJson(Map<String, dynamic>.from(data));
     } on TypeError {
-      throw const MeetingApiException.localized(AppError.invalidMessageData);
+      throw MeetingApiException.localized(invalid);
     } on FormatException {
-      throw const MeetingApiException.localized(AppError.invalidMessageData);
+      throw MeetingApiException.localized(invalid);
     }
   }
 
-  Future<String> _authorizedUrl() async {
-    final serverUrl = await ServerConfig.readUrl();
-    final authToken = await ServerConfig.readToken();
-    if (serverUrl == null || authToken == null) {
-      throw const MeetingApiException.localized(
-        AppError.missingServerSession,
-        sessionExpired: true,
-      );
-    }
-    return serverUrl;
-  }
-
-  Future<Options> _authorizedOptions() async {
-    final authToken = await ServerConfig.readToken();
-    if (authToken == null) {
-      throw const MeetingApiException.localized(
-        AppError.missingServerSession,
-        sessionExpired: true,
-      );
-    }
-    return Options(headers: {'Authorization': 'Bearer $authToken'});
-  }
-
-  Future<MeetingApiException> _errorMessage(DioException error) async {
+  Future<MeetingApiException> _errorFor(DioException error) async {
     if (error.response?.statusCode == 401) {
       await ServerConfig.clearToken();
       return const MeetingApiException.localized(
@@ -241,45 +248,12 @@ class MeetingApi {
       );
     }
     final responseData = error.response?.data;
-    final message = responseData is Map<String, dynamic>
-        ? responseData['error'] as String?
-        : null;
-    return message == null
-        ? const MeetingApiException.localized(AppError.meetingServerUnavailable)
-        : MeetingApiException(message);
-  }
-
-  Future<RoomCredentials> _requestRoom(
-    String path,
-    Map<String, String> data,
-  ) async {
-    final serverUrl = await ServerConfig.readUrl();
-    final authToken = await ServerConfig.readToken();
-    if (serverUrl == null || authToken == null) {
-      throw const MeetingApiException.localized(
-        AppError.missingServerSession,
-        sessionExpired: true,
-      );
-    }
-
-    try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '$serverUrl$path',
-        data: data,
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
-      );
-      final responseData = response.data;
-      if (responseData == null) {
-        throw const MeetingApiException.localized(
-          AppError.invalidServerResponse,
-        );
-      }
-      return RoomCredentials.fromJson(responseData);
-    } on DioException catch (error) {
-      throw await _errorMessage(error);
-    } on TypeError {
-      throw const MeetingApiException.localized(AppError.invalidRoomData);
-    }
+    final message = responseData is Map ? responseData['error'] : null;
+    return message is String && message.isNotEmpty
+        ? MeetingApiException(message)
+        : const MeetingApiException.localized(
+            AppError.meetingServerUnavailable,
+          );
   }
 }
 

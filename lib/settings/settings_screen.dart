@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
+import 'package:v_meeting/auth/auth_api.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
@@ -8,8 +8,7 @@ import 'device_test_screen.dart';
 import 'meeting_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key, this.dio});
-  final Dio? dio;
+  const SettingsScreen({super.key});
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
@@ -21,9 +20,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     text: '${ServerConfig.defaultPort}',
   );
 
-  bool startWithMic = true;
-  bool startWithCamera = true;
-  bool mirrorCamera = true;
   bool _isSavingServerSettings = false;
   bool _isLoadingServerSettings = true;
 
@@ -31,17 +27,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void initState() {
     super.initState();
     _loadServerSettings();
-    _loadMeetingPreferences();
-  }
-
-  Future<void> _loadMeetingPreferences() async {
-    final preferences = await MeetingPreferences.load();
-    if (!mounted) return;
-    setState(() {
-      startWithMic = preferences.startWithMicrophone;
-      startWithCamera = preferences.startWithCamera;
-      mirrorCamera = preferences.mirrorCamera;
-    });
   }
 
   Future<void> _loadServerSettings() async {
@@ -95,21 +80,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _isSavingServerSettings = true);
     try {
       final currentUrl = await ServerConfig.readUrl();
-      final dio =
-          widget.dio ??
-          Dio(
-            BaseOptions(
-              connectTimeout: const Duration(seconds: 10),
-              receiveTimeout: const Duration(seconds: 10),
-            ),
-          );
-      final response = await dio.get<Map<String, dynamic>>('$newUrl/ping');
-      final pingResponse = response.data;
-      if (response.statusCode != 200 ||
-          pingResponse?['message'] != 'pong' ||
-          pingResponse?['status'] != 'active') {
-        throw const FormatException('Invalid server response');
-      }
+      await ref.read(authApiProvider).checkServer(newUrl);
 
       await ServerConfig.saveUrl(newUrl);
       final serverChanged =
@@ -136,15 +107,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
       );
-    } on DioException catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.connectionError),
-          ),
-        );
-      }
-    } on FormatException catch (_) {
+    } on ServerCheckException {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -173,6 +136,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final preferences =
+        ref.watch(meetingPreferencesProvider).value ??
+        const MeetingPreferences();
+    final updatePreferences = ref
+        .read(meetingPreferencesProvider.notifier)
+        .change;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings), centerTitle: true),
@@ -204,31 +173,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SwitchListTile(
             secondary: const Icon(Icons.mic),
             title: Text(l10n.startWithMic),
-            value: startWithMic,
-            onChanged: (value) {
-              setState(() => startWithMic = value);
-              MeetingPreferences.save(startWithMicrophone: value);
-            },
+            value: preferences.startWithMicrophone,
+            onChanged: (value) => updatePreferences(startWithMicrophone: value),
           ),
 
           SwitchListTile(
             secondary: const Icon(Icons.videocam),
             title: Text(l10n.startWithCamera),
-            value: startWithCamera,
-            onChanged: (value) {
-              setState(() => startWithCamera = value);
-              MeetingPreferences.save(startWithCamera: value);
-            },
+            value: preferences.startWithCamera,
+            onChanged: (value) => updatePreferences(startWithCamera: value),
           ),
 
           SwitchListTile(
             secondary: const Icon(Icons.flip_camera_android),
             title: Text(l10n.mirrorCamera),
-            value: mirrorCamera,
-            onChanged: (value) {
-              setState(() => mirrorCamera = value);
-              MeetingPreferences.save(mirrorCamera: value);
-            },
+            value: preferences.mirrorCamera,
+            onChanged: (value) => updatePreferences(mirrorCamera: value),
           ),
 
           SwitchListTile(

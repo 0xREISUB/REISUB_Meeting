@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/create_screen.dart';
@@ -32,22 +33,12 @@ class HomeScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               icon: const CircleAvatar(
-                backgroundColor: Colors.deepPurpleAccent,
+                backgroundColor: brandColor,
                 foregroundColor: Colors.white,
                 child: Icon(Icons.person),
               ),
               itemBuilder: (context) {
                 return [
-                  PopupMenuItem<int>(
-                    value: 0,
-                    child: Row(
-                      children: [
-                        Icon(Icons.person_outline, size: 20),
-                        SizedBox(width: 12),
-                        Text(l10n.profile),
-                      ],
-                    ),
-                  ),
                   PopupMenuItem<int>(
                     value: 1,
                     child: Row(
@@ -98,9 +89,6 @@ class HomeScreen extends ConsumerWidget {
               },
               onSelected: (value) async {
                 switch (value) {
-                  case 0:
-                    print('Profil');
-                    break;
                   case 1:
                     Navigator.push(
                       context,
@@ -193,11 +181,6 @@ class HomeScreen extends ConsumerWidget {
                             padding: EdgeInsets.symmetric(
                               vertical: isCompact ? 16 : 20,
                             ),
-                            backgroundColor: Colors.deepPurpleAccent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
                           ),
                           icon: const Icon(Icons.add_box, size: 24),
                           label: Text(
@@ -223,14 +206,6 @@ class HomeScreen extends ConsumerWidget {
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(
                               vertical: isCompact ? 16 : 20,
-                            ),
-                            foregroundColor: Colors.deepPurpleAccent,
-                            side: const BorderSide(
-                              color: Colors.deepPurpleAccent,
-                              width: 2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           icon: const Icon(Icons.login, size: 24),

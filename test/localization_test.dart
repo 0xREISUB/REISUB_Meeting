@@ -8,7 +8,8 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/app_localizations_en.dart';
 import 'package:v_meeting/l10n/app_localizations_tr.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
-import 'package:v_meeting/main.dart';
+import 'package:v_meeting/app/app.dart';
+import 'package:v_meeting/app/locale.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_media.dart';
 import 'package:v_meeting/meeting/meeting_sharing.dart';
@@ -42,6 +43,23 @@ void main() {
     expect(find.text('Server Settings'), findsOneWidget);
     expect(find.text('Save Server Settings'), findsOneWidget);
     expect(find.text('Sunucu Ayarları'), findsNothing);
+  });
+
+  testWidgets('a chosen language is restored on the next launch', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final first = ProviderContainer();
+    addTearDown(first.dispose);
+    await first.read(localeProvider.notifier).select(const Locale('tr'));
+
+    await tester.pumpWidget(const ProviderScope(child: VMeetingApp()));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).locale,
+      const Locale('tr'),
+    );
+    expect(find.text('Sunucu Ayarları'), findsOneWidget);
   });
 
   testWidgets('language selection switches the visible interface both ways', (

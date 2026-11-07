@@ -1,20 +1,21 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/auth/auth_api.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
 import 'package:v_meeting/widgets/language_menu_button.dart';
 
-class HostScreen extends StatefulWidget {
-  const HostScreen({super.key, this.dio});
-  final Dio? dio;
+class HostScreen extends ConsumerStatefulWidget {
+  const HostScreen({super.key});
 
   @override
-  State<HostScreen> createState() => _HostScreenState();
+  ConsumerState<HostScreen> createState() => _HostScreenState();
 }
 
-class _HostScreenState extends State<HostScreen> {
+class _HostScreenState extends ConsumerState<HostScreen> {
   final _hostController = TextEditingController();
   final _portController = TextEditingController(
     text: '${ServerConfig.defaultPort}',
@@ -61,23 +62,7 @@ class _HostScreenState extends State<HostScreen> {
 
     setState(() => _isConnecting = true);
     try {
-      final dio =
-          widget.dio ??
-          Dio(
-            BaseOptions(
-              connectTimeout: const Duration(seconds: 10),
-              receiveTimeout: const Duration(seconds: 10),
-            ),
-          );
-      final response = await dio.get<Map<String, dynamic>>('$host/ping');
-      final pingResponse = response.data;
-
-      if (response.statusCode != 200 ||
-          pingResponse?['message'] != 'pong' ||
-          pingResponse?['status'] != 'active') {
-        throw const FormatException('Invalid server response');
-      }
-
+      await ref.read(authApiProvider).checkServer(host);
       await ServerConfig.saveUrl(host);
       if (mounted) {
         Navigator.pushReplacement(
@@ -85,18 +70,10 @@ class _HostScreenState extends State<HostScreen> {
           MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       }
-    } on DioException catch (_) {
-      if (mounted) {
-        _showError(l10n.connectionError);
-      }
-    } on FormatException catch (_) {
-      if (mounted) {
-        _showError(l10n.connectionError);
-      }
+    } on ServerCheckException {
+      if (mounted) _showError(l10n.connectionError);
     } catch (_) {
-      if (mounted) {
-        _showError(AppLocalizations.of(context)!.serverSettingsSaveFailed);
-      }
+      if (mounted) _showError(l10n.serverSettingsSaveFailed);
     } finally {
       if (mounted) {
         setState(() => _isConnecting = false);
@@ -104,11 +81,7 @@ class _HostScreenState extends State<HostScreen> {
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
+  void _showError(String message) => showErrorSnackBar(context, message);
 
   @override
   void dispose() {
@@ -157,9 +130,6 @@ class _HostScreenState extends State<HostScreen> {
                     labelText: l10n.serverAddress,
                     hintText: l10n.serverSettingsHint,
                     prefixIcon: const Icon(Icons.link),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -171,22 +141,11 @@ class _HostScreenState extends State<HostScreen> {
                   decoration: InputDecoration(
                     labelText: l10n.serverPort,
                     prefixIcon: const Icon(Icons.numbers),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
                   ),
                   onSubmitted: (_) => _isConnecting ? null : _connect(),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.deepPurpleAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
                   onPressed: _isLoading || _isConnecting ? null : _connect,
                   icon: _isConnecting
                       ? const SizedBox(

@@ -1,6 +1,7 @@
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/auth/login_screen.dart';
@@ -55,7 +56,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  l10n.nameError, // Ger├ğek dil paketinden
+                  l10n.nameError,
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
@@ -73,7 +74,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final credentials = await MeetingApi().createRoom(name);
+      final credentials = await ref.read(meetingApiProvider).createRoom(name);
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -105,7 +106,6 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ger├ğek dil paketini kullan─▒yoruz
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -136,11 +136,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(
-                        Icons.add_box,
-                        size: 80,
-                        color: Colors.deepPurpleAccent,
-                      ),
+                      const Icon(Icons.add_box, size: 80, color: brandColor),
                       const SizedBox(height: 32),
                       Text(
                         l10n.createRoom,
@@ -158,23 +154,12 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
                         decoration: InputDecoration(
                           labelText: l10n.yourName,
                           errorText: _isNameError ? l10n.nameError : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
                           prefixIcon: const Icon(Icons.person),
                         ),
                       ),
                       const SizedBox(height: 32),
 
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.deepPurpleAccent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
                         onPressed: _isSubmitting
                             ? null
                             : () => _startMeeting(l10n),
