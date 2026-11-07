@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#141418">
+  <title>REISUB Meeting</title>
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <style>
+    :root {
+      --bg: #0d0d10;
+      --card: #1c1c1e;
+      --surface: #2c2c2e;
+      --accent: #7c4dff;
+      --accent-soft: #b69bff;
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.62);
+      --faint: rgba(255, 255, 255, 0.38);
+      --danger: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(124, 77, 255, 0.22), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    main {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 24px;
+      padding: 32px 24px 24px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      text-align: center;
+    }
+    .logo {
+      width: 88px;
+      height: 88px;
+      border-radius: 22px;
+      display: block;
+      margin: 0 auto 16px;
+    }
+    .brand {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      color: var(--accent-soft);
+    }
+    h1 {
+      margin: 8px 0 20px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .code {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 8px;
+      padding: 12px 16px 12px 20px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+    }
+    .code svg { width: 18px; height: 18px; opacity: 0.6; flex: none; }
+    .code:hover svg, .code:focus-visible svg { opacity: 1; }
+    .hint {
+      min-height: 18px;
+      margin: 0 0 24px;
+      font-size: 13px;
+      color: var(--faint);
+    }
+    .hint.ok { color: #69f0ae; }
+    .actions { display: grid; gap: 12px; }
+    .button {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 14px;
+      text-decoration: none;
+      text-align: left;
+      transition: transform 0.12s ease, filter 0.12s ease, background 0.12s ease;
+    }
+    .button:active { transform: scale(0.985); }
+    .button svg { width: 24px; height: 24px; flex: none; }
+    .button strong { display: block; font-size: 16px; font-weight: 700; }
+    .button span span { display: block; margin-top: 2px; font-size: 13px; }
+    .primary { background: var(--accent); color: #fff; }
+    .primary span span { color: rgba(255, 255, 255, 0.8); }
+    .primary:hover, .primary:focus-visible { filter: brightness(1.08); }
+    .secondary {
+      border: 2px solid var(--accent);
+      color: var(--accent-soft);
+    }
+    .secondary span span { color: var(--muted); }
+    .secondary:hover, .secondary:focus-visible { background: rgba(124, 77, 255, 0.1); }
+    .error {
+      margin: 0 0 24px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: rgba(255, 107, 107, 0.12);
+      color: var(--danger);
+      font-size: 14px;
+    }
+    footer {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--faint);
+    }
+    footer a { color: var(--muted); }
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-soft);
+      outline-offset: 3px;
+    }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src="../icons/Icon-192.png" alt="" width="88" height="88">
+    <p class="brand" lang="en">REISUB MEETING</p>
+    <h1 id="title">Toplantıya davet edildiniz</h1>
+
+    <div id="invite">
+      <button class="code" id="code" type="button" aria-describedby="hint">
+        <span id="code-text"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+      </button>
+      <p class="hint" id="hint"></p>
+    </div>
+    <p class="error" id="error" hidden></p>
+
+    <div class="actions">
+      <a class="button primary" id="join" href="../">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20z"/></svg>
+        <span><strong id="join-title"></strong><span id="join-sub"></span></span>
+      </a>
+      <a class="button secondary" id="download" href="https://github.com/0xREISUB/REISUB_Meeting/releases/latest" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        <span><strong id="download-title"></strong><span id="download-sub"></span></span>
+      </a>
+    </div>
+
+    <footer>
+      <span id="footer"></span>
+      · <a href="https://github.com/0xREISUB/REISUB_Meeting" rel="noopener">GitHub</a>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      var text = {
+        tr: {
+          title: 'Toplantıya davet edildiniz',
+          invalidTitle: 'Davet bağlantısı geçersiz',
+          invalid: 'Bu bağlantıda geçerli bir oda kodu yok. Sizi davet eden kişiden bağlantıyı yeniden isteyin.',
+          hint: 'Kopyalamak için koda dokunun',
+          copied: 'Oda kodu kopyalandı',
+          join: 'Tarayıcıda katıl',
+          joinSub: 'Kurulum gerekmez',
+          download: 'Uygulamayı indir',
+          downloadSub: 'Android, Windows ve Linux',
+          footer: 'Açık kaynak görüntülü toplantılar'
+        },
+        en: {
+          title: 'You’re invited to a meeting',
+          invalidTitle: 'Invalid invite link',
+          invalid: 'This link has no valid room code. Ask the person who invited you to send it again.',
+          hint: 'Tap the code to copy it',
+          copied: 'Room code copied',
+          join: 'Join in your browser',
+          joinSub: 'Nothing to install',
+          download: 'Download the app',
+          downloadSub: 'Android, Windows and Linux',
+          footer: 'Open-source video meetings'
+        }
+      };
+      var languages = navigator.languages || [navigator.language || 'en'];
+      var lang = /^tr\b/i.test(languages[0] || '') ? 'tr' : 'en';
+      var t = text[lang];
+      document.documentElement.lang = lang;
+
+      var pattern = /^\d{3}-\d{3}-\d{3}$/;
+      function findRoom() {
+        var query = new URLSearchParams(location.search).get('room');
+        if (query && pattern.test(query.trim())) return query.trim();
+        // Short links such as /j/123-456-789.
+        var segments = location.pathname.split('/').filter(Boolean);
+        var last = decodeURIComponent(segments[segments.length - 1] || '');
+        return pattern.test(last) ? last : null;
+      }
+
+      function set(id, value) { document.getElementById(id).textContent = value; }
+      set('join-title', t.join);
+      set('join-sub', t.joinSub);
+      set('download-title', t.download);
+      set('download-sub', t.downloadSub);
+      set('footer', t.footer);
+
+      var room = findRoom();
+      var join = document.getElementById('join');
+      if (!room) {
+        set('title', t.invalidTitle);
+        set('error', t.invalid);
+        document.getElementById('error').hidden = false;
+        document.getElementById('invite').hidden = true;
+        join.hidden = true;
+        document.title = t.invalidTitle + ' · REISUB Meeting';
+        return;
+      }
+
+      set('title', t.title);
+      set('code-text', room);
+      set('hint', t.hint);
+      document.title = t.title + ' · REISUB Meeting';
+      // The web app lives one level up from /invite/ and /j/.
+      var app = new URL('../', location.href);
+      app.search = '?room=' + encodeURIComponent(room);
+      app.hash = '';
+      join.href = app.toString();
+
+      var hint = document.getElementById('hint');
+      document.getElementById('code').addEventListener('click', function () {
+        if (!navigator.clipboard) return;
+        navigator.clipboard.writeText(room).then(function () {
+          hint.textContent = t.copied;
+          hint.classList.add('ok');
+        }, function () {});
+      });
+    })();
+  </script>
+</body>
+</html>

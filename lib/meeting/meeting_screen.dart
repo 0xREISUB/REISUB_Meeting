@@ -472,6 +472,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                   // A new key restarts the countdown when shown again.
                   key: ValueKey(_roomCodeRequests),
                   roomId: roomId,
+                  inviteLink: _session.inviteLink,
                   onClose: () => setState(() => _showRoomCode = false),
                 ),
               ),

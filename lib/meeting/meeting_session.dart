@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 // LiveKit has its own TimeoutException; the one used here is dart:async's.
 import 'package:livekit_client/livekit_client.dart' hide TimeoutException;
+import 'package:v_meeting/app/invite.dart';
+import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
@@ -520,6 +522,18 @@ class MeetingSession extends ChangeNotifier {
     final credentials = _credentials;
     if (credentials == null || !isOwner || member.isLocal) return;
     await api.transferOwnership(credentials.roomId, member.identity);
+  }
+
+  /// A link that opens this meeting's invite page.
+  Future<String?> inviteLink() async {
+    final credentials = _credentials;
+    if (credentials == null) return null;
+    final fromServer = credentials.inviteUrl;
+    if (fromServer != null && fromServer.isNotEmpty) return fromServer;
+    return fallbackInviteLink(
+      credentials.roomId,
+      serverUrl: await ServerConfig.readUrl(),
+    );
   }
 
   /// Whether leaving now hands full admin to someone else.

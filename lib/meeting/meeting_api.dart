@@ -16,6 +16,9 @@ class RoomCredentials {
   /// servers only send is_host.
   final MeetingRole? role;
 
+  /// Shareable invite link from the server, if it provides one.
+  final String? inviteUrl;
+
   MeetingRole get initialRole =>
       role ?? (isHost ? MeetingRole.owner : MeetingRole.participant);
 
@@ -26,6 +29,7 @@ class RoomCredentials {
     required this.participant,
     required this.isHost,
     this.role,
+    this.inviteUrl,
   });
 
   factory RoomCredentials.fromJson(Map<String, dynamic> json) {
@@ -38,6 +42,7 @@ class RoomCredentials {
       role: json['role'] is String
           ? MeetingRole.parse(json['role'] as String)
           : null,
+      inviteUrl: json['invite_url'] as String?,
     );
   }
 }

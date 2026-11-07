@@ -18,6 +18,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get roomId => 'Oda ID';
 
   @override
+  String get roomCodeCopied => 'Oda kodu kopyalandı';
+
+  @override
+  String get invite => 'Davet et';
+
+  @override
+  String get inviteLinkCopied => 'Davet bağlantısı kopyalandı';
+
+  @override
   String get nameError => 'Bir ad girmelisin';
 
   @override

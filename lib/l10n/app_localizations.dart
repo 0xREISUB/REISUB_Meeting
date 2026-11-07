@@ -116,6 +116,24 @@ abstract class AppLocalizations {
   /// **'Room ID'**
   String get roomId;
 
+  /// No description provided for @roomCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Room code copied'**
+  String get roomCodeCopied;
+
+  /// No description provided for @invite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get invite;
+
+  /// No description provided for @inviteLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link copied'**
+  String get inviteLinkCopied;
+
   /// No description provided for @nameError.
   ///
   /// In en, this message translates to:

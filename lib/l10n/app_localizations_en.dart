@@ -18,6 +18,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomId => 'Room ID';
 
   @override
+  String get roomCodeCopied => 'Room code copied';
+
+  @override
+  String get invite => 'Invite';
+
+  @override
+  String get inviteLinkCopied => 'Invite link copied';
+
+  @override
   String get nameError => 'You must enter a name';
 
   @override

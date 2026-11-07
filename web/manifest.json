@@ -3,10 +3,10 @@
     "short_name": "REISUB Meeting",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#141418",
+    "theme_color": "#141418",
+    "description": "Open-source video meetings.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

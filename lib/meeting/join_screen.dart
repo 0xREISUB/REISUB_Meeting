@@ -2,6 +2,7 @@ import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
@@ -10,7 +11,10 @@ import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
 
 class JoinScreen extends ConsumerStatefulWidget {
-  const JoinScreen({super.key});
+  const JoinScreen({super.key, this.initialRoomId});
+
+  /// Prefilled room code, e.g. from an invite link.
+  final String? initialRoomId;
 
   @override
   ConsumerState<JoinScreen> createState() => _JoinScreenState();
@@ -18,7 +22,9 @@ class JoinScreen extends ConsumerStatefulWidget {
 
 class _JoinScreenState extends ConsumerState<JoinScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _roomController = TextEditingController();
+  late final TextEditingController _roomController = TextEditingController(
+    text: widget.initialRoomId,
+  );
 
   final FocusNode _nameFocusNode = FocusNode();
   final FocusNode _roomFocusNode = FocusNode();
@@ -26,6 +32,17 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   bool _isNameError = false;
   bool _isRoomError = false;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialRoomId != null) {
+      // The invite has been used; providers can't change during a build.
+      Future.microtask(() {
+        if (mounted) ref.read(inviteRoomProvider.notifier).clear();
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -57,7 +74,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
     setState(() {
       _isNameError = name.isEmpty;
-      _isRoomError = !RegExp(r'^\d{3}-\d{3}-\d{3}$').hasMatch(room);
+      _isRoomError = !roomCodePattern.hasMatch(room);
     });
 
     if (_isNameError || _isRoomError) {
@@ -199,6 +216,8 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                           TextField(
                             controller: _nameController,
                             focusNode: _nameFocusNode,
+                            // With an invite only the name is missing.
+                            autofocus: widget.initialRoomId != null,
                             textInputAction: TextInputAction.next,
                             onSubmitted: (_) {
                               FocusScope.of(
@@ -226,9 +245,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                             onSubmitted: (_) => _joinMeeting(),
                             onChanged: (val) {
                               if (_isRoomError &&
-                                  RegExp(
-                                    r'^\d{3}-\d{3}-\d{3}$',
-                                  ).hasMatch(val)) {
+                                  roomCodePattern.hasMatch(val)) {
                                 setState(() => _isRoomError = false);
                               }
                             },
