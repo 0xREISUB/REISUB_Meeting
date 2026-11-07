@@ -20,7 +20,7 @@ if (gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = tr
 }
 
 android {
-    namespace = "com.example.v_meeting"
+    namespace = "xyz.reisub.meeting"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -31,7 +31,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.v_meeting"
+        applicationId = "xyz.reisub.meeting"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

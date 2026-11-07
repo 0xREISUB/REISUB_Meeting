@@ -10,7 +10,7 @@ set(APPLICATION_NAME "${BINARY_NAME}")
 string(REPLACE " " "_" BINARY_NAME "${BINARY_NAME}")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.example.v_meeting")
+set(APPLICATION_ID "xyz.reisub.meeting")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

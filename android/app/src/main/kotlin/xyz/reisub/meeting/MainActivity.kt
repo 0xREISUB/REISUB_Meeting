@@ -1,4 +1,4 @@
-package com.example.v_meeting
+package xyz.reisub.meeting
 
 import android.content.Intent
 import android.os.Build

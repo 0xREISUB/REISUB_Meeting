@@ -17,7 +17,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = "reisub-meeting"
-APP_ID = "com.example.v_meeting"
+APP_ID = "xyz.reisub.meeting"
 MAINTAINER = "Yusuf Enes Metin <yusufenes4124@gmail.com>"
 HOMEPAGE = "https://github.com/0xREISUB/REISUB_Meeting"
 

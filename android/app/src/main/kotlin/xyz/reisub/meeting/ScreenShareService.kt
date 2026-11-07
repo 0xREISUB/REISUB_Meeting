@@ -1,4 +1,4 @@
-package com.example.v_meeting
+package xyz.reisub.meeting
 
 import android.app.Notification
 import android.app.NotificationChannel
