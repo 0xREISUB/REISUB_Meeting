@@ -12,6 +12,19 @@
   <meta name="reisub-download-url" content="__REISUB_DOWNLOAD_URL__">
   <meta name="reisub-source-url" content="__REISUB_SOURCE_URL__">
   <title>REISUB Meeting</title>
+  <script>
+    // Invites must not run over plain HTTP outside local networks.
+    (function () {
+      var host = location.hostname;
+      var local = host === 'localhost' || host === '127.0.0.1' || host === '[::1]' ||
+        /\.local$/.test(host) || /^(10|127)\./.test(host) ||
+        /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+      if (location.protocol === 'http:' && !local) {
+        location.replace('https://' + location.host + location.pathname +
+          location.search + location.hash);
+      }
+    })();
+  </script>
   <link rel="icon" type="image/png" href="../favicon.png">
   <style>
     :root {

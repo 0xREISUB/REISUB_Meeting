@@ -380,6 +380,12 @@ abstract class AppLocalizations {
   /// **'Example: meeting.example.com'**
   String get serverSettingsHint;
 
+  /// No description provided for @webServerFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'The web version uses the server it is published on.'**
+  String get webServerFixed;
+
   /// No description provided for @version.
   ///
   /// In en, this message translates to:

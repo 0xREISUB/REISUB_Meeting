@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/auth_api.dart';
@@ -206,74 +207,87 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           _sectionTitle(context, l10n.serverSettings),
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Card(
-              elevation: 0,
-              color: colorScheme.surfaceContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    TextFormField(
-                      key: const Key('server-host'),
-                      enabled:
-                          !_isLoadingServerSettings && !_isSavingServerSettings,
-                      controller: _serverHostController,
-                      keyboardType: TextInputType.text,
-                      decoration: InputDecoration(
-                        labelText: l10n.serverAddress,
-                        hintText: '192.168.1.10',
-                        prefixIcon: const Icon(Icons.dns_outlined),
+          // The web app always uses the server it was loaded from; another
+          // address would only fail on the browser's cross-origin rules.
+          if (kIsWeb)
+            ListTile(
+              key: const Key('web-server-info'),
+              leading: const Icon(Icons.dns_outlined),
+              title: Text(_serverHostController.text),
+              subtitle: Text(l10n.webServerFixed),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Card(
+                elevation: 0,
+                color: colorScheme.surfaceContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        key: const Key('server-host'),
+                        enabled:
+                            !_isLoadingServerSettings &&
+                            !_isSavingServerSettings,
+                        controller: _serverHostController,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          labelText: l10n.serverAddress,
+                          hintText: '192.168.1.10',
+                          prefixIcon: const Icon(Icons.dns_outlined),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      key: const Key('server-port'),
-                      enabled:
-                          !_isLoadingServerSettings && !_isSavingServerSettings,
-                      controller: _serverPortController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: l10n.serverPort,
-                        hintText: '${ServerConfig.defaultPort}',
-                        prefixIcon: const Icon(Icons.numbers_outlined),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        key: const Key('server-port'),
+                        enabled:
+                            !_isLoadingServerSettings &&
+                            !_isSavingServerSettings,
+                        controller: _serverPortController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: l10n.serverPort,
+                          hintText: '${ServerConfig.defaultPort}',
+                          prefixIcon: const Icon(Icons.numbers_outlined),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            _isLoadingServerSettings || _isSavingServerSettings
-                            ? null
-                            : _saveServerSettings,
-                        icon: _isSavingServerSettings
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.save),
-                        label: Text(l10n.saveServerSettings),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed:
+                              _isLoadingServerSettings ||
+                                  _isSavingServerSettings
+                              ? null
+                              : _saveServerSettings,
+                          icon: _isSavingServerSettings
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.save),
+                          label: Text(l10n.saveServerSettings),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.serverSettingsHint,
-                      style: TextStyle(
-                        color: Colors.grey.shade400,
-                        fontSize: 12,
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.serverSettingsHint,
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
           const Divider(height: 32),
 

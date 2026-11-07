@@ -47,6 +47,7 @@
   "serverPort": "Sunucu Portu",
   "saveServerSettings": "Sunucu Ayarlarını Kaydet",
   "serverSettingsHint": "Örnek: meeting.example.com",
+  "webServerFixed": "Web sürümü, yayınlandığı sunucuyu kullanır.",
   "version": "Sürüm",
   "checkForUpdates": "Güncellemeleri Kontrol Et",
   "chatTitle": "Sohbet",

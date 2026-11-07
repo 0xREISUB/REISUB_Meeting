@@ -154,6 +154,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverSettingsHint => 'Example: meeting.example.com';
 
   @override
+  String get webServerFixed =>
+      'The web version uses the server it is published on.';
+
+  @override
   String get version => 'Version';
 
   @override

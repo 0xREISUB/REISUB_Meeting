@@ -48,6 +48,7 @@
   "serverPort": "Server Port",
   "saveServerSettings": "Save Server Settings",
   "serverSettingsHint": "Example: meeting.example.com",
+  "webServerFixed": "The web version uses the server it is published on.",
   "version": "Version",
   "checkForUpdates": "Check for Updates",
   "chatTitle": "Chat",
