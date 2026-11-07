@@ -6,6 +6,7 @@ class ServerConfig {
   static const defaultPort = 8080;
   static const _serverUrlKey = 'server_url';
   static const _authTokenKey = 'auth_token';
+  static const _guestTokenKey = 'guest_token';
   static const _secureStorage = FlutterSecureStorage();
 
   static String normalizeUrl(String value) {
@@ -105,6 +106,28 @@ class ServerConfig {
     await _secureStorage.write(key: _authTokenKey, value: legacyToken);
     await prefs.remove(_authTokenKey);
     return legacyToken;
+  }
+
+  /// Token of the anonymous guest session used while not logged in.
+  static Future<String?> readGuestToken() async {
+    final token = await _secureStorage.read(key: _guestTokenKey);
+    return token == null || token.trim().isEmpty ? null : token;
+  }
+
+  static Future<void> saveGuestToken(String token) =>
+      _secureStorage.write(key: _guestTokenKey, value: token);
+
+  static Future<void> clearGuestToken() =>
+      _secureStorage.delete(key: _guestTokenKey);
+
+  /// Forgets both the account and the guest session, e.g. when the server
+  /// changes.
+  static Future<void> clearSessions() async {
+    try {
+      await clearGuestToken();
+    } finally {
+      await clearToken();
+    }
   }
 
   static Future<void> clearToken() async {

@@ -464,6 +464,18 @@ abstract class AppLocalizations {
   /// **'Enter your username and password.'**
   String get credentialsRequired;
 
+  /// No description provided for @accountSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. You can continue as a guest or log in again.'**
+  String get accountSessionExpired;
+
+  /// No description provided for @guestUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This server requires an account. Please log in.'**
+  String get guestUnavailable;
+
   /// No description provided for @login.
   ///
   /// In en, this message translates to:

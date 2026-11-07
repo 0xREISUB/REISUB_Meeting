@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:v_meeting/app/http.dart';
 import 'package:v_meeting/auth/host_screen.dart';
-import 'package:v_meeting/auth/login_screen.dart';
+import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/settings/settings_screen.dart';
@@ -171,7 +171,8 @@ void main() {
     await saveSettings(tester);
     expect(requests.single.uri.toString(), 'https://meeting.test:9443/ping');
     expect(await ServerConfig.readUrl(), 'https://meeting.test:9443');
-    expect(find.byType(LoginScreen), findsOneWidget);
+    // Logging in is optional; the app goes straight home.
+    expect(find.byType(HomeScreen), findsOneWidget);
     await showSettings(tester);
     expect(fieldText(tester, 'server-host'), 'https://meeting.test');
     expect(fieldText(tester, 'server-port'), '9443');
@@ -191,8 +192,9 @@ void main() {
       await saveSettings(tester);
       expect(requests.single.uri.toString(), 'https://meeting.test:8443/ping');
       expect(await ServerConfig.readUrl(), 'https://meeting.test:8443');
+      // Sessions belong to the old server, but the user stays in settings.
       expect(await ServerConfig.readToken(), isNull);
-      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(SettingsScreen), findsOneWidget);
       await tester.pumpWidget(app(const HostScreen()));
       await tester.pumpAndSettle();
       expect(fieldText(tester, 'server-port'), '8443');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/auth_api.dart';
 import 'package:v_meeting/auth/register_screen.dart';
 import 'package:v_meeting/app/invite.dart';
@@ -33,8 +34,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isSubmitting = true);
     try {
       await ref.read(authApiProvider).login(nick: nick, password: password);
+      ref.read(signedInProvider.notifier).markSignedIn();
       if (!mounted) return;
-      final next = signedInHome(ref);
+      // Login is opened from the app; go back to where the user came from.
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context, true);
+        return;
+      }
+      final next = startHome(ref);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => next),
@@ -63,7 +70,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: const [LanguageMenuButton(), SizedBox(width: 8)],

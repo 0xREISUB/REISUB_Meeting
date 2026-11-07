@@ -25,9 +25,9 @@ String? parseInviteRoom(Uri uri) {
   return room != null && roomCodePattern.hasMatch(room) ? room : null;
 }
 
-/// Where a signed-in user lands: the join screen for a pending invite,
-/// otherwise the home screen.
-Widget signedInHome(WidgetRef ref) {
+/// The first screen once a server is set: the join screen for a pending
+/// invite, otherwise the home screen.
+Widget startHome(WidgetRef ref) {
   final invite = ref.read(inviteRoomProvider);
   return invite == null
       ? const HomeScreen()

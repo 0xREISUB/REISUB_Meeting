@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/auth_api.dart';
-import 'package:v_meeting/auth/login_screen.dart';
+import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'device_test_screen.dart';
@@ -86,17 +86,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final serverChanged =
           currentUrl != null &&
           ServerConfig.parseUrl(currentUrl) != Uri.parse(newUrl);
-      if (serverChanged) await ServerConfig.clearToken();
-      if (!mounted) {
-        return;
-      }
-
       if (serverChanged) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
+        // Sessions belong to the previous server.
+        await ServerConfig.clearSessions();
+        ref.read(signedInProvider.notifier).refresh();
+      }
+      if (!mounted) {
         return;
       }
 

@@ -61,6 +61,8 @@
   "nickname": "Kullanıcı Adı (Nick)",
   "password": "Şifre",
   "credentialsRequired": "Kullanıcı adınızı ve şifrenizi girin.",
+  "accountSessionExpired": "Oturumunuzun süresi doldu. Misafir olarak devam edebilir ya da yeniden giriş yapabilirsiniz.",
+  "guestUnavailable": "Bu sunucu hesap gerektiriyor. Lütfen giriş yapın.",
   "login": "Giriş Yap",
   "noAccountRegister": "Hesabın yok mu? Kayıt Ol",
   "createAccount": "Yeni Hesap Oluştur",

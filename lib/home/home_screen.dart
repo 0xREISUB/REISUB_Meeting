@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/create_screen.dart';
@@ -8,7 +9,6 @@ import 'package:v_meeting/meeting/join_screen.dart';
 import 'package:v_meeting/settings/about_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
 import 'package:v_meeting/settings/settings_screen.dart';
-import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -17,13 +17,13 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final signedIn = ref.watch(signedInProvider).value ?? false;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          // PROFİL RESMİ VE AÇILIR MENÜ
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: PopupMenuButton<int>(
@@ -69,22 +69,34 @@ class HomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  PopupMenuItem<int>(
-                    value: 4,
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout, size: 20, color: Colors.red),
-                        SizedBox(width: 12),
-                        Text(
-                          l10n.logout,
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
+                  if (signedIn)
+                    PopupMenuItem<int>(
+                      value: 4,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.logout, size: 20, color: Colors.red),
+                          const SizedBox(width: 12),
+                          Text(
+                            l10n.logout,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    )
+                  else
+                    PopupMenuItem<int>(
+                      value: 5,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.login, size: 20),
+                          const SizedBox(width: 12),
+                          Text(l10n.login),
+                        ],
+                      ),
                     ),
-                  ),
                 ];
               },
               onSelected: (value) async {
@@ -110,17 +122,13 @@ class HomeScreen extends ConsumerWidget {
                     );
                     break;
                   case 4:
-                    await ServerConfig.clearToken();
-                    if (!context.mounted) {
-                      return;
-                    }
-                    Navigator.pushAndRemoveUntil(
+                    // Back to a guest; rooms stay usable without an account.
+                    await ref.read(signedInProvider.notifier).signOut();
+                    break;
+                  case 5:
+                    Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                      (route) =>
-                          false, // Tüm geçmişi siler ki geri tuşuyla anasayfaya dönülmesin
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
                     );
                     break;
                 }

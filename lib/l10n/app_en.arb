@@ -61,6 +61,8 @@
   "nickname": "Username (Nick)",
   "password": "Password",
   "credentialsRequired": "Enter your username and password.",
+  "accountSessionExpired": "Your session has expired. You can continue as a guest or log in again.",
+  "guestUnavailable": "This server requires an account. Please log in.",
   "login": "Log In",
   "noAccountRegister": "Don't have an account? Register",
   "createAccount": "Create New Account",

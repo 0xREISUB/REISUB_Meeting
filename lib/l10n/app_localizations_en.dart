@@ -201,6 +201,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get credentialsRequired => 'Enter your username and password.';
 
   @override
+  String get accountSessionExpired =>
+      'Your session has expired. You can continue as a guest or log in again.';
+
+  @override
+  String get guestUnavailable =>
+      'This server requires an account. Please log in.';
+
+  @override
   String get login => 'Log In';
 
   @override

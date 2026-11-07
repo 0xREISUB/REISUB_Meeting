@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
+import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
@@ -85,12 +86,14 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
     } on MeetingApiException catch (error) {
       if (mounted) {
         if (error.sessionExpired) {
-          Navigator.pushAndRemoveUntil(
+          ref.read(signedInProvider.notifier).refresh();
+        }
+        if (error.loginRequired) {
+          // Servers without guest sessions still need an account.
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const LoginScreen()),
-            (_) => false,
           );
-          return;
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

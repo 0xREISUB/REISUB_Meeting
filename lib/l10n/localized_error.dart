@@ -23,6 +23,8 @@ enum AppError {
   moderatorRequired,
   nowOwner,
   nowModerator,
+  accountSessionExpired,
+  loginRequired,
 }
 
 /// Keep application errors as data so an already visible error follows a locale
@@ -64,6 +66,8 @@ class AppException implements Exception {
     AppError.moderatorRequired => l10n.moderatorRequiredError,
     AppError.nowOwner => l10n.youAreOwnerNow,
     AppError.nowModerator => l10n.youAreModeratorNow,
+    AppError.accountSessionExpired => l10n.accountSessionExpired,
+    AppError.loginRequired => l10n.guestUnavailable,
     null => message!,
   };
 

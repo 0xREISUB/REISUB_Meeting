@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
@@ -112,17 +111,13 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     if (!mounted) return;
     _controlsTimer?.cancel();
     final notice = switch (reason) {
-      MeetingExitReason.left || MeetingExitReason.sessionExpired => null,
+      MeetingExitReason.left => null,
       MeetingExitReason.endedByYou => _l10n.meetingEndedByYou,
       MeetingExitReason.disconnected => _session.connection.message(_l10n),
     };
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => reason == MeetingExitReason.sessionExpired
-            ? const LoginScreen()
-            : const HomeScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
       (_) => false,
     );
     if (notice != null) {

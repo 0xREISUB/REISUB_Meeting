@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/auth_api.dart';
-import 'package:v_meeting/auth/login_screen.dart';
+import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
@@ -65,9 +65,10 @@ class _HostScreenState extends ConsumerState<HostScreen> {
       await ref.read(authApiProvider).checkServer(host);
       await ServerConfig.saveUrl(host);
       if (mounted) {
+        final next = startHome(ref);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => next),
         );
       }
     } on ServerCheckException {

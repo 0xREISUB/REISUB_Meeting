@@ -29,9 +29,6 @@ enum MeetingExitReason {
 
   /// The server closed the meeting or removed this participant.
   disconnected,
-
-  /// The app session expired; the user must log in again.
-  sessionExpired,
 }
 
 /// What the meeting logic needs from the screen: navigation, dialogs and
@@ -298,13 +295,8 @@ class MeetingSession extends ChangeNotifier {
       if (_disposed) return;
       await connect();
     } catch (error) {
-      if (!_disposed) {
-        if (error is MeetingApiException && error.sessionExpired) {
-          leave(MeetingExitReason.sessionExpired);
-        } else {
-          connection.fail(error);
-        }
-      }
+      // An expired account continues as a guest on the next attempt.
+      if (!_disposed) connection.fail(error);
     } finally {
       if (!_disposed) {
         isRejoining = false;

@@ -228,39 +228,111 @@ class MeetingApi {
   static String _room(String roomId) => '/rooms/${Uri.encodeComponent(roomId)}';
 
   /// Sends an authenticated request and returns the decoded response body.
+  ///
+  /// Uses the account session when logged in, otherwise a guest session that
+  /// is created on first use and renewed once if the server rejects it.
   Future<Object?> _send(String method, String path, {Object? data}) async {
-    final (serverUrl, token) = await _session();
+    final serverUrl = await _serverUrl();
+    var session = await _session(serverUrl);
+    for (var attempt = 0; ; attempt++) {
+      try {
+        final response = await _dio.request<Object?>(
+          '$serverUrl$path',
+          data: data,
+          options: Options(
+            method: method,
+            headers: {'Authorization': 'Bearer ${session.token}'},
+          ),
+        );
+        return response.data;
+      } on DioException catch (error) {
+        if (error.response?.statusCode == 401) {
+          if (session.guest && attempt == 0) {
+            await _forget(ServerConfig.clearGuestToken);
+            session = await _session(serverUrl);
+            continue;
+          }
+          if (!session.guest) {
+            // The next request continues as a guest; the user may log in again.
+            await _forget(ServerConfig.clearToken);
+            throw const MeetingApiException.localized(
+              AppError.accountSessionExpired,
+              sessionExpired: true,
+            );
+          }
+        }
+        throw await _errorFor(error);
+      }
+    }
+  }
+
+  Future<String> _serverUrl() async {
+    String? serverUrl;
     try {
-      final response = await _dio.request<Object?>(
-        '$serverUrl$path',
-        data: data,
-        options: Options(
-          method: method,
-          headers: {'Authorization': 'Bearer $token'},
-        ),
-      );
-      return response.data;
+      serverUrl = await ServerConfig.readUrl();
+    } catch (_) {}
+    if (serverUrl == null) {
+      throw const MeetingApiException.localized(AppError.missingServerSession);
+    }
+    return serverUrl;
+  }
+
+  Future<({String token, bool guest})> _session(String serverUrl) async {
+    try {
+      final account = await ServerConfig.readToken();
+      if (account != null) return (token: account, guest: false);
+      final guest = await ServerConfig.readGuestToken();
+      if (guest != null) return (token: guest, guest: true);
+    } catch (_) {
+      // An unreadable key store is treated like having no session.
+    }
+    return (token: await _createGuestSession(serverUrl), guest: true);
+  }
+
+  /// Requests started together share one guest session instead of each
+  /// creating a different guest user.
+  static Future<String>? _guestCreation;
+
+  Future<String> _createGuestSession(String serverUrl) {
+    return _guestCreation ??= _requestGuestSession(
+      serverUrl,
+    ).whenComplete(() => _guestCreation = null);
+  }
+
+  /// POST /guest creates an anonymous user. Servers without it require an
+  /// account.
+  Future<String> _requestGuestSession(String serverUrl) async {
+    try {
+      final response = await _dio.post<Object?>('$serverUrl/guest');
+      final data = response.data;
+      final token = data is Map ? data['token'] : null;
+      if (token is! String || token.isEmpty) {
+        throw const MeetingApiException.localized(
+          AppError.invalidServerResponse,
+        );
+      }
+      try {
+        await ServerConfig.saveGuestToken(token);
+      } catch (_) {
+        // Without storage the guest session lasts for this request only.
+      }
+      return token;
     } on DioException catch (error) {
+      final status = error.response?.statusCode;
+      if (status == 404 || status == 405) {
+        throw const MeetingApiException.localized(
+          AppError.loginRequired,
+          loginRequired: true,
+        );
+      }
       throw await _errorFor(error);
     }
   }
 
-  Future<(String, String)> _session() async {
-    String? serverUrl;
-    String? token;
+  static Future<void> _forget(Future<void> Function() clear) async {
     try {
-      serverUrl = await ServerConfig.readUrl();
-      token = await ServerConfig.readToken();
-    } catch (_) {
-      // An unreadable key store is treated like a missing session.
-    }
-    if (serverUrl == null || token == null) {
-      throw const MeetingApiException.localized(
-        AppError.missingServerSession,
-        sessionExpired: true,
-      );
-    }
-    return (serverUrl, token);
+      await clear();
+    } catch (_) {}
   }
 
   /// Converts a JSON object, rejecting missing or malformed server data
@@ -285,13 +357,6 @@ class MeetingApi {
   }
 
   Future<MeetingApiException> _errorFor(DioException error) async {
-    if (error.response?.statusCode == 401) {
-      await ServerConfig.clearToken();
-      return const MeetingApiException.localized(
-        AppError.missingServerSession,
-        sessionExpired: true,
-      );
-    }
     final responseData = error.response?.data;
     final code = responseData is Map ? responseData['code'] : null;
     final known = switch (code) {
@@ -312,9 +377,20 @@ class MeetingApi {
 }
 
 class MeetingApiException extends AppException {
-  const MeetingApiException(super.message, {this.sessionExpired = false});
-  const MeetingApiException.localized(super.code, {this.sessionExpired = false})
-    : super.localized();
+  const MeetingApiException(
+    super.message, {
+    this.sessionExpired = false,
+    this.loginRequired = false,
+  });
+  const MeetingApiException.localized(
+    super.code, {
+    this.sessionExpired = false,
+    this.loginRequired = false,
+  }) : super.localized();
 
+  /// The account session ended; requests now continue as a guest.
   final bool sessionExpired;
+
+  /// The server does not offer guest sessions; the user has to log in.
+  final bool loginRequired;
 }

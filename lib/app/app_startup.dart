@@ -4,7 +4,8 @@ import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/app/locale.dart';
 import 'package:v_meeting/auth/server_config.dart';
 
-enum StartDestination { serverSetup, login, home }
+/// Logging in is optional, so a configured server leads straight home.
+enum StartDestination { serverSetup, home }
 
 /// Meeting server for the web app: `--dart-define=REISUB_SERVER_URL=…` when
 /// the API lives elsewhere, otherwise the server that served the page.
@@ -28,15 +29,9 @@ final appStartupProvider = FutureProvider<StartDestination>((ref) async {
       forInvite: ref.read(inviteRoomProvider) != null,
     );
   }
-  if (serverUrl == null) return StartDestination.serverSetup;
-
-  try {
-    final token = await ServerConfig.readToken();
-    return token == null ? StartDestination.login : StartDestination.home;
-  } catch (_) {
-    // A locked or unavailable platform key store requires a new login.
-    return StartDestination.login;
-  }
+  return serverUrl == null
+      ? StartDestination.serverSetup
+      : StartDestination.home;
 });
 
 Future<String?> _useWebServer({
@@ -48,7 +43,7 @@ Future<String?> _useWebServer({
   final normalized = ServerConfig.normalizeUrl(server);
   if (saved == normalized) return saved;
   // A session from another server is not valid here.
-  if (saved != null) await ServerConfig.clearToken();
+  if (saved != null) await ServerConfig.clearSessions();
   await ServerConfig.saveUrl(normalized);
   return normalized;
 }

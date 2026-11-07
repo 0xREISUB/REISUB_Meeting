@@ -201,6 +201,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get credentialsRequired => 'Kullanıcı adınızı ve şifrenizi girin.';
 
   @override
+  String get accountSessionExpired =>
+      'Oturumunuzun süresi doldu. Misafir olarak devam edebilir ya da yeniden giriş yapabilirsiniz.';
+
+  @override
+  String get guestUnavailable =>
+      'Bu sunucu hesap gerektiriyor. Lütfen giriş yapın.';
+
+  @override
   String get login => 'Giriş Yap';
 
   @override

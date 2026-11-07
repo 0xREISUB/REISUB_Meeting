@@ -5,7 +5,6 @@ import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/app/locale.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/host_screen.dart';
-import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 
 class VMeetingApp extends ConsumerWidget {
@@ -31,8 +30,7 @@ class StartupScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (ref.watch(appStartupProvider)) {
-      AsyncData(value: StartDestination.home) => signedInHome(ref),
-      AsyncData(value: StartDestination.login) => const LoginScreen(),
+      AsyncData(value: StartDestination.home) => startHome(ref),
       AsyncData(value: StartDestination.serverSetup) ||
       AsyncError() => const HostScreen(),
       _ => const Scaffold(body: Center(child: CircularProgressIndicator())),
