@@ -1,5 +1,33 @@
 import 'package:livekit_client/livekit_client.dart';
 
+/// A participant's role in a meeting, as granted by the server.
+enum MeetingRole {
+  /// Full admin: everything an admin can do, plus changing roles.
+  owner,
+
+  /// Admin: microphone moderation, screen-share policy, ending the meeting.
+  moderator,
+  participant;
+
+  /// Reads the server's role name; unknown or empty means participant.
+  static MeetingRole parse(String? value) => switch (value) {
+    'owner' => owner,
+    'moderator' => moderator,
+    _ => participant,
+  };
+
+  bool get canModerate => this != participant;
+}
+
+/// Whether [viewer] may lock, unmute-request or stop the share of [target].
+/// The server protects owners from everyone and admins from other admins.
+bool canModerateMember(MeetingRole viewer, MemberEntry target) =>
+    viewer.canModerate &&
+    !target.isLocal &&
+    target.identity.isNotEmpty &&
+    target.role != MeetingRole.owner &&
+    !(viewer == MeetingRole.moderator && target.role == MeetingRole.moderator);
+
 /// A participant as shown in the meeting UI.
 class MemberEntry {
   final String id;
@@ -14,6 +42,7 @@ class MemberEntry {
   final bool isScreenSharing;
   final bool isScreenShare;
   final bool mirrorCamera;
+  final MeetingRole role;
 
   const MemberEntry({
     required this.id,
@@ -28,6 +57,7 @@ class MemberEntry {
     this.isScreenSharing = false,
     this.isScreenShare = false,
     this.mirrorCamera = true,
+    this.role = MeetingRole.participant,
   });
 }
 

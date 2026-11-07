@@ -312,6 +312,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get endMeeting => 'End meeting';
 
   @override
+  String get roleOwner => 'Full admin';
+
+  @override
+  String get roleModerator => 'Admin';
+
+  @override
+  String get participantActions => 'Participant actions';
+
+  @override
+  String get makeOwner => 'Make full admin';
+
+  @override
+  String get makeModerator => 'Make admin';
+
+  @override
+  String get removeAdminRole => 'Remove admin rights';
+
+  @override
+  String get transferOwnership => 'Transfer full admin';
+
+  @override
+  String get transferOwnershipTitle => 'Transfer full admin?';
+
+  @override
+  String transferOwnershipBody(String name) {
+    return '$name becomes a full admin and you stay an admin.';
+  }
+
+  @override
+  String get transfer => 'Transfer';
+
+  @override
+  String get lastOwnerLeaveHint =>
+      'You are the only full admin. If you leave, full admin passes to an admin, or to a random participant if there is none.';
+
+  @override
+  String get youAreOwnerNow => 'You are now a full admin.';
+
+  @override
+  String get youAreModeratorNow => 'You are now an admin.';
+
+  @override
+  String get lastOwnerError => 'At least one full admin must remain.';
+
+  @override
+  String get targetProtectedError => 'You can\'t do this to this participant.';
+
+  @override
+  String get ownerRequiredError => 'Only full admins can do this.';
+
+  @override
+  String get moderatorRequiredError => 'Only admins can do this.';
+
+  @override
   String get meetingEndedByYou => 'You ended the meeting.';
 
   @override

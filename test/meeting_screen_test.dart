@@ -165,6 +165,10 @@ class _ModerationApi extends MeetingApi {
   VoidCallback? onClose;
   @override
   Future<List<MeetingChatMessage>> getRoomMessages(String roomId) async => [];
+  int leaves = 0;
+  @override
+  Future<void> leaveRoom(String roomId) async => leaves++;
+
   @override
   Future<void> closeRoom(String roomId) async {
     closes++;
@@ -1157,7 +1161,7 @@ void main() {
           Scaffold(
             body: MembersScreen(
               members: [local, entry],
-              isHost: host,
+              viewerRole: host ? MeetingRole.owner : MeetingRole.participant,
               onMicrophoneChange: (_, locked, request) async =>
                   actions.add((locked, request)),
             ),
@@ -1168,9 +1172,9 @@ void main() {
     }
 
     await render(false, guest);
-    expect(find.byTooltip('Mikrofon yönetimi'), findsNothing);
+    expect(find.byTooltip('Katılımcı işlemleri'), findsNothing);
     await render(true, guest);
-    expect(find.byTooltip('Mikrofon yönetimi'), findsOneWidget);
+    expect(find.byTooltip('Katılımcı işlemleri'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('moderate-guest')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Mikrofonu kapat ve kilitle'));
@@ -1192,6 +1196,137 @@ void main() {
     expect(actions.last, (false, true));
     expect(tester.takeException(), isNull);
   });
+
+  group('roles in the members panel', () {
+    const guest = MemberEntry(
+      id: 'guest',
+      identity: 'guest',
+      name: 'Konuk',
+      isLocal: false,
+      isMicEnabled: true,
+    );
+    const admin = MemberEntry(
+      id: 'admin',
+      identity: 'admin',
+      name: 'Yönetici Ayşe',
+      isLocal: false,
+      isMicEnabled: true,
+      role: MeetingRole.moderator,
+    );
+    const fullAdmin = MemberEntry(
+      id: 'owner',
+      identity: 'owner',
+      name: 'Sahip Can',
+      isLocal: false,
+      isMicEnabled: true,
+      role: MeetingRole.owner,
+    );
+    final roleChanges = <(String, MeetingRole)>[];
+    final transfers = <String>[];
+
+    Future<void> render(WidgetTester tester, MeetingRole viewer) async {
+      roleChanges.clear();
+      transfers.clear();
+      await tester.pumpWidget(
+        localized(
+          Scaffold(
+            body: MembersScreen(
+              members: const [local, guest, admin, fullAdmin],
+              viewerRole: viewer,
+              onMicrophoneChange: (_, _, _) async {},
+              onRoleChange: (member, role) async =>
+                  roleChanges.add((member.identity, role)),
+              onTransferOwnership: (member) async =>
+                  transfers.add(member.identity),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('admins moderate participants but not other admins', (
+      tester,
+    ) async {
+      await render(tester, MeetingRole.moderator);
+      expect(find.byKey(const ValueKey('moderate-guest')), findsOneWidget);
+      expect(find.byKey(const ValueKey('moderate-admin')), findsNothing);
+      expect(find.byKey(const ValueKey('moderate-owner')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mikrofonu kapat ve kilitle'), findsOneWidget);
+      expect(find.text('Yönetici yap'), findsNothing);
+      expect(find.text('Tam yöneticiliği devret'), findsNothing);
+      expect(find.byKey(const ValueKey('role-badge-owner')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('role-badge-moderator')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('full admins change roles but cannot mute a full admin', (
+      tester,
+    ) async {
+      await render(tester, MeetingRole.owner);
+      await tester.tap(find.byKey(const ValueKey('moderate-owner')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mikrofonu kapat ve kilitle'), findsNothing);
+      expect(find.text('Tam yönetici yap'), findsNothing);
+      await tester.tap(find.text('Yönetici yap'));
+      await tester.pumpAndSettle();
+      expect(roleChanges, [('owner', MeetingRole.moderator)]);
+
+      await tester.tap(find.byKey(const ValueKey('moderate-admin')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mikrofonu kapat ve kilitle'), findsOneWidget);
+      await tester.tap(find.text('Yöneticiliği kaldır'));
+      await tester.pumpAndSettle();
+      expect(roleChanges.last, ('admin', MeetingRole.participant));
+    });
+
+    testWidgets('transferring full admin asks for confirmation', (
+      tester,
+    ) async {
+      await render(tester, MeetingRole.owner);
+      await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tam yöneticiliği devret'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Konuk tam yönetici olur'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('confirm-transfer')));
+      await tester.pumpAndSettle();
+      expect(transfers, ['guest']);
+    });
+  });
+
+  testWidgets('an admin role from the server unlocks ending the meeting', (
+    tester,
+  ) async {
+    final participant = _TestLocal();
+    participant.values['meeting.role'] = 'moderator';
+    final room = _TestRoom(local: participant);
+    final api = _ModerationApi();
+    await openExitTest(tester, room, api: api);
+    await tester.tap(find.byIcon(Icons.call_end_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('Toplantıyı bitir'), findsOneWidget);
+    await tester.tap(find.text('Ayrıl'));
+    await tester.pumpAndSettle();
+    expect(api.leaves, 1);
+    expect(api.closes, 0);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+  testWidgets('a participant leaves at once and tells the server', (
+    tester,
+  ) async {
+    final room = _TestRoom(local: _TestLocal());
+    final api = _ModerationApi();
+    await openExitTest(tester, room, api: api);
+    await tester.tap(find.byIcon(Icons.call_end_rounded));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(api.leaves, 1);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
 
   testWidgets('locked microphone stops capture and cannot be opened locally', (
     tester,

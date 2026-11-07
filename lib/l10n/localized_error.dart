@@ -17,6 +17,12 @@ enum AppError {
   devicePreferenceSaveFailed,
   windowsDevicePrivacyUnavailable,
   screenShareStoppedByHost,
+  lastOwner,
+  targetProtected,
+  ownerRequired,
+  moderatorRequired,
+  nowOwner,
+  nowModerator,
 }
 
 /// Keep application errors as data so an already visible error follows a locale
@@ -52,6 +58,12 @@ class AppException implements Exception {
         details == true ? l10n.cameraName : l10n.microphoneName,
       ),
     AppError.screenShareStoppedByHost => l10n.screenShareStoppedByHost,
+    AppError.lastOwner => l10n.lastOwnerError,
+    AppError.targetProtected => l10n.targetProtectedError,
+    AppError.ownerRequired => l10n.ownerRequiredError,
+    AppError.moderatorRequired => l10n.moderatorRequiredError,
+    AppError.nowOwner => l10n.youAreOwnerNow,
+    AppError.nowModerator => l10n.youAreModeratorNow,
     null => message!,
   };
 

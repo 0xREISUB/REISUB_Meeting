@@ -674,6 +674,108 @@ abstract class AppLocalizations {
   /// **'End meeting'**
   String get endMeeting;
 
+  /// No description provided for @roleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Full admin'**
+  String get roleOwner;
+
+  /// No description provided for @roleModerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleModerator;
+
+  /// No description provided for @participantActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant actions'**
+  String get participantActions;
+
+  /// No description provided for @makeOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Make full admin'**
+  String get makeOwner;
+
+  /// No description provided for @makeModerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get makeModerator;
+
+  /// No description provided for @removeAdminRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove admin rights'**
+  String get removeAdminRole;
+
+  /// No description provided for @transferOwnership.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer full admin'**
+  String get transferOwnership;
+
+  /// No description provided for @transferOwnershipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer full admin?'**
+  String get transferOwnershipTitle;
+
+  /// No description provided for @transferOwnershipBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} becomes a full admin and you stay an admin.'**
+  String transferOwnershipBody(String name);
+
+  /// No description provided for @transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get transfer;
+
+  /// No description provided for @lastOwnerLeaveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You are the only full admin. If you leave, full admin passes to an admin, or to a random participant if there is none.'**
+  String get lastOwnerLeaveHint;
+
+  /// No description provided for @youAreOwnerNow.
+  ///
+  /// In en, this message translates to:
+  /// **'You are now a full admin.'**
+  String get youAreOwnerNow;
+
+  /// No description provided for @youAreModeratorNow.
+  ///
+  /// In en, this message translates to:
+  /// **'You are now an admin.'**
+  String get youAreModeratorNow;
+
+  /// No description provided for @lastOwnerError.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one full admin must remain.'**
+  String get lastOwnerError;
+
+  /// No description provided for @targetProtectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t do this to this participant.'**
+  String get targetProtectedError;
+
+  /// No description provided for @ownerRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Only full admins can do this.'**
+  String get ownerRequiredError;
+
+  /// No description provided for @moderatorRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Only admins can do this.'**
+  String get moderatorRequiredError;
+
   /// No description provided for @meetingEndedByYou.
   ///
   /// In en, this message translates to:

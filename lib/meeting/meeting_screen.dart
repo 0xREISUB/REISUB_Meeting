@@ -158,7 +158,8 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   @override
-  void showError(Object error) => _showMessage(localizeError(error, _l10n));
+  void showMessage(Object message) =>
+      _showMessage(localizeError(message, _l10n));
 
   @override
   Future<ScreenShareChoice?> pickDesktopScreen() async {
@@ -198,16 +199,21 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
 
   Future<void> _requestLeaveMeeting() async {
     if (_session.endingRoom || _exitDialogOpen) return;
-    if (!_session.isHost) {
+    if (!_session.canModerate) {
       _session.leave(MeetingExitReason.left);
       return;
     }
+    final lastOwner = _session.isLastOwner;
     _exitDialogOpen = true;
     final action = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_l10n.leaveMeeting),
-        content: Text(_l10n.hostLeaveBody),
+        content: Text(
+          lastOwner
+              ? '${_l10n.hostLeaveBody}\n\n${_l10n.lastOwnerLeaveHint}'
+              : _l10n.hostLeaveBody,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, 'leave'),
@@ -250,8 +256,10 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
           listenable: _session.room,
           builder: (context, _) => MembersScreen(
             members: _session.members(localName: _l10n.you),
-            isHost: _session.isHost,
+            viewerRole: _session.role,
             onMicrophoneChange: _session.moderateMicrophone,
+            onRoleChange: _session.changeRole,
+            onTransferOwnership: _session.transferOwnership,
           ),
         ),
       ),
@@ -273,7 +281,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   void _openMeetingSettings() {
-    final sharing = _session.isHost ? _session.sharing : null;
+    final sharing = _session.canModerate ? _session.sharing : null;
     if (sharing != null) unawaited(sharing.refresh());
     showDialog<void>(
       context: context,

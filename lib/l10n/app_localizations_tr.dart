@@ -311,6 +311,63 @@ class AppLocalizationsTr extends AppLocalizations {
   String get endMeeting => 'Toplantıyı bitir';
 
   @override
+  String get roleOwner => 'Tam yönetici';
+
+  @override
+  String get roleModerator => 'Yönetici';
+
+  @override
+  String get participantActions => 'Katılımcı işlemleri';
+
+  @override
+  String get makeOwner => 'Tam yönetici yap';
+
+  @override
+  String get makeModerator => 'Yönetici yap';
+
+  @override
+  String get removeAdminRole => 'Yöneticiliği kaldır';
+
+  @override
+  String get transferOwnership => 'Tam yöneticiliği devret';
+
+  @override
+  String get transferOwnershipTitle => 'Tam yöneticilik devredilsin mi?';
+
+  @override
+  String transferOwnershipBody(String name) {
+    return '$name tam yönetici olur, siz yönetici olarak kalırsınız.';
+  }
+
+  @override
+  String get transfer => 'Devret';
+
+  @override
+  String get lastOwnerLeaveHint =>
+      'Tek tam yönetici sizsiniz. Ayrılırsanız tam yöneticilik bir yöneticiye, yoksa rastgele bir katılımcıya geçer.';
+
+  @override
+  String get youAreOwnerNow => 'Artık tam yöneticisiniz.';
+
+  @override
+  String get youAreModeratorNow => 'Artık yöneticisiniz.';
+
+  @override
+  String get lastOwnerError => 'En az bir tam yönetici kalmalı.';
+
+  @override
+  String get targetProtectedError =>
+      'Bu katılımcı üzerinde bu işlemi yapamazsınız.';
+
+  @override
+  String get ownerRequiredError =>
+      'Bu işlemi yalnızca tam yöneticiler yapabilir.';
+
+  @override
+  String get moderatorRequiredError =>
+      'Bu işlemi yalnızca yöneticiler yapabilir.';
+
+  @override
   String get meetingEndedByYou => 'Toplantıyı bitirdiniz.';
 
   @override

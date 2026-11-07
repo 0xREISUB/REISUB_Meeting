@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/http.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/meeting/meeting_member.dart';
 
 class RoomCredentials {
   final String roomId;
@@ -11,12 +12,20 @@ class RoomCredentials {
   final String participant;
   final bool isHost;
 
+  /// Role at join time; the live role arrives as a LiveKit attribute. Older
+  /// servers only send is_host.
+  final MeetingRole? role;
+
+  MeetingRole get initialRole =>
+      role ?? (isHost ? MeetingRole.owner : MeetingRole.participant);
+
   const RoomCredentials({
     required this.roomId,
     required this.liveKitUrl,
     required this.token,
     required this.participant,
     required this.isHost,
+    this.role,
   });
 
   factory RoomCredentials.fromJson(Map<String, dynamic> json) {
@@ -26,6 +35,9 @@ class RoomCredentials {
       token: json['token'] as String,
       participant: json['participant'] as String,
       isHost: json['is_host'] as bool? ?? false,
+      role: json['role'] is String
+          ? MeetingRole.parse(json['role'] as String)
+          : null,
     );
   }
 }
@@ -151,6 +163,34 @@ class MeetingApi {
     );
   }
 
+  /// Owners only. [role] is applied even if the user is not connected.
+  Future<void> setParticipantRole({
+    required String roomId,
+    required String identity,
+    required MeetingRole role,
+  }) async {
+    await _send(
+      'POST',
+      '${_room(roomId)}/participants/${Uri.encodeComponent(identity)}/role',
+      data: {'role': role.name},
+    );
+  }
+
+  /// Owners only: [identity] becomes owner and the caller becomes moderator.
+  Future<void> transferOwnership(String roomId, String identity) async {
+    await _send(
+      'POST',
+      '${_room(roomId)}/transfer-ownership',
+      data: {'identity': identity},
+    );
+  }
+
+  /// Tells the server this user left on purpose, so ownership passes on at
+  /// once instead of after LiveKit notices the disconnect.
+  Future<void> leaveRoom(String roomId) async {
+    await _send('POST', '${_room(roomId)}/leave');
+  }
+
   Future<List<MeetingChatMessage>> getRoomMessages(String roomId) async {
     final data = await _send('GET', '${_room(roomId)}/messages');
     if (data == null) return const [];
@@ -248,6 +288,15 @@ class MeetingApi {
       );
     }
     final responseData = error.response?.data;
+    final code = responseData is Map ? responseData['code'] : null;
+    final known = switch (code) {
+      'last_owner' => AppError.lastOwner,
+      'target_protected' => AppError.targetProtected,
+      'owner_required' => AppError.ownerRequired,
+      'not_room_owner' => AppError.moderatorRequired,
+      _ => null,
+    };
+    if (known != null) return MeetingApiException.localized(known);
     final message = responseData is Map ? responseData['error'] : null;
     return message is String && message.isNotEmpty
         ? MeetingApiException(message)
