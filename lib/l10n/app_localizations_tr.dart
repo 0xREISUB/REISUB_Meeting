@@ -543,6 +543,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Toplantı bağlantısı kesildi. Şu anda odaya bağlı değilsiniz.';
 
   @override
+  String get videoLoading => 'Görüntü yükleniyor…';
+
+  @override
+  String get videoLoadingSlow =>
+      'Görüntü hâlâ bekleniyor. Bağlantı yavaş olabilir.';
+
+  @override
   String get poorMediaConnection =>
       'Medya bağlantısı zayıf. Görüntü ve ses kesilebilir.';
 

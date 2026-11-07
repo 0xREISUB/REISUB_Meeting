@@ -174,6 +174,8 @@
   "reconnectFailed": "Could not restore the connection. Try rejoining.",
   "meetingSessionLost": "The server lost the session. Please rejoin the meeting.",
   "meetingDisconnected": "Disconnected from the meeting. You are no longer connected to the room.",
+  "videoLoading": "Loading video…",
+  "videoLoadingSlow": "Still waiting for video. The connection may be slow.",
   "poorMediaConnection": "The media connection is weak. Audio and video may cut out.",
   "subscriptionFailed": "Could not receive a participant’s media stream ({reason}).",
   "@subscriptionFailed": {

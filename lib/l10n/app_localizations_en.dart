@@ -541,6 +541,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Disconnected from the meeting. You are no longer connected to the room.';
 
   @override
+  String get videoLoading => 'Loading video…';
+
+  @override
+  String get videoLoadingSlow =>
+      'Still waiting for video. The connection may be slow.';
+
+  @override
   String get poorMediaConnection =>
       'The media connection is weak. Audio and video may cut out.';
 

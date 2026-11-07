@@ -172,6 +172,8 @@
   "reconnectFailed": "Bağlantı geri kurulamadı. Tekrar katılmayı deneyin.",
   "meetingSessionLost": "Sunucu oturumu kaybetti. Toplantıya tekrar katılın.",
   "meetingDisconnected": "Toplantı bağlantısı kesildi. Şu anda odaya bağlı değilsiniz.",
+  "videoLoading": "Görüntü yükleniyor…",
+  "videoLoadingSlow": "Görüntü hâlâ bekleniyor. Bağlantı yavaş olabilir.",
   "poorMediaConnection": "Medya bağlantısı zayıf. Görüntü ve ses kesilebilir.",
   "subscriptionFailed": "Katılımcının medya akışı alınamadı ({reason}).",
   "@subscriptionFailed": {

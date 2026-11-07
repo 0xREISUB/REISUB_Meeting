@@ -1,9 +1,11 @@
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:livekit_client/livekit_client.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
+import 'package:livekit_client/livekit_client.dart' hide ConnectionState;
 import 'package:v_meeting/meeting/meeting_member.dart';
 
 class MeetingParticipantTile extends StatelessWidget {
@@ -38,9 +40,10 @@ class MeetingParticipantTile extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (member.videoTrack != null)
-            VideoTrackRenderer(
-              member.videoTrack!,
+            MeetingVideoView(
+              track: member.videoTrack!,
               key: ObjectKey(member.videoTrack),
+              compact: !isMain,
               fit: isMain ? VideoViewFit.contain : VideoViewFit.cover,
               mirrorMode:
                   member.isLocal && !member.isScreenShare && member.mirrorCamera
@@ -100,6 +103,143 @@ class MeetingParticipantTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A video track that shows a loading message instead of a black frame until
+/// its first frame arrives. Remote video can take a while: the server waits
+/// for the sender's next key frame, longer on a lossy connection.
+class MeetingVideoView extends StatefulWidget {
+  const MeetingVideoView({
+    super.key,
+    required this.track,
+    required this.fit,
+    required this.mirrorMode,
+    this.compact = false,
+    this.slowAfter = const Duration(seconds: 6),
+  });
+
+  final VideoTrack track;
+  final VideoViewFit fit;
+  final VideoViewMirrorMode mirrorMode;
+  final bool compact;
+  final Duration slowAfter;
+
+  @override
+  State<MeetingVideoView> createState() => _MeetingVideoViewState();
+}
+
+class _MeetingVideoViewState extends State<MeetingVideoView> {
+  // Our own renderer, so its size can be watched: it reports a size once a
+  // frame has been decoded. VideoTrackRenderer takes over onResize.
+  final _renderer = rtc.RTCVideoRenderer();
+  late final Future<void> _initialized = _renderer.initialize();
+  bool _hasFrame = false;
+  bool _slow = false;
+  Timer? _slowTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _renderer.addListener(_onRendererChanged);
+    _slowTimer = Timer(widget.slowAfter, () {
+      if (mounted && !_hasFrame) setState(() => _slow = true);
+    });
+  }
+
+  void _onRendererChanged() {
+    final value = _renderer.value;
+    if (_hasFrame || value.width <= 0 || value.height <= 0) return;
+    _slowTimer?.cancel();
+    if (mounted) setState(() => _hasFrame = true);
+  }
+
+  @override
+  void dispose() {
+    _slowTimer?.cancel();
+    _renderer.removeListener(_onRendererChanged);
+    // The VideoTrackRenderer child is unmounted first and leaves the renderer
+    // to us.
+    unawaited(
+      _initialized
+          .then((_) async {
+            _renderer.srcObject = null;
+            await _renderer.dispose();
+          })
+          .catchError((_) {}),
+    );
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        FutureBuilder<void>(
+          future: _initialized,
+          builder: (context, snapshot) =>
+              snapshot.connectionState == ConnectionState.done &&
+                  !snapshot.hasError
+              ? VideoTrackRenderer(
+                  widget.track,
+                  cachedRenderer: _renderer,
+                  autoDisposeRenderer: false,
+                  fit: widget.fit,
+                  mirrorMode: widget.mirrorMode,
+                )
+              : const SizedBox.shrink(),
+        ),
+        if (!_hasFrame)
+          ColoredBox(
+            key: const ValueKey('video-loading'),
+            color: const Color(0xFF1C1C1E),
+            child: _VideoLoading(slow: _slow, compact: widget.compact),
+          ),
+      ],
+    );
+  }
+}
+
+class _VideoLoading extends StatelessWidget {
+  const _VideoLoading({required this.slow, required this.compact});
+
+  final bool slow;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox.square(
+              dimension: compact ? 20 : 28,
+              child: const CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Color(0xFFB69BFF),
+              ),
+            ),
+            if (!compact || slow) ...[
+              const SizedBox(height: 10),
+              Text(
+                slow ? l10n.videoLoadingSlow : l10n.videoLoading,
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: compact ? 11 : 14,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

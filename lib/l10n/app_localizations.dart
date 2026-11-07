@@ -1088,6 +1088,18 @@ abstract class AppLocalizations {
   /// **'Disconnected from the meeting. You are no longer connected to the room.'**
   String get meetingDisconnected;
 
+  /// No description provided for @videoLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading video…'**
+  String get videoLoading;
+
+  /// No description provided for @videoLoadingSlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Still waiting for video. The connection may be slow.'**
+  String get videoLoadingSlow;
+
   /// No description provided for @poorMediaConnection.
   ///
   /// In en, this message translates to:
