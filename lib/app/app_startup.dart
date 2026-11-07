@@ -7,11 +7,12 @@ import 'package:v_meeting/auth/server_config.dart';
 /// Logging in is optional, so a configured server leads straight home.
 enum StartDestination { serverSetup, home }
 
-/// Meeting server for the web app: `--dart-define=REISUB_SERVER_URL=…` when
-/// the API lives elsewhere, otherwise the server that served the page.
+/// Meeting server for the web app: `--dart-define=REISUB_WEB_SERVER_URL=…`
+/// (from app.env via tool/build_web.py) when the API lives on another origin,
+/// otherwise the server that served the page.
 @visibleForTesting
 String? webServerUrl({Uri? page}) {
-  const configured = String.fromEnvironment('REISUB_SERVER_URL');
+  const configured = String.fromEnvironment('REISUB_WEB_SERVER_URL');
   if (configured.isNotEmpty) return configured;
   final origin = (page ?? Uri.base).origin;
   return ServerConfig.parseUrl(origin) == null ? null : origin;
@@ -47,7 +48,7 @@ Future<String?> _useWebServer({
   final server = webServerUrl();
   if (server == null || (saved != null && !forInvite)) return saved;
   final normalized = ServerConfig.normalizeUrl(server);
-  if (saved == normalized) return saved;
+  if (ServerConfig.sameServer(saved, normalized)) return saved;
   // A session from another server is not valid here.
   if (saved != null) await ServerConfig.clearSessions();
   await ServerConfig.saveUrl(normalized);

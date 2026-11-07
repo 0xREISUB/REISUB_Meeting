@@ -112,6 +112,50 @@ void main() {
     expect(await DeepLinks.launchInvite(['--some-flag']), isNull);
   });
 
+  test('the same server written differently is still the same server', () {
+    expect(
+      ServerConfig.sameServer(
+        'https://api.meeting.test',
+        'https://API.meeting.test:443/',
+      ),
+      isTrue,
+    );
+    expect(
+      ServerConfig.sameServer(
+        'https://meeting.test',
+        'https://api.meeting.test',
+      ),
+      isFalse,
+    );
+    expect(
+      ServerConfig.sameServer(
+        'https://meeting.test',
+        'https://meeting.test:8443',
+      ),
+      isFalse,
+    );
+    expect(ServerConfig.sameServer(null, 'https://meeting.test'), isFalse);
+  });
+
+  testWidgets('an invite for the saved server does not ask to switch', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      'server_url': 'https://meeting.test:443',
+    });
+    await tester.pumpWidget(
+      localized(
+        const JoinScreen(
+          initialRoomId: '123-456-789',
+          inviteServerUrl: 'https://meeting.test',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Sunucu değiştirilsin mi?'), findsNothing);
+  });
+
   group('opening an invite for another server', () {
     Future<void> openInvite(WidgetTester tester) async {
       await tester.pumpWidget(

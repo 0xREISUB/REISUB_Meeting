@@ -59,7 +59,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   /// invite could otherwise collect their password on a fake server.
   Future<void> _offerInviteServer(String inviteServer) async {
     final current = await ServerConfig.readUrl();
-    if (!mounted || current == inviteServer) return;
+    if (!mounted || ServerConfig.sameServer(current, inviteServer)) return;
     if (current == null) {
       // No server yet, so there is nothing to replace.
       await ServerConfig.saveUrl(inviteServer);

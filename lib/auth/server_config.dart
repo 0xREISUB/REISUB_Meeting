@@ -60,6 +60,19 @@ class ServerConfig {
         (first == 192 && second == 168);
   }
 
+  /// Whether two addresses name the same server, e.g. `https://host` and
+  /// `https://host:443/`.
+  static bool sameServer(String? a, String? b) {
+    if (a == null || b == null) return false;
+    final first = parseUrl(a);
+    final second = parseUrl(b);
+    return first != null &&
+        second != null &&
+        first.scheme == second.scheme &&
+        first.host.toLowerCase() == second.host.toLowerCase() &&
+        first.port == second.port;
+  }
+
   static String? buildUrl({required String address, required String port}) {
     final portNumber = int.tryParse(port.trim());
     if (portNumber == null || portNumber < 1 || portNumber > 65535) return null;

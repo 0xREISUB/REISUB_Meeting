@@ -1,6 +1,8 @@
 package xyz.reisub.meeting
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.view.View
 import android.view.WindowInsets
@@ -68,8 +70,28 @@ class MainActivity : FlutterActivity() {
         inviteLink(intent)?.let { links?.invokeMethod("onLink", it) }
     }
 
-    private fun inviteLink(intent: Intent?): String? =
-        if (intent?.action == Intent.ACTION_VIEW) intent.dataString else null
+    private fun inviteLink(intent: Intent?): String? {
+        if (intent?.action != Intent.ACTION_VIEW) return null
+        val link = intent.data ?: return null
+        return withInviteServer(link).toString()
+    }
+
+    /**
+     * Invite links on the web host (e.g. https://meeting.example/j/<code>) stand
+     * for the meeting server users enter in the app, which may be another host
+     * (e.g. api.meeting.example). Without this the app would offer to switch
+     * servers on every invite.
+     */
+    private fun withInviteServer(link: Uri): Uri {
+        if (link.scheme != "https" || link.getQueryParameter("server") != null) return link
+        val settings = packageManager
+            .getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+            .metaData ?: return link
+        val host = settings.getString("xyz.reisub.meeting.INVITE_HOST")
+        val server = settings.getString("xyz.reisub.meeting.INVITE_SERVER")
+        if (server.isNullOrBlank() || !link.host.equals(host, ignoreCase = true)) return link
+        return link.buildUpon().appendQueryParameter("server", server).build()
+    }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)

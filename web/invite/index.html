@@ -6,8 +6,11 @@
   <meta name="robots" content="noindex">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#141418">
-  <!-- Meeting server for "Open in app"; empty means this page's origin. -->
-  <meta name="reisub-server" content="">
+  <!-- Filled from app.env by tool/build_web.py. Empty server means this
+       page's origin; an empty link hides its button. -->
+  <meta name="reisub-server" content="__REISUB_SERVER_URL__">
+  <meta name="reisub-download-url" content="__REISUB_DOWNLOAD_URL__">
+  <meta name="reisub-source-url" content="__REISUB_SOURCE_URL__">
   <title>REISUB Meeting</title>
   <link rel="icon" type="image/png" href="../favicon.png">
   <style>
@@ -169,15 +172,15 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20z"/></svg>
         <span><strong id="join-title"></strong><span id="join-sub"></span></span>
       </a>
-      <a class="button tertiary" id="download" href="https://github.com/0xREISUB/REISUB_Meeting/releases/latest" rel="noopener">
+      <a class="button tertiary" id="download" href="#" rel="noopener" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
         <span><strong id="download-title"></strong><span id="download-sub"></span></span>
       </a>
     </div>
 
     <footer>
-      <span id="footer"></span>
-      · <a href="https://github.com/0xREISUB/REISUB_Meeting" rel="noopener">GitHub</a>
+      <span id="footer"></span><span id="source" hidden>
+      · <a id="source-link" href="#" rel="noopener">GitHub</a></span>
     </footer>
   </main>
 
@@ -229,6 +232,22 @@
       }
 
       function set(id, value) { document.getElementById(id).textContent = value; }
+      // Unfilled placeholders (a plain `flutter build web`) count as empty.
+      function setting(name) {
+        var meta = document.querySelector('meta[name="' + name + '"]');
+        var value = meta ? meta.content.trim() : '';
+        return /^__REISUB_/.test(value) ? '' : value;
+      }
+      var downloadUrl = setting('reisub-download-url');
+      if (downloadUrl) {
+        document.getElementById('download').href = downloadUrl;
+        document.getElementById('download').hidden = false;
+      }
+      var sourceUrl = setting('reisub-source-url');
+      if (sourceUrl) {
+        document.getElementById('source-link').href = sourceUrl;
+        document.getElementById('source').hidden = false;
+      }
       set('open-app-title', t.openApp);
       set('open-app-sub', t.openAppSub);
       set('join-title', t.join);
@@ -260,18 +279,19 @@
       join.href = app.toString();
 
       // "Open in app": the browser asks whether to open REISUB Meeting.
-      var configured = document.querySelector('meta[name="reisub-server"]');
-      var server = (configured && configured.content) || location.origin;
+      var server = setting('reisub-server') || location.origin;
       var appPath = 'join/' + encodeURIComponent(room) +
         '?server=' + encodeURIComponent(server);
-      var download = document.getElementById('download').href;
       var agent = navigator.userAgent;
       var openApp = document.getElementById('open-app');
       if (/Android/i.test(agent)) {
         // Chrome falls back to the download page when the app is missing.
         openApp.href = 'intent://' + appPath +
           '#Intent;scheme=reisub-meeting;package=xyz.reisub.meeting;' +
-          'S.browser_fallback_url=' + encodeURIComponent(download) + ';end';
+          (downloadUrl
+            ? 'S.browser_fallback_url=' + encodeURIComponent(downloadUrl) + ';'
+            : '') +
+          'end';
         openApp.hidden = false;
       } else if (!/iPhone|iPad|iPod/i.test(agent)) {
         openApp.href = 'reisub-meeting://' + appPath;
