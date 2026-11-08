@@ -60,8 +60,14 @@ clients, with English and Turkish interfaces.
 
 ### Public server
 
-A public REISUB Meeting server will be available to everyone for **one month**.
-Enter these values in the application's server settings:
+A public REISUB Meeting server is open to everyone until **8 December 2026**.
+
+The web app runs at [https://meeting.reisub.xyz](https://meeting.reisub.xyz) and
+needs no installation or server setup: open it in a browser and create or join
+a meeting. On phones the Android app is more reliable than a mobile browser.
+
+To use the server from the desktop or Android app, enter these values in the
+application's server settings:
 
 | Setting | Value |
 | --- | --- |
@@ -75,7 +81,7 @@ server's moderation and meeting-settings APIs.
 For the Linux Debian package, run this command in the folder containing the download:
 
 ```sh
-sudo apt install ./reisub-meeting_1.0.0-1_amd64.deb
+sudo apt install ./reisub-meeting_1.1.0-2_amd64.deb
 ```
 
 The current amd64 package targets Ubuntu 24.04 / Zorin OS 18 libraries. See the
@@ -130,8 +136,16 @@ istemcilerinde Türkçe ve İngilizce arayüz sunar.
 
 ### Herkese açık sunucu
 
-REISUB Meeting sunucusu **bir ay boyunca** herkesin kullanımına açık olacak.
-Uygulamanın sunucu ayarlarına şu bilgileri girin:
+REISUB Meeting sunucusu **8 Aralık 2026** tarihine kadar herkesin kullanımına
+açıktır.
+
+Web uygulaması [https://meeting.reisub.xyz](https://meeting.reisub.xyz)
+adresinde çalışır. Kurulum ya da sunucu ayarı gerektirmez: tarayıcıda açıp
+toplantı oluşturabilir veya katılabilirsiniz. Telefonlarda Android uygulaması
+mobil tarayıcıdan daha kararlı çalışır.
+
+Sunucuyu masaüstü ya da Android uygulamasından kullanmak için uygulamanın sunucu
+ayarlarına şu bilgileri girin:
 
 | Ayar | Değer |
 | --- | --- |
@@ -145,7 +159,7 @@ sunucunun moderasyon ve toplantı ayarları API'leri gereklidir.
 Linux Debian paketini indirdiğiniz klasörde şu komutla kurabilirsiniz:
 
 ```sh
-sudo apt install ./reisub-meeting_1.0.0-1_amd64.deb
+sudo apt install ./reisub-meeting_1.1.0-2_amd64.deb
 ```
 
 Mevcut amd64 paketi Ubuntu 24.04 / Zorin OS 18 kütüphanelerini kullanır. Uyumluluk
