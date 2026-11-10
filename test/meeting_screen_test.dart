@@ -566,60 +566,103 @@ void main() {
     expect(tester.takeException(), isNull);
   }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
 
-  test('alone shows self; two participants always show the other person', () {
-    expect(selectMainMember([local], activeSpeakerIds: []).id, local.id);
-    expect(
-      selectMainMember([local, remote], activeSpeakerIds: [local.id]).id,
-      remote.id,
-    );
+  test('you are on the main video only when alone', () {
+    expect(selectMainMember([local]).id, local.id);
+    expect(selectMainMember([local, remote]).id, remote.id);
+    // Even when you are the one talking in a group.
+    for (final speaker in [null, local.id]) {
+      expect(
+        selectMainMember([local, remote, third], speakerId: speaker).id,
+        isNot(local.id),
+      );
+    }
   });
 
-  test(
-    'group follows the loudest speaker, including self and camera-off users',
-    () {
-      const members = [local, remote, third];
-      for (final speaker in members) {
-        expect(
-          selectMainMember(
-            members,
-            activeSpeakerIds: [speaker.id, fourth.id],
-            previousSpeakerId: remote.id,
-          ).id,
-          speaker.id,
-        );
-      }
-    },
-  );
+  test('the main video shows the focused speaker, else another person', () {
+    const members = [local, remote, third];
+    expect(selectMainMember(members, speakerId: third.id).id, third.id);
+    expect(selectMainMember(members, speakerId: remote.id).id, remote.id);
+    // A speaker who left.
+    expect(selectMainMember(members, speakerId: fourth.id).id, remote.id);
+  });
 
-  test(
-    'silence keeps last speaker and a departed speaker falls back safely',
-    () {
-      expect(
-        selectMainMember(
-          [local, remote, third],
-          activeSpeakerIds: [],
-          previousSpeakerId: third.id,
-        ).id,
-        third.id,
+  group('speaker focus', () {
+    final start = DateTime(2026);
+    DateTime at(int milliseconds) =>
+        start.add(Duration(milliseconds: milliseconds));
+    const people = ['a', 'b', 'c'];
+
+    test('starts on the first person and switches only after 1.5 s', () {
+      final focus = SpeakerFocus();
+      focus.update(participantIds: people, speakingIds: [], now: at(0));
+      expect(focus.focusId, 'a');
+
+      // b talks; a has been shown long enough, but b only just started.
+      final wait = focus.update(
+        participantIds: people,
+        speakingIds: ['b'],
+        now: at(5000),
       );
-      expect(
-        selectMainMember(
-          [local, remote, fourth],
-          activeSpeakerIds: [third.id],
-          previousSpeakerId: third.id,
-        ).id,
-        remote.id,
+      expect(focus.focusId, 'a');
+      expect(wait, const Duration(milliseconds: 1500));
+      focus.update(participantIds: people, speakingIds: ['b'], now: at(6000));
+      expect(focus.focusId, 'a');
+      focus.update(participantIds: people, speakingIds: ['b'], now: at(6500));
+      expect(focus.focusId, 'b');
+    });
+
+    test('a short sound or a break in speech does not switch', () {
+      final focus = SpeakerFocus();
+      focus.update(participantIds: people, speakingIds: [], now: at(0));
+      focus.update(participantIds: people, speakingIds: ['b'], now: at(5000));
+      focus.update(participantIds: people, speakingIds: [], now: at(5400));
+      // b starts again: the 1.5 s count starts over.
+      focus.update(participantIds: people, speakingIds: ['b'], now: at(5600));
+      focus.update(participantIds: people, speakingIds: ['b'], now: at(6600));
+      expect(focus.focusId, 'a');
+      focus.update(participantIds: people, speakingIds: ['b'], now: at(7100));
+      expect(focus.focusId, 'b');
+    });
+
+    test('the shown person stays while still talking and for 4 s', () {
+      final focus = SpeakerFocus();
+      focus.update(participantIds: people, speakingIds: ['a'], now: at(0));
+      // a and b both talking, b louder: a stays.
+      focus.update(
+        participantIds: people,
+        speakingIds: ['b', 'a'],
+        now: at(1000),
       );
-      expect(
-        selectMainMember(
-          [local],
-          activeSpeakerIds: [third.id],
-          previousSpeakerId: third.id,
-        ).id,
-        local.id,
+      focus.update(
+        participantIds: people,
+        speakingIds: ['b', 'a'],
+        now: at(9000),
       );
-    },
-  );
+      expect(focus.focusId, 'a');
+
+      // After a switch to b, c must wait until b has been shown 4 s.
+      focus.update(participantIds: people, speakingIds: ['b'], now: at(10000));
+      focus.update(participantIds: people, speakingIds: ['b'], now: at(11500));
+      expect(focus.focusId, 'b');
+      final wait = focus.update(
+        participantIds: people,
+        speakingIds: ['c'],
+        now: at(12000),
+      );
+      expect(wait, const Duration(milliseconds: 3500));
+      focus.update(participantIds: people, speakingIds: ['c'], now: at(15500));
+      expect(focus.focusId, 'c');
+    });
+
+    test('silence keeps the last speaker; one who leaves is replaced', () {
+      final focus = SpeakerFocus();
+      focus.update(participantIds: people, speakingIds: ['c'], now: at(0));
+      focus.update(participantIds: people, speakingIds: [], now: at(60000));
+      expect(focus.focusId, 'c');
+      focus.update(participantIds: ['a', 'b'], speakingIds: [], now: at(61000));
+      expect(focus.focusId, 'a');
+    });
+  });
 
   testWidgets(
     'members panel lists names and rebuilds when membership changes',
@@ -691,11 +734,7 @@ void main() {
         [local, shared],
         [local, remote, shared],
       ]) {
-        final main = selectMainMember(
-          entries,
-          activeSpeakerIds: [local.id, remote.id],
-          previousSpeakerId: remote.id,
-        );
+        final main = selectMainMember(entries, speakerId: remote.id);
         expect(main.id, shared.id);
         expect(main.isScreenShare, isTrue);
         expect(
@@ -737,7 +776,7 @@ void main() {
         Scaffold(
           body: MeetingVideoLayout(
             members: const [local, shared],
-            mainMember: selectMainMember([local, shared], activeSpeakerIds: []),
+            mainMember: selectMainMember([local, shared]),
           ),
         ),
       ),
@@ -783,10 +822,7 @@ void main() {
           Scaffold(
             body: MeetingVideoLayout(
               members: const [local, shared],
-              mainMember: selectMainMember([
-                local,
-                shared,
-              ], activeSpeakerIds: []),
+              mainMember: selectMainMember([local, shared]),
             ),
           ),
         ),
@@ -840,7 +876,7 @@ void main() {
         Scaffold(
           body: MeetingVideoLayout(
             members: const [local, shared],
-            mainMember: selectMainMember([local, shared], activeSpeakerIds: []),
+            mainMember: selectMainMember([local, shared]),
           ),
         ),
       ),
@@ -897,7 +933,7 @@ void main() {
             valueListenable: entries,
             builder: (context, value, _) => MeetingVideoLayout(
               members: value,
-              mainMember: selectMainMember(value, activeSpeakerIds: []),
+              mainMember: selectMainMember(value),
             ),
           ),
         ),

@@ -150,6 +150,8 @@ class MeetingSession extends ChangeNotifier {
   Object? cameraError;
 
   String? mainMemberId;
+  final _speakerFocus = SpeakerFocus();
+  Timer? _speakerFocusTimer;
 
   bool changingScreenShare = false;
   bool _ownsScreenShare = false;
@@ -376,7 +378,11 @@ class MeetingSession extends ChangeNotifier {
       );
       return;
     }
-    if (!connection.isConnected) mainMemberId = null;
+    if (!connection.isConnected) {
+      mainMemberId = null;
+      _speakerFocusTimer?.cancel();
+      _speakerFocus.reset();
+    }
     developer.log(
       'phase=${connection.phase.name} reason=${connection.disconnectReason?.name} '
       'quality=${connection.quality.name} room=${_credentials?.roomId}',
@@ -392,8 +398,31 @@ class MeetingSession extends ChangeNotifier {
     if (_ownsScreenShare && !changingScreenShare && !_localScreenSharing) {
       unawaited(stopScreenShare());
     }
+    _updateSpeakerFocus();
     mainMemberId = mainMember(members()).id;
     notifyListeners();
+  }
+
+  /// Moves the main video to whoever has been speaking, once they have
+  /// spoken long enough; see [SpeakerFocus].
+  void _updateSpeakerFocus() {
+    _speakerFocusTimer?.cancel();
+    final wait = _speakerFocus.update(
+      participantIds: [for (final p in room.remoteParticipants.values) p.sid],
+      speakingIds: [
+        for (final p in room.activeSpeakers)
+          if (p is! LocalParticipant) p.sid,
+      ],
+      now: DateTime.now(),
+    );
+    if (wait == null) return;
+    // Nothing else may happen while they keep talking, so check again then.
+    _speakerFocusTimer = Timer(wait, () {
+      if (_inactive) return;
+      _updateSpeakerFocus();
+      mainMemberId = mainMember(members()).id;
+      notifyListeners();
+    });
   }
 
   void _onSharingChanged() {
@@ -460,11 +489,8 @@ class MeetingSession extends ChangeNotifier {
     ];
   }
 
-  MemberEntry mainMember(List<MemberEntry> members) => selectMainMember(
-    members,
-    activeSpeakerIds: room.activeSpeakers.map((p) => p.sid).toList(),
-    previousSpeakerId: mainMemberId,
-  );
+  MemberEntry mainMember(List<MemberEntry> members) =>
+      selectMainMember(members, speakerId: _speakerFocus.focusId);
 
   RemoteParticipant? _mainRemoteParticipant() {
     final participants = room.remoteParticipants.values;
@@ -991,6 +1017,7 @@ class MeetingSession extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _speakerFocusTimer?.cancel();
     unawaited(_deviceTest?.controller.close());
     _videoStatsTimer?.cancel();
     unawaited(_stopScreenService());

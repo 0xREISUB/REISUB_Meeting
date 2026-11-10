@@ -61,11 +61,9 @@ class MemberEntry {
   });
 }
 
-MemberEntry selectMainMember(
-  List<MemberEntry> members, {
-  required List<String> activeSpeakerIds,
-  String? previousSpeakerId,
-}) {
+/// The main video: a shared screen first, then [speakerId] or another
+/// participant; yourself only when nobody else is there.
+MemberEntry selectMainMember(List<MemberEntry> members, {String? speakerId}) {
   assert(members.isNotEmpty);
   for (final member in members) {
     if (member.isScreenSharing) {
@@ -80,18 +78,76 @@ MemberEntry selectMainMember(
       );
     }
   }
-
-  if (members.length == 1) return members.first;
-  if (members.length == 2) {
-    return members.firstWhere((member) => !member.isLocal);
-  }
-  for (final id in activeSpeakerIds) {
-    for (final member in members) {
-      if (member.id == id) return member;
-    }
-  }
-  return members.firstWhere(
-    (member) => member.id == previousSpeakerId,
-    orElse: () => members.firstWhere((member) => !member.isLocal),
+  // You never fill the main video while someone else is there.
+  final others = members.where((member) => !member.isLocal).toList();
+  if (others.isEmpty) return members.first;
+  return others.firstWhere(
+    (member) => member.id == speakerId,
+    orElse: () => others.first,
   );
+}
+
+/// Decides whose camera the main video shows in a group, without jumping at
+/// every short sound. Another person takes over only after speaking for
+/// [switchAfter] without a break, and whoever is shown stays for at least
+/// [minimumHold]. Silence keeps the last speaker.
+class SpeakerFocus {
+  SpeakerFocus({
+    this.switchAfter = const Duration(milliseconds: 1500),
+    this.minimumHold = const Duration(seconds: 4),
+  });
+
+  final Duration switchAfter;
+  final Duration minimumHold;
+
+  /// The participant the main video shows, or null before anyone else joins.
+  String? get focusId => _focusId;
+  String? _focusId;
+  DateTime _focusSince = DateTime.fromMillisecondsSinceEpoch(0);
+
+  String? _candidateId;
+  DateTime _candidateSince = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Updates the focus from the other participants in the room and those of
+  /// them speaking now, loudest first. Returns how long to wait before
+  /// calling again when someone is about to take over, otherwise null.
+  Duration? update({
+    required List<String> participantIds,
+    required List<String> speakingIds,
+    required DateTime now,
+  }) {
+    if (!participantIds.contains(_focusId)) {
+      // The shown person left, or nobody was shown yet: take the current
+      // speaker, or anyone, at once.
+      final next = speakingIds.firstOrNull ?? participantIds.firstOrNull;
+      _setFocus(next, now);
+      return null;
+    }
+    final loudest = speakingIds.firstOrNull;
+    if (loudest == null || speakingIds.contains(_focusId)) {
+      // Silence, or the shown person is still talking.
+      _candidateId = null;
+      return null;
+    }
+    if (_candidateId != loudest) {
+      _candidateId = loudest;
+      _candidateSince = now;
+    }
+    final heardEnough = _candidateSince.add(switchAfter);
+    final shownEnough = _focusSince.add(minimumHold);
+    final switchAt = heardEnough.isAfter(shownEnough)
+        ? heardEnough
+        : shownEnough;
+    if (now.isBefore(switchAt)) return switchAt.difference(now);
+    _setFocus(loudest, now);
+    return null;
+  }
+
+  void reset() => _setFocus(null, DateTime.fromMillisecondsSinceEpoch(0));
+
+  void _setFocus(String? id, DateTime now) {
+    if (id != _focusId) _focusSince = now;
+    _focusId = id;
+    _candidateId = null;
+  }
 }
