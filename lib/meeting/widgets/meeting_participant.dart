@@ -44,7 +44,11 @@ class MeetingParticipantTile extends StatelessWidget {
               track: member.videoTrack!,
               key: ObjectKey(member.videoTrack),
               compact: !isMain,
-              fit: isMain ? VideoViewFit.contain : VideoViewFit.cover,
+              // Tiles are 16:9 and cameras fill them. A shared screen is
+              // never cropped, so nothing on it is lost.
+              fit: member.isScreenShare
+                  ? VideoViewFit.contain
+                  : VideoViewFit.cover,
               mirrorMode:
                   member.isLocal && !member.isScreenShare && member.mirrorCamera
                   ? VideoViewMirrorMode.mirror
@@ -387,7 +391,6 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
                 key: ValueKey('gallery-page-$page'),
                 members: entries,
                 columns: isWide ? 4 : 2,
-                rows: isWide ? 4 : 2,
               );
             }
             final mainVideo = Stack(
@@ -662,12 +665,18 @@ class _MeetingMainVideoState extends State<MeetingMainVideo> {
 
   @override
   Widget build(BuildContext context) {
-    final tile = MeetingParticipantTile(
-      member: widget.member,
-      isMain: true,
-      placeholder: widget.connecting
-          ? AppLocalizations.of(context)!.connecting
-          : null,
+    // A 16:9 frame like the gallery's, instead of filling the whole area.
+    final tile = Center(
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: MeetingParticipantTile(
+          member: widget.member,
+          isMain: true,
+          placeholder: widget.connecting
+              ? AppLocalizations.of(context)!.connecting
+              : null,
+        ),
+      ),
     );
     if (!widget.member.isScreenShare) return tile;
     return Stack(
@@ -704,16 +713,17 @@ class _MeetingMainVideoState extends State<MeetingMainVideo> {
   }
 }
 
+/// One gallery page. All tiles have the same 16:9 size, like a computer
+/// screen, instead of an even split of the screen, and are laid out in the
+/// column count that makes them largest. Videos fill their tile.
 class _ParticipantPage extends StatelessWidget {
   final List<MemberEntry> members;
   final int columns;
-  final int rows;
 
   const _ParticipantPage({
     super.key,
     required this.members,
     required this.columns,
-    required this.rows,
   });
 
   @override
@@ -721,25 +731,71 @@ class _ParticipantPage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         const gap = 10.0;
-        final tileWidth =
-            (constraints.maxWidth - gap * (columns - 1)) / columns;
-        final tileHeight = (constraints.maxHeight - gap * (rows - 1)) / rows;
-        return GridView.builder(
-          padding: EdgeInsets.zero,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            mainAxisSpacing: gap,
-            crossAxisSpacing: gap,
-            childAspectRatio: tileWidth / tileHeight,
-          ),
-          itemCount: members.length,
-          itemBuilder: (context, index) => MeetingParticipantTile(
-            key: ValueKey(members[index].id),
-            member: members[index],
+        final layout = galleryLayout(
+          count: members.length,
+          maxColumns: columns,
+          area: constraints.biggest,
+          aspectRatio: 16 / 9,
+          gap: gap,
+        );
+        final rows = <Widget>[];
+        for (var start = 0; start < members.length; start += layout.columns) {
+          final row = members.skip(start).take(layout.columns).toList();
+          rows.add(
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < row.length; i++) ...[
+                  if (i > 0) const SizedBox(width: gap),
+                  SizedBox.fromSize(
+                    size: layout.tileSize,
+                    child: MeetingParticipantTile(
+                      key: ValueKey(row[i].id),
+                      member: row[i],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < rows.length; i++) ...[
+                if (i > 0) const SizedBox(height: gap),
+                rows[i],
+              ],
+            ],
           ),
         );
       },
     );
   }
+}
+
+/// Equal tiles of [aspectRatio] for [count] members, in the column count
+/// (up to [maxColumns]) that makes them largest within [area].
+@visibleForTesting
+({int columns, Size tileSize}) galleryLayout({
+  required int count,
+  required int maxColumns,
+  required Size area,
+  required double aspectRatio,
+  double gap = 10,
+}) {
+  var best = (columns: 1, tileSize: Size.zero);
+  if (count == 0 || area.isEmpty) return best;
+  for (var columns = 1; columns <= math.min(count, maxColumns); columns++) {
+    final rows = (count / columns).ceil();
+    final width = math.min(
+      (area.width - gap * (columns - 1)) / columns,
+      (area.height - gap * (rows - 1)) / rows * aspectRatio,
+    );
+    if (width > best.tileSize.width) {
+      best = (columns: columns, tileSize: Size(width, width / aspectRatio));
+    }
+  }
+  return best;
 }
