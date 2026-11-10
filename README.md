@@ -40,7 +40,8 @@ clients, with English and Turkish interfaces.
   If the last full admin leaves, an admin (or a random participant) takes over.
 - **Invites:** the room code is copied when you open it in a meeting, and
   **Invite** copies a link. The link opens a page to open the meeting in the
-  app, join in the browser, or download the app.
+  app, or join in the browser. Without the app installed, it leads to the
+  download page.
 - **No account needed:** you can create and join meetings as a guest. Logging
   in from the profile menu is optional.
 - **Server settings:** save your server address and port, including HTTPS connections.
@@ -115,8 +116,9 @@ istemcilerinde Türkçe ve İngilizce arayüz sunar.
   yönetici atayabilir, tam yöneticiliği devredebilir. Son tam yönetici ayrılırsa
   yerine bir yönetici (yoksa rastgele bir katılımcı) geçer.
 - **Davetler:** toplantıda oda kodunu açtığınızda kod panoya kopyalanır,
-  **Davet et** bir bağlantı kopyalar. Bağlantı; toplantıyı uygulamada açma,
-  tarayıcıda katılma ve uygulamayı indirme seçeneklerini sunan bir sayfa açar.
+  **Davet et** bir bağlantı kopyalar. Bağlantı; toplantıyı uygulamada açma ve
+  tarayıcıda katılma seçeneklerini sunan bir sayfa açar. Uygulama yüklü
+  değilse indirme sayfasına yönlendirir.
 - **Hesap gerekmez:** misafir olarak toplantı oluşturup katılabilirsiniz. Profil
   menüsünden giriş yapmak isteğe bağlıdır.
 - **Sunucu ayarları:** HTTPS desteğiyle sunucu adresinizi ve portunuzu kaydedin.
@@ -203,7 +205,7 @@ değişkenleri ikisini de geçersiz kılar.
 | --- | --- | --- |
 | `REISUB_INVITE_HOST` | Android | Host serving the web app and `https://<host>/j/<code>` invite links, which open in the app. / Web uygulamasını ve uygulamada açılan `https://<host>/j/<kod>` davet bağlantılarını yayınlayan alan adı. |
 | `REISUB_SERVER_URL` | invite page, Android / davet sayfası, Android | Server address users enter in the app (e.g. `https://api.meeting.reisub.xyz`); invites opened in the app use it. / Kullanıcıların uygulamaya girdiği sunucu adresi (örn. `https://api.meeting.reisub.xyz`); uygulamada açılan davetler bunu kullanır. |
-| `REISUB_DOWNLOAD_URL` | invite page / davet sayfası | Target of "Download the app". / "Uygulamayı indir" butonunun hedefi. |
+| `REISUB_DOWNLOAD_URL` | invite page / davet sayfası | Where the invite page sends people without the app. / Davet sayfasının uygulaması olmayanları yönlendirdiği indirme sayfası. |
 | `REISUB_SOURCE_URL` | invite page, `.deb` | Project page. / Proje sayfası. |
 | `REISUB_WEB_SERVER_URL` | web | Server for the web app when the web app's origin does not also serve the API (needs CORS); empty otherwise. / Web uygulamasının adresi API'yi de sunmuyorsa web'in kullanacağı sunucu (CORS gerekir); aksi halde boş. |
 | `REISUB_ANDROID_KEYSTORE`, `REISUB_ANDROID_STORE_PASSWORD`, `REISUB_ANDROID_KEY_ALIAS`, `REISUB_ANDROID_KEY_PASSWORD` | Android release | Signing keystore and passwords; put them in `.env` or the environment. / İmza anahtarı ve şifreleri; `.env` dosyasına ya da ortam değişkenlerine yazın. |

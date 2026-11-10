@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#141418">
+  <meta name="theme-color" content="#121214">
   <!-- Filled from app.env by tool/build_web.py. Empty server means this
-       page's origin; an empty link hides its button. -->
+       page's origin; an empty link hides its link. -->
   <meta name="reisub-server" content="__REISUB_SERVER_URL__">
   <meta name="reisub-download-url" content="__REISUB_DOWNLOAD_URL__">
   <meta name="reisub-source-url" content="__REISUB_SOURCE_URL__">
@@ -28,204 +28,315 @@
   <link rel="icon" type="image/png" href="../favicon.png">
   <style>
     :root {
-      --bg: #0d0d10;
-      --card: #1c1c1e;
-      --surface: #2c2c2e;
+      --bg: #121214;
+      --raised: #1d1d21;
+      --line: #313137;
       --accent: #7c4dff;
-      --accent-soft: #b69bff;
-      --text: #ffffff;
-      --muted: rgba(255, 255, 255, 0.62);
-      --faint: rgba(255, 255, 255, 0.38);
-      --danger: #ff6b6b;
+      --accent-hover: #8c63ff;
+      --text: #ececf0;
+      --muted: #9a9aa3;
+      --danger: #ff8a80;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
+    html, body { margin: 0; }
     body {
       min-height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-      background:
-        radial-gradient(1200px 600px at 50% -10%, rgba(124, 77, 255, 0.22), transparent 60%),
-        var(--bg);
+      flex-direction: column;
+      background: var(--bg);
       color: var(--text);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
-    main {
+    .wrap {
       width: 100%;
-      max-width: 420px;
-      background: var(--card);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 24px;
-      padding: 32px 24px 24px;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-      text-align: center;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding-left: 20px;
+      padding-right: 20px;
     }
-    .logo {
-      width: 88px;
-      height: 88px;
-      border-radius: 22px;
-      display: block;
-      margin: 0 auto 16px;
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 24px;
     }
+    header a {
+      font-size: 14px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    header a:hover { color: var(--text); }
     .brand {
-      margin: 0;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-      color: var(--accent-soft);
-    }
-    h1 {
-      margin: 8px 0 20px;
-      font-size: 24px;
-      font-weight: 700;
-      line-height: 1.25;
-    }
-    .code {
       display: inline-flex;
       align-items: center;
       gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .brand img { width: 28px; height: 28px; border-radius: 7px; }
+    main { flex: 1; padding-top: 12vh; padding-bottom: 48px; }
+    .invite-panel { max-width: 400px; }
+    h1 {
       margin: 0 0 8px;
-      padding: 12px 16px 12px 20px;
-      border: 0;
-      border-radius: 16px;
-      background: var(--surface);
-      color: var(--text);
-      font: inherit;
       font-size: 26px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      font-variant-numeric: tabular-nums;
-      cursor: pointer;
+      font-weight: 600;
+      line-height: 1.25;
     }
-    .code svg { width: 18px; height: 18px; opacity: 0.6; flex: none; }
-    .code:hover svg, .code:focus-visible svg { opacity: 1; }
-    .hint {
-      min-height: 18px;
-      margin: 0 0 24px;
+    .lead { margin: 0 0 28px; color: var(--muted); }
+    .label {
+      margin: 0 0 6px;
       font-size: 13px;
-      color: var(--faint);
+      color: var(--muted);
     }
-    .hint.ok { color: #69f0ae; }
-    .actions { display: grid; gap: 12px; }
-    .button {
+    .code-row {
       display: flex;
       align-items: center;
-      gap: 14px;
-      width: 100%;
-      padding: 14px 18px;
-      border-radius: 14px;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding: 12px 12px 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--raised);
+    }
+    .code {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+    .copy {
+      flex: none;
+      padding: 6px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .copy:hover { background: #26262b; }
+    .copy.done { color: #8fd19e; border-color: #3b5a43; }
+    .actions { display: grid; gap: 10px; }
+    .button {
+      display: block;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
       text-decoration: none;
-      text-align: left;
-      transition: transform 0.12s ease, filter 0.12s ease, background 0.12s ease;
     }
-    .button:active { transform: scale(0.985); }
-    .button svg { width: 24px; height: 24px; flex: none; }
-    .button strong { display: block; font-size: 16px; font-weight: 700; }
-    .button span span { display: block; margin-top: 2px; font-size: 13px; }
     .primary { background: var(--accent); color: #fff; }
-    .primary span span { color: rgba(255, 255, 255, 0.8); }
-    .primary:hover, .primary:focus-visible { filter: brightness(1.08); }
+    .primary:hover { background: var(--accent-hover); }
     .secondary {
-      border: 2px solid var(--accent);
-      color: var(--accent-soft);
-    }
-    .secondary span span { color: var(--muted); }
-    .secondary:hover, .secondary:focus-visible { background: rgba(124, 77, 255, 0.1); }
-    .tertiary {
-      background: var(--surface);
+      border: 1px solid var(--line);
+      background: var(--raised);
       color: var(--text);
     }
-    .tertiary span span { color: var(--muted); }
-    .tertiary:hover, .tertiary:focus-visible { filter: brightness(1.15); }
-    .error {
-      margin: 0 0 24px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: rgba(255, 107, 107, 0.12);
-      color: var(--danger);
+    .secondary:hover { background: #26262b; }
+    .download {
+      margin: 16px 0 0;
       font-size: 14px;
+      color: var(--muted);
     }
+    a { color: var(--text); }
+    .error { margin: 0; color: var(--danger); }
     footer {
-      margin-top: 24px;
-      font-size: 12px;
-      color: var(--faint);
+      padding: 16px 0 24px;
+      border-top: 1px solid #1f1f23;
+      font-size: 13px;
+      color: var(--muted);
     }
     footer a { color: var(--muted); }
     a:focus-visible, button:focus-visible {
-      outline: 2px solid var(--accent-soft);
-      outline-offset: 3px;
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
+
+    /* A still of the app's meeting screen; decoration for wide screens. */
+    .preview { display: none; }
+    .preview[hidden] { display: none !important; }
+    @media (min-width: 900px) {
+      main {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 72px;
+        align-items: center;
+        padding-top: 0;
+      }
+      h1 { font-size: 32px; }
+      .preview {
+        display: block;
+        padding: 12px;
+        border: 1px solid #26262b;
+        border-radius: 14px;
+        background: #0b0b0d;
+      }
+    }
+    .tiles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .tile {
+      position: relative;
+      display: grid;
+      place-items: center;
+      aspect-ratio: 16 / 10;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      background: #1c1c1e;
+    }
+    .tile.speaking { border: 2px solid #69f0ae; }
+    .tile.you { border: 2px solid #8a5cff; }
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .tile-name {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.54);
+      font-size: 12px;
+    }
+    .tile-name svg { width: 12px; height: 12px; }
+    .muted svg { color: #ff5252; }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .control {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #3a3a3c;
+      color: #fff;
+    }
+    .control svg { width: 18px; height: 18px; }
+    .control.leave { width: 56px; border-radius: 20px; background: #ff5252; }
     [hidden] { display: none !important; }
   </style>
 </head>
 <body>
-  <main>
-    <img class="logo" src="../icons/Icon-192.png" alt="" width="88" height="88">
-    <p class="brand" lang="en">REISUB MEETING</p>
-    <h1 id="title">Toplantıya davet edildiniz</h1>
+  <header class="wrap">
+    <span class="brand" lang="en">
+      <img src="../icons/Icon-192.png" alt="" width="28" height="28">
+      REISUB Meeting
+    </span>
+    <a id="header-source" href="#" rel="noopener" hidden>GitHub</a>
+  </header>
 
-    <div id="invite">
-      <button class="code" id="code" type="button" aria-describedby="hint">
-        <span id="code-text"></span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-      </button>
-      <p class="hint" id="hint"></p>
-    </div>
+  <main class="wrap">
+    <div class="invite-panel">
+    <h1 id="title">Toplantıya davet edildiniz</h1>
+    <p class="lead" id="lead"></p>
     <p class="error" id="error" hidden></p>
 
-    <div class="actions">
-      <a class="button primary" id="open-app" href="#" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>
-        <span><strong id="open-app-title"></strong><span id="open-app-sub"></span></span>
-      </a>
-      <a class="button secondary" id="join" href="../">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20z"/></svg>
-        <span><strong id="join-title"></strong><span id="join-sub"></span></span>
-      </a>
-      <a class="button tertiary" id="download" href="#" rel="noopener" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-        <span><strong id="download-title"></strong><span id="download-sub"></span></span>
-      </a>
+    <div id="invite">
+      <p class="label" id="code-label">Oda kodu</p>
+      <div class="code-row">
+        <span class="code" id="code"></span>
+        <button class="copy" id="copy" type="button">Kopyala</button>
+      </div>
+
+      <div class="actions">
+        <a class="button primary" id="open-app" href="#" hidden>Uygulamada aç</a>
+        <a class="button secondary" id="join" href="../">Tarayıcıda katıl</a>
+      </div>
+      <p class="download" id="download" hidden>
+        <span id="download-text"></span>
+        <a id="download-link" href="#" rel="noopener"></a>
+      </p>
+    </div>
     </div>
 
-    <footer>
-      <span id="footer"></span><span id="source" hidden>
-      · <a id="source-link" href="#" rel="noopener">GitHub</a></span>
-    </footer>
+    <div class="preview" aria-hidden="true">
+      <div class="tiles">
+        <div class="tile speaking">
+          <span class="avatar" style="background:#5c6bc0">EK</span>
+          <span class="tile-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>Elif</span>
+        </div>
+        <div class="tile">
+          <span class="avatar" style="background:#00897b">MA</span>
+          <span class="tile-name muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 18 18M9 9v1a3 3 0 0 0 5.1 2.1M15 9.3V5a3 3 0 0 0-5.9-.7M19 10a7 7 0 0 1-1.2 3.9M5 10a7 7 0 0 0 11.1 5.7M12 17v4"/></svg>Mert</span>
+        </div>
+        <div class="tile">
+          <span class="avatar" style="background:#8d6e63">ZD</span>
+          <span class="tile-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>Zeynep</span>
+        </div>
+        <div class="tile you">
+          <span class="avatar" style="background:#7c4dff"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6z"/></svg></span>
+          <span class="tile-name" id="preview-you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>Siz</span>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg></span>
+        <span class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></svg></span>
+        <span class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+        <span class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/></svg></span>
+        <span class="control leave"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-3.3 0-6.4.9-8.8 2.6-.6.4-.8 1.2-.4 1.8l1.3 2c.3.5 1 .7 1.5.5l2.6-1c.5-.2.8-.7.8-1.2V12c1-.3 2-.4 3-.4s2 .1 3 .4v1.7c0 .5.3 1 .8 1.2l2.6 1c.5.2 1.2 0 1.5-.5l1.3-2c.4-.6.2-1.4-.4-1.8C18.4 9.9 15.3 9 12 9z"/></svg></span>
+      </div>
+    </div>
   </main>
+
+  <footer>
+    <div class="wrap">
+      <span id="footer"></span>
+    </div>
+  </footer>
 
   <script>
     (function () {
       var text = {
         tr: {
           title: 'Toplantıya davet edildiniz',
+          lead: 'Uygulamadan ya da doğrudan tarayıcıdan katılabilirsiniz.',
+          you: 'Siz',
           invalidTitle: 'Davet bağlantısı geçersiz',
           invalid: 'Bu bağlantıda geçerli bir oda kodu yok. Sizi davet eden kişiden bağlantıyı yeniden isteyin.',
-          hint: 'Kopyalamak için koda dokunun',
-          copied: 'Oda kodu kopyalandı',
+          codeLabel: 'Oda kodu',
+          copy: 'Kopyala',
+          copied: 'Kopyalandı',
           openApp: 'Uygulamada aç',
-          openAppSub: 'REISUB Meeting yüklüyse',
           join: 'Tarayıcıda katıl',
-          joinSub: 'Kurulum gerekmez',
-          download: 'Uygulamayı indir',
-          downloadSub: 'Android, Windows ve Linux',
-          footer: 'Açık kaynak görüntülü toplantılar'
+          downloadText: 'Uygulama yüklü değil mi?',
+          downloadLink: 'İndirin',
+          footer: 'Açık kaynak görüntülü toplantı'
         },
         en: {
           title: 'You’re invited to a meeting',
+          lead: 'Join from the app or right in your browser.',
+          you: 'You',
           invalidTitle: 'Invalid invite link',
           invalid: 'This link has no valid room code. Ask the person who invited you to send it again.',
-          hint: 'Tap the code to copy it',
-          copied: 'Room code copied',
+          codeLabel: 'Room code',
+          copy: 'Copy',
+          copied: 'Copied',
           openApp: 'Open in the app',
-          openAppSub: 'If REISUB Meeting is installed',
-          join: 'Join in your browser',
-          joinSub: 'Nothing to install',
-          download: 'Download the app',
-          downloadSub: 'Android, Windows and Linux',
+          join: 'Join in the browser',
+          downloadText: 'Don’t have the app?',
+          downloadLink: 'Download it',
           footer: 'Open-source video meetings'
         }
       };
@@ -251,54 +362,51 @@
         var value = meta ? meta.content.trim() : '';
         return /^__REISUB_/.test(value) ? '' : value;
       }
-      var downloadUrl = setting('reisub-download-url');
-      if (downloadUrl) {
-        document.getElementById('download').href = downloadUrl;
-        document.getElementById('download').hidden = false;
-      }
       var sourceUrl = setting('reisub-source-url');
       if (sourceUrl) {
-        document.getElementById('source-link').href = sourceUrl;
-        document.getElementById('source').hidden = false;
+        document.getElementById('header-source').href = sourceUrl;
+        document.getElementById('header-source').hidden = false;
       }
-      set('open-app-title', t.openApp);
-      set('open-app-sub', t.openAppSub);
-      set('join-title', t.join);
-      set('join-sub', t.joinSub);
-      set('download-title', t.download);
-      set('download-sub', t.downloadSub);
+      var you = document.getElementById('preview-you');
+      you.lastChild.textContent = t.you;
       set('footer', t.footer);
 
       var room = findRoom();
-      var join = document.getElementById('join');
       if (!room) {
         set('title', t.invalidTitle);
         set('error', t.invalid);
         document.getElementById('error').hidden = false;
         document.getElementById('invite').hidden = true;
-        join.hidden = true;
+        document.querySelector('.preview').hidden = true;
         document.title = t.invalidTitle + ' · REISUB Meeting';
         return;
       }
 
       set('title', t.title);
-      set('code-text', room);
-      set('hint', t.hint);
+      set('lead', t.lead);
+      set('code-label', t.codeLabel);
+      set('code', room);
+      set('copy', t.copy);
+      set('open-app', t.openApp);
+      set('join', t.join);
       document.title = t.title + ' · REISUB Meeting';
+
       // The web app lives one level up from /invite/ and /j/.
+      var join = document.getElementById('join');
       var app = new URL('../', location.href);
       app.search = '?room=' + encodeURIComponent(room);
       app.hash = '';
       join.href = app.toString();
 
       // "Open in app": the browser asks whether to open REISUB Meeting.
+      var downloadUrl = setting('reisub-download-url');
       var server = setting('reisub-server') || location.origin;
       var appPath = 'join/' + encodeURIComponent(room) +
         '?server=' + encodeURIComponent(server);
       var agent = navigator.userAgent;
       var openApp = document.getElementById('open-app');
       if (/Android/i.test(agent)) {
-        // Chrome falls back to the download page when the app is missing.
+        // Chrome opens the download page itself when the app is missing.
         openApp.href = 'intent://' + appPath +
           '#Intent;scheme=reisub-meeting;package=xyz.reisub.meeting;' +
           (downloadUrl
@@ -307,16 +415,24 @@
           'end';
         openApp.hidden = false;
       } else if (!/iPhone|iPad|iPod/i.test(agent)) {
+        // Desktop browsers do nothing for a missing app, so offer the
+        // download quietly below the buttons.
         openApp.href = 'reisub-meeting://' + appPath;
         openApp.hidden = false;
+        if (downloadUrl) {
+          set('download-text', t.downloadText + ' ');
+          set('download-link', t.downloadLink);
+          document.getElementById('download-link').href = downloadUrl;
+          document.getElementById('download').hidden = false;
+        }
       }
 
-      var hint = document.getElementById('hint');
-      document.getElementById('code').addEventListener('click', function () {
-        if (!navigator.clipboard) return;
+      var copy = document.getElementById('copy');
+      if (!navigator.clipboard) copy.hidden = true;
+      copy.addEventListener('click', function () {
         navigator.clipboard.writeText(room).then(function () {
-          hint.textContent = t.copied;
-          hint.classList.add('ok');
+          copy.textContent = t.copied;
+          copy.classList.add('done');
         }, function () {});
       });
     })();
