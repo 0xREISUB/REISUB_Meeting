@@ -140,7 +140,14 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     });
   }
 
-  void _showMeetingControls() {
+  /// A tap on the video shows the controls, or hides them if they are up.
+  /// Taps on the controls themselves never reach the video.
+  void _toggleMeetingControls() {
+    if (_showControls) {
+      _controlsTimer?.cancel();
+      setState(() => _showControls = false);
+      return;
+    }
     setState(() => _showControls = true);
     _scheduleControlsHide();
   }
@@ -418,7 +425,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                     connecting:
                         session.isConnecting ||
                         connection.phase == MeetingConnectionPhase.reconnecting,
-                    onMainPageTap: _showMeetingControls,
+                    onMainPageTap: _toggleMeetingControls,
                     onStopScreenShare: session.changingScreenShare
                         ? null
                         : session.stopScreenShare,

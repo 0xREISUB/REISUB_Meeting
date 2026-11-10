@@ -387,10 +387,13 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
                   .skip((page - 1) * perPage)
                   .take(perPage)
                   .toList();
-              return _ParticipantPage(
+              return MeetingTapListener(
                 key: ValueKey('gallery-page-$page'),
-                members: entries,
-                columns: isWide ? 4 : 2,
+                onTap: widget.onMainPageTap,
+                child: _ParticipantPage(
+                  members: entries,
+                  columns: isWide ? 4 : 2,
+                ),
               );
             }
             final mainVideo = Stack(
@@ -448,8 +451,7 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
                 _fullscreen ||
                 (widget.members.length == 1 &&
                     !widget.mainMember.isScreenShare)) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
+              return MeetingTapListener(
                 onTap: widget.onMainPageTap,
                 child: mainVideo,
               );
@@ -462,8 +464,7 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
                 )
                 .take(5)
                 .toList();
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            return MeetingTapListener(
               onTap: widget.onMainPageTap,
               child: Row(
                 children: [
@@ -548,6 +549,63 @@ class _MeetingVideoLayoutState extends State<MeetingVideoLayout> {
 
 /// Carries two-finger pinches detected above the page view to the main
 /// video, which owns the zoom.
+/// Reports a single-finger tap anywhere on [child], even where a widget
+/// inside handles the tap itself. On phones the video renderer of the local
+/// camera claims taps for focus, which kept a GestureDetector here from ever
+/// seeing taps on the video. Drags and pinches are not taps.
+class MeetingTapListener extends StatefulWidget {
+  const MeetingTapListener({
+    super.key,
+    required this.onTap,
+    required this.child,
+  });
+
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  State<MeetingTapListener> createState() => _MeetingTapListenerState();
+}
+
+class _MeetingTapListenerState extends State<MeetingTapListener> {
+  final _down = <int, (Offset, Duration)>{};
+  bool _multiTouch = false;
+
+  void _onDown(PointerDownEvent event) {
+    _down[event.pointer] = (event.position, event.timeStamp);
+    if (_down.length > 1) _multiTouch = true;
+  }
+
+  void _onUp(PointerUpEvent event) {
+    final start = _down.remove(event.pointer);
+    final multiTouch = _multiTouch;
+    if (_down.isEmpty) _multiTouch = false;
+    if (start == null || multiTouch) return;
+    final (position, time) = start;
+    final moved = (event.position - position).distance;
+    final held = event.timeStamp - time;
+    if (moved <= kTouchSlop && held <= const Duration(milliseconds: 500)) {
+      widget.onTap?.call();
+    }
+  }
+
+  void _onCancel(PointerCancelEvent event) {
+    _down.remove(event.pointer);
+    if (_down.isEmpty) _multiTouch = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: _onDown,
+      onPointerUp: _onUp,
+      onPointerCancel: _onCancel,
+      child: widget.child,
+    );
+  }
+}
+
 class ScreenZoomRelay {
   _MeetingMainVideoState? _target;
 
@@ -720,11 +778,7 @@ class _ParticipantPage extends StatelessWidget {
   final List<MemberEntry> members;
   final int columns;
 
-  const _ParticipantPage({
-    super.key,
-    required this.members,
-    required this.columns,
-  });
+  const _ParticipantPage({required this.members, required this.columns});
 
   @override
   Widget build(BuildContext context) {

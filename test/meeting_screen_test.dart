@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/home/home_screen.dart';
+import 'package:v_meeting/meeting/widgets/meeting_controls_bar.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 
 import 'package:flutter/material.dart';
@@ -1057,7 +1058,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('landscape phone stays swipeable and only taps reveal controls', (
+  testWidgets('landscape phone stays swipeable and taps reveal controls', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(920, 400);
@@ -1089,14 +1090,50 @@ void main() {
     await tester.pumpAndSettle();
     expect(taps, 1);
     expect(find.byType(MeetingParticipantTile), findsNWidgets(4));
+    // The participant gallery reveals the controls too.
     await tester.tapAt(const Offset(100, 100));
-    expect(taps, 1);
+    expect(taps, 2);
     await tester.drag(pager, const Offset(850, 0));
     await tester.pumpAndSettle();
-    expect(taps, 1);
-    await tester.tapAt(const Offset(915, 200));
     expect(taps, 2);
+    await tester.tapAt(const Offset(915, 200));
+    expect(taps, 3);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('taps reach the controls even where the video claims them', (
+    tester,
+  ) async {
+    var taps = 0;
+    var innerTaps = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MeetingTapListener(
+          onTap: () => taps++,
+          // Like the phone's local camera renderer, which takes taps for
+          // focus and pinches for zoom.
+          child: GestureDetector(
+            onTap: () => innerTaps++,
+            onScaleUpdate: (_) {},
+            child: const ColoredBox(color: Colors.black),
+          ),
+        ),
+      ),
+    );
+    await tester.tapAt(const Offset(200, 300));
+    expect(innerTaps, 1);
+    expect(taps, 1);
+
+    // A pinch is not a tap.
+    final first = await tester.startGesture(const Offset(150, 300));
+    final second = await tester.startGesture(const Offset(250, 300));
+    await first.up();
+    await second.up();
+    expect(taps, 1);
+
+    // Neither is a drag.
+    await tester.dragFrom(const Offset(200, 300), const Offset(-120, 0));
+    expect(taps, 1);
   });
 
   testWidgets(
@@ -1149,9 +1186,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.mic_rounded).hitTestable(), findsOneWidget);
       expect(tester.getRect(video), before);
+      // A second tap on the video hides the controls again.
       await tester.tapAt(const Offset(915, 200));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.mic_rounded).hitTestable(), findsOneWidget);
+      expect(find.byIcon(Icons.mic_rounded).hitTestable(), findsNothing);
+      expect(tester.getRect(video), before);
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
       expect(
@@ -1339,6 +1378,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.leaves, 1);
     expect(api.closes, 0);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+  testWidgets('a tap on the video toggles the controls, not one on them', (
+    tester,
+  ) async {
+    await openExitTest(tester, _TestRoom());
+    final bar = find.byType(MeetingControlsBar);
+    final screenHeight =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    bool shown() => tester.getRect(bar).top < screenHeight;
+    expect(shown(), isTrue);
+
+    await tester.tapAt(const Offset(200, 150));
+    await tester.pumpAndSettle();
+    expect(shown(), isFalse);
+
+    await tester.tapAt(const Offset(200, 150));
+    await tester.pumpAndSettle();
+    expect(shown(), isTrue);
+
+    // The bar's own background, between its buttons' edges.
+    await tester.tapAt(tester.getRect(bar).topLeft + const Offset(12, 30));
+    await tester.pumpAndSettle();
+    expect(shown(), isTrue);
+    await tester.pumpWidget(const SizedBox());
   }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
 
   testWidgets('a participant leaves at once and tells the server', (
