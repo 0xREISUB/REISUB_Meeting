@@ -181,6 +181,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get speakerLabel => 'Konuşmacı';
 
   @override
+  String moreParticipants(int count) {
+    return '+$count kişi daha';
+  }
+
+  @override
+  String get collapseParticipants => 'Tek kişi göster';
+
+  @override
+  String get expandParticipants => 'Daha fazla kişi göster';
+
+  @override
+  String get showPictureInPicture => 'Küçük videoyu göster';
+
+  @override
   String get membersTitle => 'Üyeler';
 
   @override

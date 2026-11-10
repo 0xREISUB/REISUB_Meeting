@@ -57,6 +57,17 @@
   "messageHint": "Type a message...",
   "mainVideoLabel": "Main Video Stream",
   "speakerLabel": "Speaker",
+  "moreParticipants": "+{count} more",
+  "@moreParticipants": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "collapseParticipants": "Show one person",
+  "expandParticipants": "Show more people",
+  "showPictureInPicture": "Show the small video",
   "membersTitle": "Members",
   "membersHeader": "{count} people attending · Page {current}/{total}",
   "memberCountLabel": "{count} members",

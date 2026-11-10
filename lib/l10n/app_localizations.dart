@@ -434,6 +434,30 @@ abstract class AppLocalizations {
   /// **'Speaker'**
   String get speakerLabel;
 
+  /// No description provided for @moreParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String moreParticipants(int count);
+
+  /// No description provided for @collapseParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Show one person'**
+  String get collapseParticipants;
+
+  /// No description provided for @expandParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more people'**
+  String get expandParticipants;
+
+  /// No description provided for @showPictureInPicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the small video'**
+  String get showPictureInPicture;
+
   /// No description provided for @membersTitle.
   ///
   /// In en, this message translates to:

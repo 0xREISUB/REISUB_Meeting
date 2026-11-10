@@ -182,6 +182,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speakerLabel => 'Speaker';
 
   @override
+  String moreParticipants(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get collapseParticipants => 'Show one person';
+
+  @override
+  String get expandParticipants => 'Show more people';
+
+  @override
+  String get showPictureInPicture => 'Show the small video';
+
+  @override
   String get membersTitle => 'Members';
 
   @override
