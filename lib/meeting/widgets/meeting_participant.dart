@@ -22,11 +22,17 @@ class MeetingParticipantTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(isMain ? 24 : 16);
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: isMain ? Colors.black : const Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(isMain ? 24 : 16),
+        borderRadius: radius,
+      ),
+      // Drawn over the video: underneath, the clipped video covered the
+      // border's rounded corners and the line broke up there.
+      foregroundDecoration: BoxDecoration(
+        borderRadius: radius,
         border: Border.all(
           color: member.isSpeaking
               ? Colors.greenAccent
