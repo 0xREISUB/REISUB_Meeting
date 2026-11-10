@@ -78,10 +78,40 @@ class MeetingPlatform {
   /// Lists screens and windows on desktop platforms.
   rtc.DesktopCapturer get desktopCapturer => rtc.desktopCapturer;
 
-  /// Android 12+ requires runtime permission for Bluetooth headsets. Denial
-  /// still allows using the phone's microphone and speaker.
-  Future<void> requestBluetoothPermission() async {
-    if (_isAndroid) await Permission.bluetoothConnect.request();
+  /// Asks for everything the meeting needs before it connects, one prompt
+  /// after another. Prompts that open while the meeting is connecting, or
+  /// two requests at once, can drop the connection on Android.
+  ///
+  /// The microphone is always asked for: the background service can only
+  /// keep it running if it was allowed when the service started. Denials are
+  /// reported later, when a device is turned on.
+  Future<void> requestMeetingPermissions({required bool camera}) async {
+    if (_isAndroid) {
+      // Android 12+ needs Bluetooth for headsets, and Android 13+ hides the
+      // meeting notification without the notification permission.
+      await _quietly(
+        () => [
+          Permission.notification,
+          Permission.bluetoothConnect,
+          Permission.microphone,
+          if (camera) Permission.camera,
+        ].request(),
+      );
+    } else if (kIsWeb) {
+      // Separate requests, so that refusing the camera keeps the microphone.
+      await _quietly(() => _askBrowser({'audio': true}));
+      if (camera) await _quietly(() => _askBrowser({'video': true}));
+    }
+  }
+
+  /// Opens and immediately closes a device so the browser asks now; it
+  /// remembers the answer for this page.
+  static Future<void> _askBrowser(Map<String, dynamic> constraints) async {
+    final stream = await rtc.navigator.mediaDevices.getUserMedia(constraints);
+    for (final track in stream.getTracks()) {
+      await track.stop();
+    }
+    await stream.dispose();
   }
 
   /// Asks Android for screen capture consent. Other platforms need none.
@@ -118,9 +148,6 @@ class MeetingPlatform {
   /// while it is in the background, with an ongoing notification.
   Future<void> startMeetingService(NotificationText text) async {
     if (!_isAndroid) return;
-    // Android 13+ hides the notification unless the user allows it; the
-    // service itself runs either way.
-    await _quietly(() => Permission.notification.request());
     await _quietly(
       () => _display.invokeMethod<void>('startMeetingService', {
         'channelName': text.channelName,

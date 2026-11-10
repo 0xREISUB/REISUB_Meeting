@@ -43,6 +43,7 @@ abstract interface class MeetingUi {
   /// Lets a desktop user choose a screen or window. Null means cancelled.
   Future<ScreenShareChoice?> pickDesktopScreen();
   NotificationText screenShareNotification();
+  NotificationText meetingNotification();
 }
 
 /// A running in-meeting device test; see [MeetingSession.beginDeviceTest].
@@ -168,6 +169,7 @@ class MeetingSession extends ChangeNotifier {
   /// True once the meeting is being left or the session was disposed; async
   /// work must not continue after that.
   bool get _inactive => _disposed || _leaving;
+  bool _backgroundServiceStarted = false;
 
   bool get microphoneLocked =>
       room.localParticipant?.attributes[micLockAttribute] == 'true';
@@ -216,7 +218,14 @@ class MeetingSession extends ChangeNotifier {
       }
       mirrorCamera = meetingPreferences.mirrorCamera;
       if (_inactive) return;
-      await platform.requestBluetoothPermission();
+      await platform.requestMeetingPermissions(camera: isCameraEnabled);
+      if (_inactive) return;
+      // After the permissions, so that Android lets the service keep the
+      // microphone running in the background.
+      if (!_backgroundServiceStarted) {
+        _backgroundServiceStarted = true;
+        await platform.startMeetingService(_ui.meetingNotification());
+      }
       if (_inactive) return;
       await room
           .connect(credentials.liveKitUrl, credentials.token)

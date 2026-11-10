@@ -98,19 +98,18 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     }
   }
 
-  /// Keeps the screen awake and, on Android, the meeting running in the
-  /// background.
+  /// Keeps the screen awake. The session starts the Android background
+  /// service once the meeting's permissions have been asked for.
   void _startBackgroundSupport() {
-    final platform = _session.platform;
-    unawaited(platform.setKeepScreenOn(true));
-    unawaited(
-      platform.startMeetingService((
-        channelName: _l10n.meetingNotificationChannel,
-        title: _l10n.meetingNotificationTitle,
-        body: _l10n.meetingNotificationBody,
-      )),
-    );
+    unawaited(_session.platform.setKeepScreenOn(true));
   }
+
+  @override
+  NotificationText meetingNotification() => (
+    channelName: _l10n.meetingNotificationChannel,
+    title: _l10n.meetingNotificationTitle,
+    body: _l10n.meetingNotificationBody,
+  );
 
   /// System back leaves the meeting running on Android (the app goes to the
   /// background) and asks before leaving elsewhere.

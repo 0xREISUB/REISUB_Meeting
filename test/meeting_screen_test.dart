@@ -230,12 +230,16 @@ const _guestCredentials = RoomCredentials(
 /// Records background-support calls and avoids the real Bluetooth
 /// permission prompt, which never answers in tests.
 class _TestPlatform extends MeetingPlatform {
-  _TestPlatform();
+  _TestPlatform({this.connectCalls});
 
   final calls = <String>[];
 
+  /// How often the room had connected when permissions were asked for.
+  final int Function()? connectCalls;
+
   @override
-  Future<void> requestBluetoothPermission() async {}
+  Future<void> requestMeetingPermissions({required bool camera}) async =>
+      calls.add('permissions:camera=$camera,connects=${connectCalls?.call()}');
 
   @override
   Future<void> setKeepScreenOn(bool enabled) async =>
@@ -1353,12 +1357,20 @@ void main() {
     testWidgets('a meeting keeps the screen awake and runs in the background', (
       tester,
     ) async {
-      final platform = _TestPlatform();
-      await openExitTest(tester, _TestRoom(), platform: platform);
+      SharedPreferences.setMockInitialValues({});
+      final room = _TestRoom();
+      final platform = _TestPlatform(connectCalls: () => room.connectCalls);
+      await openExitTest(tester, room, platform: platform);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+      // Permissions come first, before connecting and before the service,
+      // so no prompt opens while the meeting connects.
       expect(platform.calls, [
         'keepScreenOn:true',
+        'permissions:camera=true,connects=0',
         'startService:Toplantı sürüyor',
       ]);
+      expect(room.connectCalls, 1);
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
       expect(
