@@ -67,53 +67,151 @@ class MeetingParticipantTile extends StatelessWidget {
                       placeholder!,
                       style: const TextStyle(color: Colors.white70),
                     )
-                  : Icon(
-                      member.isScreenShare
-                          ? Icons.screen_share_rounded
-                          : Icons.person,
+                  : member.isScreenShare
+                  ? Icon(
+                      Icons.screen_share_rounded,
                       size: isMain ? 64 : 36,
                       color: Colors.white24,
+                    )
+                  : MemberAvatar(
+                      name: member.name,
+                      seed: member.identity.isEmpty
+                          ? member.name
+                          : member.identity,
+                      size: isMain ? 112 : 52,
                     ),
             ),
           Positioned(
             left: 8,
-            right: 8,
             bottom: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    member.isMicEnabled ? Icons.mic : Icons.mic_off,
-                    size: 14,
-                    color: member.isMicEnabled
-                        ? Colors.white
-                        : Colors.redAccent,
-                  ),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: Text(
-                      member.isScreenShare
-                          ? '${member.name} • ${AppLocalizations.of(context)!.screenShareLabel}'
-                          : member.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isMain ? 14 : 12,
-                      ),
-                    ),
-                  ),
-                ],
+            right: 8,
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: _NameLabel(member: member, large: isMain),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Name and microphone state in the corner of a tile, as wide as the name.
+class _NameLabel extends StatelessWidget {
+  const _NameLabel({required this.member, required this.large});
+
+  final MemberEntry member;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    final speaking = member.isSpeaking && member.isMicEnabled;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: large ? 10 : 8,
+        vertical: large ? 6 : 4,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            member.isMicEnabled ? Icons.mic : Icons.mic_off,
+            size: large ? 16 : 14,
+            color: !member.isMicEnabled
+                ? Colors.redAccent
+                : speaking
+                ? Colors.greenAccent
+                : Colors.white,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              member.isScreenShare
+                  ? '${member.name} • ${AppLocalizations.of(context)!.screenShareLabel}'
+                  : member.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: large ? 14 : 12,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A participant without video: initials on a colour picked from [seed], so
+/// each person keeps the same colour.
+class MemberAvatar extends StatelessWidget {
+  const MemberAvatar({
+    super.key,
+    required this.name,
+    required this.seed,
+    required this.size,
+  });
+
+  final String name;
+  final String seed;
+  final double size;
+
+  static const _colors = [
+    Color(0xFF5C6BC0),
+    Color(0xFF00897B),
+    Color(0xFF8D6E63),
+    Color(0xFFAB47BC),
+    Color(0xFF43A047),
+    Color(0xFFEF6C00),
+    Color(0xFF1E88E5),
+    Color(0xFFD81B60),
+  ];
+
+  /// Up to two letters: the first of the first and last words.
+  static String initials(String name) {
+    final words = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+    if (words.isEmpty) return '?';
+    final letters = [
+      words.first.characters.first,
+      if (words.length > 1) words.last.characters.first,
+    ];
+    return letters.join().toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var hash = 0;
+    for (final unit in seed.codeUnits) {
+      hash = (hash * 31 + unit) & 0x7fffffff;
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Never larger than a small tile allows.
+        final diameter = math.min(size, constraints.biggest.shortestSide * 0.5);
+        return Container(
+          width: diameter,
+          height: diameter,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _colors[hash % _colors.length],
+          ),
+          child: Text(
+            initials(name),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: diameter * 0.36,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      },
     );
   }
 }
