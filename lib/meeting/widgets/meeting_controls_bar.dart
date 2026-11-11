@@ -19,6 +19,7 @@ class MeetingControlsBar extends StatelessWidget {
     required this.onOpenChat,
     required this.onToggleScreenShare,
     required this.onOpenSettings,
+    this.onOpenPermissions,
     required this.onShowRoomCode,
     required this.onLeave,
   });
@@ -40,6 +41,9 @@ class MeetingControlsBar extends StatelessWidget {
   /// Null disables the screen-share button.
   final VoidCallback? onToggleScreenShare;
   final VoidCallback onOpenSettings;
+
+  /// Opens the permissions window; null hides it from the menu.
+  final VoidCallback? onOpenPermissions;
   final VoidCallback onShowRoomCode;
 
   /// Null disables the leave button, e.g. while the meeting is being ended.
@@ -114,6 +118,8 @@ class MeetingControlsBar extends StatelessWidget {
                 onShowRoomCode();
               } else if (value == 'meeting_settings') {
                 onOpenSettings();
+              } else if (value == 'permissions') {
+                onOpenPermissions?.call();
               }
             },
             itemBuilder: (context) => [
@@ -124,15 +130,43 @@ class MeetingControlsBar extends StatelessWidget {
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
+              if (onOpenPermissions != null)
+                PopupMenuItem<String>(
+                  key: const ValueKey('menu-permissions'),
+                  value: 'permissions',
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.admin_panel_settings_rounded,
+                        color: Colors.white70,
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          l10n.permissionsTitle,
+
+                          overflow: TextOverflow.ellipsis,
+
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               PopupMenuItem<String>(
                 value: 'room_id',
                 child: Row(
                   children: [
                     const Icon(Icons.tag_rounded, color: Colors.white70),
                     const SizedBox(width: 10),
-                    Text(
-                      l10n.roomId,
-                      style: const TextStyle(color: Colors.white),
+                    Flexible(
+                      child: Text(
+                        l10n.roomId,
+
+                        overflow: TextOverflow.ellipsis,
+
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),

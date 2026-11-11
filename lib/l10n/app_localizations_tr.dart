@@ -195,6 +195,69 @@ class AppLocalizationsTr extends AppLocalizations {
   String get showPictureInPicture => 'Küçük videoyu göster';
 
   @override
+  String get permissionsTitle => 'Yetkilendirmeler';
+
+  @override
+  String get searchMembers => 'Üye ara';
+
+  @override
+  String get noMembersFound => 'Üye bulunamadı';
+
+  @override
+  String permissionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count izin',
+      zero: 'İzin yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get permissionShareScreen => 'Ekran paylaşma';
+
+  @override
+  String get permissionShareScreenHint => 'Ekranını toplantıya yansıtabilir.';
+
+  @override
+  String get permissionMuteOthers => 'Kullanıcıları susturma';
+
+  @override
+  String get permissionMuteOthersHint =>
+      'Başkalarının mikrofonunu kapatıp kilitleyebilir.';
+
+  @override
+  String get permissionRequestUnmute => 'Mikrofon açma isteme';
+
+  @override
+  String get permissionRequestUnmuteHint =>
+      'Başkalarından mikrofonlarını açmalarını isteyebilir.';
+
+  @override
+  String get permissionEndMeeting => 'Toplantıyı sonlandırma';
+
+  @override
+  String get permissionEndMeetingHint => 'Toplantıyı herkes için bitirebilir.';
+
+  @override
+  String get permissionGrant => 'Yetki verme';
+
+  @override
+  String get permissionGrantHint =>
+      'Başkalarına bu izinleri verip geri alabilir.';
+
+  @override
+  String get ownerHasAllPermissions => 'Tam yönetici tüm izinlere sahiptir.';
+
+  @override
+  String get cannotChangeOwnPermissions => 'Kendi izinlerini değiştiremezsin.';
+
+  @override
+  String get selectMemberForPermissions =>
+      'İzinlerini görmek için bir üye seç.';
+
+  @override
   String get membersTitle => 'Üyeler';
 
   @override
@@ -312,13 +375,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraInputHint => 'Kamera aygıtı ve canlı önizleme';
 
   @override
-  String get allowScreenSharing => 'Başkalarının ekran paylaşmasına izin ver';
-
-  @override
-  String get oneScreenShareHint =>
-      'Aynı anda yalnızca bir kişi ekran paylaşabilir.';
-
-  @override
   String get microphoneManagement => 'Mikrofon yönetimi';
 
   @override
@@ -372,19 +428,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get roleOwner => 'Tam yönetici';
 
   @override
-  String get roleModerator => 'Yönetici';
-
-  @override
   String get participantActions => 'Katılımcı işlemleri';
-
-  @override
-  String get makeOwner => 'Tam yönetici yap';
-
-  @override
-  String get makeModerator => 'Yönetici yap';
-
-  @override
-  String get removeAdminRole => 'Yöneticiliği kaldır';
 
   @override
   String get transferOwnership => 'Tam yöneticiliği devret';
@@ -394,7 +438,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String transferOwnershipBody(String name) {
-    return '$name tam yönetici olur, siz yönetici olarak kalırsınız.';
+    return '$name tam yönetici olur. Sizin tüm izinleriniz kalır.';
   }
 
   @override
@@ -402,13 +446,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lastOwnerLeaveHint =>
-      'Tek tam yönetici sizsiniz. Ayrılırsanız tam yöneticilik bir yöneticiye, yoksa rastgele bir katılımcıya geçer.';
+      'Tam yönetici sizsiniz. Ayrılırsanız tam yöneticilik en çok yetkisi olan kişiye geçer.';
 
   @override
   String get youAreOwnerNow => 'Artık tam yöneticisiniz.';
-
-  @override
-  String get youAreModeratorNow => 'Artık yöneticisiniz.';
 
   @override
   String get lastOwnerError => 'En az bir tam yönetici kalmalı.';
@@ -420,10 +461,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get ownerRequiredError =>
       'Bu işlemi yalnızca tam yöneticiler yapabilir.';
-
-  @override
-  String get moderatorRequiredError =>
-      'Bu işlemi yalnızca yöneticiler yapabilir.';
 
   @override
   String get meetingEndedByYou => 'Toplantıyı bitirdiniz.';
@@ -542,7 +579,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get removedFromMeeting =>
-      'Sunucu tarafından toplantıdan çıkarıldınız.';
+      'Bu toplantıdan çıkarıldınız, tekrar katılamazsınız.';
 
   @override
   String get reconnectFailed =>
@@ -748,4 +785,28 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get screenShareNotificationBody =>
       'Paylaşımı durdurmak için toplantıya dönün.';
+
+  @override
+  String get permissionRequiredError => 'Bunun için yetkiniz yok.';
+
+  @override
+  String get permissionRemoveMembers => 'Üyeleri çıkarma';
+
+  @override
+  String get permissionRemoveMembersHint =>
+      'Birini toplantıdan çıkarıp tekrar katılmasını engelleyebilir.';
+
+  @override
+  String get removeFromMeeting => 'Toplantıdan çıkar';
+
+  @override
+  String removeMemberTitle(String name) {
+    return '$name toplantıdan çıkarılsın mı?';
+  }
+
+  @override
+  String get removeMemberBody => 'Bu toplantıya tekrar katılamayacak.';
+
+  @override
+  String get remove => 'Çıkar';
 }

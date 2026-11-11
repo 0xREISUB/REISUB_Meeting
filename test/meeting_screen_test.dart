@@ -170,6 +170,14 @@ class _ModerationApi extends MeetingApi {
   @override
   Future<void> leaveRoom(String roomId) async => leaves++;
 
+  final permissionChanges = <(String, Set<MeetingPermission>)>[];
+  @override
+  Future<void> setParticipantPermissions({
+    required String roomId,
+    required String identity,
+    required Set<MeetingPermission> permissions,
+  }) async => permissionChanges.add((identity, permissions));
+
   @override
   Future<void> closeRoom(String roomId) async {
     closes++;
@@ -181,10 +189,7 @@ class _ModerationApi extends MeetingApi {
 class _BusySharingApi extends _ModerationApi {
   @override
   Future<MeetingState> getMeetingState(String roomId) async =>
-      const MeetingState(
-        allowParticipantScreenShare: true,
-        screenShareIdentity: 'someone-else',
-      );
+      const MeetingState(screenShareIdentity: 'someone-else');
 }
 
 const local = MemberEntry(
@@ -502,7 +507,10 @@ void main() {
   for (final host in [false, true]) {
     testWidgets('screen share is unavailable while someone else shares '
         '(host=$host)', (tester) async {
-      final room = _TestRoom(local: _TestLocal());
+      // A participant who may share, or the full admin.
+      final local = _TestLocal()
+        ..values['meeting.permissions'] = 'share_screen';
+      final room = _TestRoom(local: local);
       await openExitTest(tester, room, host: host, api: _BusySharingApi());
       room.events.streamCtrl.add(
         RoomConnectedEvent(room: room, metadata: null),
@@ -1560,7 +1568,9 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.android),
   );
-  testWidgets('only owners can moderate remote participants', (tester) async {
+  testWidgets('microphone controls follow the viewer\'s permissions', (
+    tester,
+  ) async {
     const guest = MemberEntry(
       id: 'guest',
       identity: 'guest',
@@ -1568,14 +1578,25 @@ void main() {
       isLocal: false,
       isMicEnabled: true,
     );
+    const lockedGuest = MemberEntry(
+      id: 'guest',
+      identity: 'guest',
+      name: 'Konuk',
+      isLocal: false,
+      isMicEnabled: false,
+      isMicrophoneLocked: true,
+    );
     final actions = <(bool, bool)>[];
-    Future<void> render(bool host, MemberEntry entry) async {
+    Future<void> render(
+      Set<MeetingPermission> viewer,
+      MemberEntry entry,
+    ) async {
       await tester.pumpWidget(
         localized(
           Scaffold(
             body: MembersScreen(
               members: [local, entry],
-              viewerRole: host ? MeetingRole.owner : MeetingRole.participant,
+              viewerPermissions: viewer,
               onMicrophoneChange: (_, locked, request) async =>
                   actions.add((locked, request)),
             ),
@@ -1585,47 +1606,55 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    await render(false, guest);
+    Future<void> openMenu() async {
+      await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+      await tester.pumpAndSettle();
+    }
+
+    await render({}, guest);
     expect(find.byTooltip('Katılımcı işlemleri'), findsNothing);
-    await render(true, guest);
-    expect(find.byTooltip('Katılımcı işlemleri'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('moderate-guest')));
-    await tester.pumpAndSettle();
+    await render({MeetingPermission.shareScreen}, guest);
+    expect(find.byTooltip('Katılımcı işlemleri'), findsNothing);
+
+    // Muting alone: lock, but no unmute request.
+    await render({MeetingPermission.muteOthers}, guest);
+    await openMenu();
+    expect(find.text('Mikrofonu açmasını iste'), findsNothing);
     await tester.tap(find.text('Mikrofonu kapat ve kilitle'));
     await tester.pumpAndSettle();
     expect(actions, [(true, false)]);
-    const lockedGuest = MemberEntry(
-      id: 'guest',
-      identity: 'guest',
-      name: 'Konuk',
-      isLocal: false,
-      isMicEnabled: false,
-      isMicrophoneLocked: true,
-    );
-    await render(true, lockedGuest);
-    await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+
+    // Asking alone: a request, but nothing for a locked microphone.
+    await render({MeetingPermission.requestUnmute}, guest);
+    await openMenu();
+    expect(find.text('Mikrofonu kapat ve kilitle'), findsNothing);
+    await tester.tap(find.text('Mikrofonu açmasını iste'));
     await tester.pumpAndSettle();
+    expect(actions.last, (false, true));
+    await render({MeetingPermission.requestUnmute}, lockedGuest);
+    expect(find.byKey(const ValueKey('moderate-guest')), findsNothing);
+
+    // Both: unlock and ask at once.
+    await render({
+      MeetingPermission.muteOthers,
+      MeetingPermission.requestUnmute,
+    }, lockedGuest);
+    await openMenu();
     await tester.tap(find.text('Kilidi kaldır ve açmasını iste'));
     await tester.pumpAndSettle();
     expect(actions.last, (false, true));
     expect(tester.takeException(), isNull);
   });
 
-  group('roles in the members panel', () {
+  testWidgets('removing someone asks first and spares the full admin', (
+    tester,
+  ) async {
     const guest = MemberEntry(
       id: 'guest',
       identity: 'guest',
       name: 'Konuk',
       isLocal: false,
       isMicEnabled: true,
-    );
-    const admin = MemberEntry(
-      id: 'admin',
-      identity: 'admin',
-      name: 'Yönetici Ayşe',
-      isLocal: false,
-      isMicEnabled: true,
-      role: MeetingRole.moderator,
     );
     const fullAdmin = MemberEntry(
       id: 'owner',
@@ -1635,23 +1664,16 @@ void main() {
       isMicEnabled: true,
       role: MeetingRole.owner,
     );
-    final roleChanges = <(String, MeetingRole)>[];
-    final transfers = <String>[];
-
-    Future<void> render(WidgetTester tester, MeetingRole viewer) async {
-      roleChanges.clear();
-      transfers.clear();
+    final removed = <String>[];
+    Future<void> render(Set<MeetingPermission> viewer) async {
       await tester.pumpWidget(
         localized(
           Scaffold(
             body: MembersScreen(
-              members: const [local, guest, admin, fullAdmin],
-              viewerRole: viewer,
+              members: const [local, guest, fullAdmin],
+              viewerPermissions: viewer,
               onMicrophoneChange: (_, _, _) async {},
-              onRoleChange: (member, role) async =>
-                  roleChanges.add((member.identity, role)),
-              onTransferOwnership: (member) async =>
-                  transfers.add(member.identity),
+              onRemove: (member) async => removed.add(member.identity),
             ),
           ),
         ),
@@ -1659,65 +1681,82 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('admins moderate participants but not other admins', (
-      tester,
-    ) async {
-      await render(tester, MeetingRole.moderator);
-      expect(find.byKey(const ValueKey('moderate-guest')), findsOneWidget);
-      expect(find.byKey(const ValueKey('moderate-admin')), findsNothing);
-      expect(find.byKey(const ValueKey('moderate-owner')), findsNothing);
-      await tester.tap(find.byKey(const ValueKey('moderate-guest')));
-      await tester.pumpAndSettle();
-      expect(find.text('Mikrofonu kapat ve kilitle'), findsOneWidget);
-      expect(find.text('Yönetici yap'), findsNothing);
-      expect(find.text('Tam yöneticiliği devret'), findsNothing);
-      expect(find.byKey(const ValueKey('role-badge-owner')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('role-badge-moderator')),
-        findsOneWidget,
-      );
-    });
+    await render({MeetingPermission.muteOthers});
+    await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+    await tester.pumpAndSettle();
+    expect(find.text('Toplantıdan çıkar'), findsNothing);
+    // Close that menu.
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
 
-    testWidgets('full admins change roles but cannot mute a full admin', (
-      tester,
-    ) async {
-      await render(tester, MeetingRole.owner);
-      await tester.tap(find.byKey(const ValueKey('moderate-owner')));
-      await tester.pumpAndSettle();
-      expect(find.text('Mikrofonu kapat ve kilitle'), findsNothing);
-      expect(find.text('Tam yönetici yap'), findsNothing);
-      await tester.tap(find.text('Yönetici yap'));
-      await tester.pumpAndSettle();
-      expect(roleChanges, [('owner', MeetingRole.moderator)]);
+    // Removing alone is enough for the menu.
+    await render({MeetingPermission.removeMembers});
+    expect(find.byKey(const ValueKey('moderate-owner')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+    await tester.pumpAndSettle();
+    expect(find.text('Mikrofonu kapat ve kilitle'), findsNothing);
+    await tester.tap(find.text('Toplantıdan çıkar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Konuk toplantıdan çıkarılsın mı?'), findsOneWidget);
+    await tester.tap(find.text('Vazgeç'));
+    await tester.pumpAndSettle();
+    expect(removed, isEmpty);
 
-      await tester.tap(find.byKey(const ValueKey('moderate-admin')));
-      await tester.pumpAndSettle();
-      expect(find.text('Mikrofonu kapat ve kilitle'), findsOneWidget);
-      await tester.tap(find.text('Yöneticiliği kaldır'));
-      await tester.pumpAndSettle();
-      expect(roleChanges.last, ('admin', MeetingRole.participant));
-    });
-
-    testWidgets('transferring full admin asks for confirmation', (
-      tester,
-    ) async {
-      await render(tester, MeetingRole.owner);
-      await tester.tap(find.byKey(const ValueKey('moderate-guest')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Tam yöneticiliği devret'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Konuk tam yönetici olur'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('confirm-transfer')));
-      await tester.pumpAndSettle();
-      expect(transfers, ['guest']);
-    });
+    await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Toplantıdan çıkar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-remove')));
+    await tester.pumpAndSettle();
+    expect(removed, ['guest']);
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('an admin role from the server unlocks ending the meeting', (
+  testWidgets('the members panel marks and protects the full admin', (
+    tester,
+  ) async {
+    const fullAdmin = MemberEntry(
+      id: 'owner',
+      identity: 'owner',
+      name: 'Sahip Can',
+      isLocal: false,
+      isMicEnabled: true,
+      role: MeetingRole.owner,
+    );
+    const guest = MemberEntry(
+      id: 'guest',
+      identity: 'guest',
+      name: 'Konuk',
+      isLocal: false,
+      isMicEnabled: true,
+    );
+    await tester.pumpWidget(
+      localized(
+        Scaffold(
+          body: MembersScreen(
+            members: const [local, guest, fullAdmin],
+            viewerPermissions: MeetingPermission.values.toSet(),
+            onMicrophoneChange: (_, _, _) async {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('role-badge-owner')), findsOneWidget);
+    expect(find.byKey(const ValueKey('moderate-owner')), findsNothing);
+    expect(find.byKey(const ValueKey('moderate-guest')), findsOneWidget);
+    // Roles and transfers live in the permissions window now.
+    await tester.tap(find.byKey(const ValueKey('moderate-guest')));
+    await tester.pumpAndSettle();
+    expect(find.text('Tam yöneticiliği devret'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the end-meeting permission unlocks ending the meeting', (
     tester,
   ) async {
     final participant = _TestLocal();
-    participant.values['meeting.role'] = 'moderator';
+    participant.values['meeting.permissions'] = 'end_meeting';
     final room = _TestRoom(local: participant);
     final api = _ModerationApi();
     await openExitTest(tester, room, api: api);
@@ -1728,6 +1767,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.leaves, 1);
     expect(api.closes, 0);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+  testWidgets('only people who may give permissions see the menu entry', (
+    tester,
+  ) async {
+    Future<void> openMenu() async {
+      await tester.tap(find.byTooltip('Daha fazla'));
+      await tester.pumpAndSettle();
+    }
+
+    final participant = _TestLocal()
+      ..values['meeting.permissions'] = 'share_screen';
+    await openExitTest(tester, _TestRoom(local: participant));
+    await openMenu();
+    expect(find.text('Yetkilendirmeler'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+
+    final granter = _TestLocal()
+      ..values['meeting.permissions'] = 'grant_permissions';
+    await openExitTest(tester, _TestRoom(local: granter));
+    await openMenu();
+    await tester.tap(find.text('Yetkilendirmeler'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('permissions-search')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
 
   testWidgets('a tap on the video toggles the controls, not one on them', (

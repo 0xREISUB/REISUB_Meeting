@@ -130,9 +130,23 @@ class MeetingSession extends ChangeNotifier {
         : MeetingRole.parse(value);
   }
 
-  bool get canModerate => role.canModerate;
   bool get isOwner => role == MeetingRole.owner;
   MeetingRole? _announcedRole;
+
+  static const permissionsAttribute = 'meeting.permissions';
+
+  /// What this participant may do. The full admin may do everything; for
+  /// anyone else the server keeps a LiveKit attribute up to date, and the
+  /// join response is used until it arrives.
+  Set<MeetingPermission> get permissions {
+    if (isOwner) return MeetingPermission.values.toSet();
+    final value = room.localParticipant?.attributes[permissionsAttribute];
+    return value == null
+        ? (_credentials?.permissions ?? const {})
+        : MeetingPermission.parseList(value);
+  }
+
+  bool can(MeetingPermission permission) => permissions.contains(permission);
 
   bool isConnecting = true;
   bool isRejoining = false;
@@ -346,7 +360,10 @@ class MeetingSession extends ChangeNotifier {
 
   Future<void> closeRoomForEveryone() async {
     final credentials = _credentials;
-    if (_inactive || credentials == null || !canModerate || endingRoom) {
+    if (_inactive ||
+        credentials == null ||
+        !can(MeetingPermission.endMeeting) ||
+        endingRoom) {
       return;
     }
     endingRoom = true;
@@ -431,7 +448,7 @@ class MeetingSession extends ChangeNotifier {
     if (_ownsScreenShare &&
         !changingScreenShare &&
         state.screenShareIdentity != room.localParticipant?.identity) {
-      if (!canModerate && !state.allowParticipantScreenShare) {
+      if (!can(MeetingPermission.shareScreen)) {
         _stopRevokedScreenShare();
       } else {
         unawaited(stopScreenShare());
@@ -455,6 +472,7 @@ class MeetingSession extends ChangeNotifier {
         isMicrophoneLocked: microphoneLocked,
         isLocal: true,
         role: role,
+        grantedPermissions: permissions,
         mirrorCamera: mirrorCamera,
         isMicEnabled: local?.isMicrophoneEnabled() ?? isMicEnabled,
         isSpeaking: local?.isSpeaking ?? false,
@@ -476,6 +494,9 @@ class MeetingSession extends ChangeNotifier {
                 : participant.name,
             isLocal: false,
             role: MeetingRole.parse(participant.attributes[roleAttribute]),
+            grantedPermissions: MeetingPermission.parseList(
+              participant.attributes[permissionsAttribute],
+            ),
             isMicEnabled: participant.isMicrophoneEnabled(),
             isSpeaking: participant.isSpeaking,
             videoTrack: _videoTrack(participant),
@@ -524,7 +545,13 @@ class MeetingSession extends ChangeNotifier {
     bool requestUnmute,
   ) async {
     final credentials = _credentials;
-    if (credentials == null || !canModerateMember(role, member)) return;
+    if (credentials == null || !canModerateMember(permissions, member)) return;
+    // Locking and unlocking need one permission, asking to unmute another.
+    if ((locked || member.isMicrophoneLocked) &&
+        !can(MeetingPermission.muteOthers)) {
+      return;
+    }
+    if (requestUnmute && !can(MeetingPermission.requestUnmute)) return;
     await api.setParticipantMicrophone(
       roomId: credentials.roomId,
       identity: member.identity,
@@ -533,18 +560,46 @@ class MeetingSession extends ChangeNotifier {
     );
   }
 
-  /// Owners only. Throws the server's error so the caller can show it.
-  Future<void> changeRole(MemberEntry member, MeetingRole newRole) async {
+  /// Whether this user may change [member]'s permissions: never the full
+  /// admin's or their own.
+  bool canChangePermissions(MemberEntry member) =>
+      can(MeetingPermission.grantPermissions) &&
+      !member.isLocal &&
+      member.identity.isNotEmpty &&
+      member.role != MeetingRole.owner;
+
+  /// Gives or takes back one of [member]'s permissions. Throws the server's
+  /// error so the caller can show it.
+  Future<void> setPermission(
+    MemberEntry member,
+    MeetingPermission permission,
+    bool on,
+  ) async {
     final credentials = _credentials;
-    if (credentials == null || !isOwner || member.identity.isEmpty) return;
-    await api.setParticipantRole(
+    if (credentials == null || !canChangePermissions(member)) return;
+    final next = {...member.grantedPermissions};
+    on ? next.add(permission) : next.remove(permission);
+    await api.setParticipantPermissions(
       roomId: credentials.roomId,
       identity: member.identity,
-      role: newRole,
+      permissions: next,
     );
   }
 
-  /// Owners only: [member] becomes owner and this user becomes an admin.
+  /// Removes [member] from the meeting; the server keeps them from joining
+  /// again. Throws the server's error so the caller can show it.
+  Future<void> removeMember(MemberEntry member) async {
+    final credentials = _credentials;
+    if (credentials == null ||
+        !can(MeetingPermission.removeMembers) ||
+        !canModerateMember(permissions, member)) {
+      return;
+    }
+    await api.removeParticipant(credentials.roomId, member.identity);
+  }
+
+  /// Full admin only: [member] becomes the full admin and this user keeps
+  /// every permission.
   Future<void> transferOwnership(MemberEntry member) async {
     final credentials = _credentials;
     if (credentials == null || !isOwner || member.isLocal) return;
@@ -564,14 +619,10 @@ class MeetingSession extends ChangeNotifier {
   }
 
   /// Whether leaving now hands full admin to someone else.
-  bool get isLastOwner =>
-      isOwner &&
-      !room.remoteParticipants.values.any(
-        (p) => p.attributes[roleAttribute] == MeetingRole.owner.name,
-      );
+  bool get isLastOwner => isOwner && room.remoteParticipants.isNotEmpty;
 
-  /// Tells the user when the server gives them a higher role, e.g. after the
-  /// last full admin left.
+  /// Tells the user when the server makes them the full admin, e.g. after
+  /// the previous one left.
   void _announceRoleChange() {
     if (room.localParticipant?.attributes[roleAttribute] == null) return;
     final current = role;
@@ -580,9 +631,6 @@ class MeetingSession extends ChangeNotifier {
     if (previous == null || previous == current) return;
     if (current == MeetingRole.owner) {
       _ui.showMessage(const AppException.localized(AppError.nowOwner));
-    } else if (current == MeetingRole.moderator &&
-        previous == MeetingRole.participant) {
-      _ui.showMessage(const AppException.localized(AppError.nowModerator));
     }
   }
 
@@ -835,18 +883,15 @@ class MeetingSession extends ChangeNotifier {
 
   bool get isSharingScreen => _localScreenSharing || _ownsScreenShare;
 
-  /// Whether the host allows this participant to share at all.
-  bool get screenSharingAllowed =>
-      canModerate || (sharing?.state.allowParticipantScreenShare ?? false);
+  /// Whether this participant may share their screen at all.
+  bool get screenSharingAllowed => can(MeetingPermission.shareScreen);
 
   bool get canToggleScreenShare {
-    final state = sharing?.state;
     if (changingScreenShare || !connection.isConnected) return false;
     if (isSharingScreen) return true;
-    // Only one person can share at a time, the host included.
+    // Only one person can share at a time, the full admin included.
     if (screenShareBusy) return false;
-    return canModerate ||
-        (sharing?.loaded == true && state!.allowParticipantScreenShare);
+    return screenSharingAllowed;
   }
 
   /// Another participant holds the room's single screen share.

@@ -8,7 +8,13 @@
   "inviteLinkCopied": "Invite link copied",
   "inviteServerTitle": "Switch server?",
   "inviteServerBody": "This invite is for a meeting on {server}. Switching signs you out of your current server.",
-  "@inviteServerBody": {"placeholders": {"server": {"type": "String"}}},
+  "@inviteServerBody": {
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
   "switchServer": "Switch",
   "inviteFinishMeetingFirst": "Leave the current meeting to open the invite.",
   "nameError": "You must enter a name",
@@ -68,6 +74,30 @@
   "collapseParticipants": "Show one person",
   "expandParticipants": "Show more people",
   "showPictureInPicture": "Show the small video",
+  "permissionsTitle": "Permissions",
+  "searchMembers": "Search members",
+  "noMembersFound": "No members found",
+  "permissionCount": "{count, plural, =0{No permissions} =1{1 permission} other{{count} permissions}}",
+  "@permissionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "permissionShareScreen": "Share their screen",
+  "permissionShareScreenHint": "Can show their screen to the meeting.",
+  "permissionMuteOthers": "Mute others",
+  "permissionMuteOthersHint": "Can turn off and lock other people's microphones.",
+  "permissionRequestUnmute": "Ask others to unmute",
+  "permissionRequestUnmuteHint": "Can ask other people to turn their microphones on.",
+  "permissionEndMeeting": "End the meeting",
+  "permissionEndMeetingHint": "Can end the meeting for everyone.",
+  "permissionGrant": "Give permissions",
+  "permissionGrantHint": "Can give and take back these permissions.",
+  "ownerHasAllPermissions": "The full admin has every permission.",
+  "cannotChangeOwnPermissions": "You can't change your own permissions.",
+  "selectMemberForPermissions": "Choose a member to see their permissions.",
   "membersTitle": "Members",
   "membersHeader": "{count} people attending · Page {current}/{total}",
   "memberCountLabel": "{count} members",
@@ -110,8 +140,6 @@
   "cameraSelectionHint": "Camera selection and live preview",
   "audioInputHint": "Input device and live audio level",
   "cameraInputHint": "Camera device and live preview",
-  "allowScreenSharing": "Allow participants to share their screens",
-  "oneScreenShareHint": "Only one person can share their screen at a time.",
   "microphoneManagement": "Microphone controls",
   "unlockMicrophone": "Unlock microphone",
   "lockMicrophone": "Mute and lock microphone",
@@ -129,23 +157,23 @@
   "meetingNotificationTitle": "Meeting in progress",
   "meetingNotificationBody": "Tap to return to the meeting.",
   "roleOwner": "Full admin",
-  "roleModerator": "Admin",
   "participantActions": "Participant actions",
-  "makeOwner": "Make full admin",
-  "makeModerator": "Make admin",
-  "removeAdminRole": "Remove admin rights",
   "transferOwnership": "Transfer full admin",
   "transferOwnershipTitle": "Transfer full admin?",
-  "transferOwnershipBody": "{name} becomes a full admin and you stay an admin.",
-  "@transferOwnershipBody": {"placeholders": {"name": {"type": "String"}}},
+  "transferOwnershipBody": "{name} becomes the full admin. You keep every permission.",
+  "@transferOwnershipBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "transfer": "Transfer",
-  "lastOwnerLeaveHint": "You are the only full admin. If you leave, full admin passes to an admin, or to a random participant if there is none.",
+  "lastOwnerLeaveHint": "You are the full admin. If you leave, the role passes to the person with the most permissions.",
   "youAreOwnerNow": "You are now a full admin.",
-  "youAreModeratorNow": "You are now an admin.",
   "lastOwnerError": "At least one full admin must remain.",
   "targetProtectedError": "You can't do this to this participant.",
   "ownerRequiredError": "Only full admins can do this.",
-  "moderatorRequiredError": "Only admins can do this.",
   "meetingEndedByYou": "You ended the meeting.",
   "selectScreenToShare": "Choose a screen to share",
   "screen": "Screen",
@@ -181,7 +209,7 @@
   "reconnectingMeeting": "Connection lost. Reconnecting…",
   "duplicateSession": "Disconnected because this session was opened on another device.",
   "meetingClosedByServer": "The meeting was closed by the server.",
-  "removedFromMeeting": "You were removed from the meeting by the server.",
+  "removedFromMeeting": "You were removed from this meeting and can't join it again.",
   "reconnectFailed": "Could not restore the connection. Try rejoining.",
   "meetingSessionLost": "The server lost the session. Please rejoin the meeting.",
   "meetingDisconnected": "Disconnected from the meeting. You are no longer connected to the room.",
@@ -355,5 +383,19 @@
   "englishLanguage": "English",
   "turkishLanguage": "Turkish",
   "screenShareNotificationTitle": "Your screen is being shared",
-  "screenShareNotificationBody": "Return to the meeting to stop sharing."
+  "screenShareNotificationBody": "Return to the meeting to stop sharing.",
+  "permissionRequiredError": "You don't have permission to do that.",
+  "permissionRemoveMembers": "Remove members",
+  "permissionRemoveMembersHint": "Can remove someone from the meeting and keep them out.",
+  "removeFromMeeting": "Remove from meeting",
+  "removeMemberTitle": "Remove {name} from the meeting?",
+  "removeMemberBody": "They won't be able to join this meeting again.",
+  "remove": "Remove",
+  "@removeMemberTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

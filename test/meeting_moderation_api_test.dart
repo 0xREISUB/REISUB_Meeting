@@ -107,10 +107,7 @@ void main() {
                 Response<dynamic>(
                   requestOptions: options,
                   statusCode: 200,
-                  data: {
-                    'allow_participant_screen_share': false,
-                    'screen_share_identity': '',
-                  },
+                  data: {'screen_share_identity': 'someone'},
                 ),
               );
             },
@@ -118,25 +115,22 @@ void main() {
         );
       final api = MeetingApi(dio: dio);
       expect(
-        (await api.getMeetingState('123-456-789')).allowParticipantScreenShare,
-        isFalse,
+        (await api.getMeetingState('123-456-789')).screenShareIdentity,
+        'someone',
       );
-      await api.updateMeetingSettings('123-456-789', allowScreenShare: true);
       await api.startScreenShare('123-456-789', 'my-identity');
       await api.stopScreenShare('123-456-789', 'my-identity');
       expect(requests.map((r) => r.uri.path), [
         '/rooms/123-456-789/state',
-        '/rooms/123-456-789/settings',
         '/rooms/123-456-789/screen-share/start',
         '/rooms/123-456-789/screen-share/stop',
       ]);
       expect(requests.first.method, 'GET');
-      expect(requests[1].data, {'allow_participant_screen_share': true});
       for (final request in requests) {
         expect(request.headers['Authorization'], 'Bearer app-session-token');
       }
+      expect(requests[1].data, {'identity': 'my-identity'});
       expect(requests[2].data, {'identity': 'my-identity'});
-      expect(requests[3].data, {'identity': 'my-identity'});
       dio.close();
     },
   );
@@ -200,7 +194,7 @@ void main() {
       for (final body in [
         null,
         'unexpected',
-        {'allow_participant_screen_share': 'yes'},
+        {'screen_share_identity': 42},
       ]) {
         final dio = Dio()
           ..interceptors.add(
@@ -229,7 +223,7 @@ void main() {
     },
   );
 
-  test('role, transfer and leave use the role routes', () async {
+  test('permissions, transfer and leave use their routes', () async {
     final requests = <RequestOptions>[];
     final dio = Dio()
       ..interceptors.add(
@@ -243,24 +237,77 @@ void main() {
         ),
       );
     final api = MeetingApi(dio: dio);
-    await api.setParticipantRole(
+    await api.setParticipantPermissions(
       roomId: '123-456-789',
       identity: 'user-7-a',
-      role: MeetingRole.moderator,
+      permissions: {
+        MeetingPermission.endMeeting,
+        MeetingPermission.shareScreen,
+      },
     );
     await api.transferOwnership('123-456-789', 'user-7-a');
     await api.leaveRoom('123-456-789');
     expect(requests.map((r) => r.uri.path), [
-      '/rooms/123-456-789/participants/user-7-a/role',
+      '/rooms/123-456-789/participants/user-7-a/permissions',
       '/rooms/123-456-789/transfer-ownership',
       '/rooms/123-456-789/leave',
     ]);
-    expect(requests[0].data, {'role': 'moderator'});
+    expect(requests.map((r) => r.method), ['PUT', 'POST', 'POST']);
+    // Server names, in a fixed order.
+    expect(requests[0].data, {
+      'permissions': ['share_screen', 'end_meeting'],
+    });
     expect(requests[1].data, {'identity': 'user-7-a'});
     for (final request in requests) {
-      expect(request.method, 'POST');
       expect(request.headers['Authorization'], 'Bearer app-session-token');
     }
+    dio.close();
+  });
+
+  test('removing a member uses its route; a removed user is told', () async {
+    final requests = <RequestOptions>[];
+    final dio = Dio()
+      ..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            requests.add(options);
+            if (options.path.endsWith('/rooms/join')) {
+              handler.reject(
+                DioException(
+                  requestOptions: options,
+                  type: DioExceptionType.badResponse,
+                  response: Response<dynamic>(
+                    requestOptions: options,
+                    statusCode: 403,
+                    data: {'error': 'removed', 'code': 'removed_from_room'},
+                  ),
+                ),
+              );
+              return;
+            }
+            handler.resolve(
+              Response<dynamic>(requestOptions: options, statusCode: 200),
+            );
+          },
+        ),
+      );
+    final api = MeetingApi(dio: dio);
+    await api.removeParticipant('123-456-789', 'user-7-a');
+    expect(
+      requests.single.uri.path,
+      '/rooms/123-456-789/participants/user-7-a/remove',
+    );
+    expect(requests.single.method, 'POST');
+    await expectLater(
+      api.joinRoom(roomId: '123-456-789', name: 'Ali'),
+      throwsA(
+        isA<MeetingApiException>().having(
+          (error) => error.code,
+          'code',
+          AppError.removedFromRoom,
+        ),
+      ),
+    );
     dio.close();
   });
 
@@ -274,31 +321,31 @@ void main() {
               type: DioExceptionType.badResponse,
               response: Response<dynamic>(
                 requestOptions: options,
-                statusCode: 409,
-                data: {'error': 'Son owner', 'code': 'last_owner'},
+                statusCode: 403,
+                data: {'error': 'Yetki yok', 'code': 'permission_required'},
               ),
             ),
           ),
         ),
       );
     await expectLater(
-      MeetingApi(dio: dio).setParticipantRole(
+      MeetingApi(dio: dio).setParticipantPermissions(
         roomId: '123-456-789',
         identity: 'user-1-a',
-        role: MeetingRole.participant,
+        permissions: const {},
       ),
       throwsA(
         isA<MeetingApiException>().having(
           (error) => error.code,
           'code',
-          AppError.lastOwner,
+          AppError.permissionRequired,
         ),
       ),
     );
     dio.close();
   });
 
-  test('join responses carry the role, falling back to is_host', () {
+  test('join responses carry the role and permissions', () {
     RoomCredentials parse(Map<String, dynamic> extra) =>
         RoomCredentials.fromJson({
           'room_id': '123-456-789',
@@ -307,11 +354,19 @@ void main() {
           'participant': 'Ali',
           ...extra,
         });
+    // The former admin role is a participant now.
     expect(
       parse({'is_host': true, 'role': 'moderator'}).initialRole,
-      MeetingRole.moderator,
+      MeetingRole.participant,
     );
     expect(parse({'is_host': true}).initialRole, MeetingRole.owner);
     expect(parse({}).initialRole, MeetingRole.participant);
+    expect(
+      parse({
+        'permissions': ['mute_others', 'unknown', 'grant_permissions'],
+      }).permissions,
+      {MeetingPermission.muteOthers, MeetingPermission.grantPermissions},
+    );
+    expect(parse({}).permissions, isEmpty);
   });
 }

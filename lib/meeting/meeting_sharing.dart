@@ -60,8 +60,6 @@ class MeetingSharing extends ChangeNotifier {
     }
   }
 
-  Future<void> setAllowed(bool value) =>
-      _update(() => api.updateMeetingSettings(roomId, allowScreenShare: value));
   Future<void> acquire(String identity) =>
       _update(() => api.startScreenShare(roomId, identity));
   Future<void> release(String identity) =>

@@ -196,6 +196,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showPictureInPicture => 'Show the small video';
 
   @override
+  String get permissionsTitle => 'Permissions';
+
+  @override
+  String get searchMembers => 'Search members';
+
+  @override
+  String get noMembersFound => 'No members found';
+
+  @override
+  String permissionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count permissions',
+      one: '1 permission',
+      zero: 'No permissions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get permissionShareScreen => 'Share their screen';
+
+  @override
+  String get permissionShareScreenHint =>
+      'Can show their screen to the meeting.';
+
+  @override
+  String get permissionMuteOthers => 'Mute others';
+
+  @override
+  String get permissionMuteOthersHint =>
+      'Can turn off and lock other people\'s microphones.';
+
+  @override
+  String get permissionRequestUnmute => 'Ask others to unmute';
+
+  @override
+  String get permissionRequestUnmuteHint =>
+      'Can ask other people to turn their microphones on.';
+
+  @override
+  String get permissionEndMeeting => 'End the meeting';
+
+  @override
+  String get permissionEndMeetingHint => 'Can end the meeting for everyone.';
+
+  @override
+  String get permissionGrant => 'Give permissions';
+
+  @override
+  String get permissionGrantHint => 'Can give and take back these permissions.';
+
+  @override
+  String get ownerHasAllPermissions => 'The full admin has every permission.';
+
+  @override
+  String get cannotChangeOwnPermissions =>
+      'You can\'t change your own permissions.';
+
+  @override
+  String get selectMemberForPermissions =>
+      'Choose a member to see their permissions.';
+
+  @override
   String get membersTitle => 'Members';
 
   @override
@@ -314,13 +379,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraInputHint => 'Camera device and live preview';
 
   @override
-  String get allowScreenSharing => 'Allow participants to share their screens';
-
-  @override
-  String get oneScreenShareHint =>
-      'Only one person can share their screen at a time.';
-
-  @override
   String get microphoneManagement => 'Microphone controls';
 
   @override
@@ -374,19 +432,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roleOwner => 'Full admin';
 
   @override
-  String get roleModerator => 'Admin';
-
-  @override
   String get participantActions => 'Participant actions';
-
-  @override
-  String get makeOwner => 'Make full admin';
-
-  @override
-  String get makeModerator => 'Make admin';
-
-  @override
-  String get removeAdminRole => 'Remove admin rights';
 
   @override
   String get transferOwnership => 'Transfer full admin';
@@ -396,7 +442,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String transferOwnershipBody(String name) {
-    return '$name becomes a full admin and you stay an admin.';
+    return '$name becomes the full admin. You keep every permission.';
   }
 
   @override
@@ -404,13 +450,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lastOwnerLeaveHint =>
-      'You are the only full admin. If you leave, full admin passes to an admin, or to a random participant if there is none.';
+      'You are the full admin. If you leave, the role passes to the person with the most permissions.';
 
   @override
   String get youAreOwnerNow => 'You are now a full admin.';
-
-  @override
-  String get youAreModeratorNow => 'You are now an admin.';
 
   @override
   String get lastOwnerError => 'At least one full admin must remain.';
@@ -420,9 +463,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerRequiredError => 'Only full admins can do this.';
-
-  @override
-  String get moderatorRequiredError => 'Only admins can do this.';
 
   @override
   String get meetingEndedByYou => 'You ended the meeting.';
@@ -540,7 +580,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removedFromMeeting =>
-      'You were removed from the meeting by the server.';
+      'You were removed from this meeting and can\'t join it again.';
 
   @override
   String get reconnectFailed =>
@@ -750,4 +790,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get screenShareNotificationBody =>
       'Return to the meeting to stop sharing.';
+
+  @override
+  String get permissionRequiredError =>
+      'You don\'t have permission to do that.';
+
+  @override
+  String get permissionRemoveMembers => 'Remove members';
+
+  @override
+  String get permissionRemoveMembersHint =>
+      'Can remove someone from the meeting and keep them out.';
+
+  @override
+  String get removeFromMeeting => 'Remove from meeting';
+
+  @override
+  String removeMemberTitle(String name) {
+    return 'Remove $name from the meeting?';
+  }
+
+  @override
+  String get removeMemberBody =>
+      'They won\'t be able to join this meeting again.';
+
+  @override
+  String get remove => 'Remove';
 }

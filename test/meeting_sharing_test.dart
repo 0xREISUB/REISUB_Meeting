@@ -10,29 +10,17 @@ import 'package:v_meeting/meeting/widgets/meeting_settings_dialog.dart';
 class _SharingApi extends MeetingApi {
   MeetingState state = const MeetingState();
   Completer<MeetingState>? pendingRead;
-  final changes = <bool>[];
 
   @override
   Future<MeetingState> getMeetingState(String roomId) async =>
       pendingRead == null ? state : pendingRead!.future;
-  @override
-  Future<MeetingState> updateMeetingSettings(
-    String roomId, {
-    required bool allowScreenShare,
-  }) async {
-    changes.add(allowScreenShare);
-    return state = MeetingState(allowParticipantScreenShare: allowScreenShare);
-  }
-
   @override
   Future<MeetingState> startScreenShare(String roomId, String identity) async =>
       state = MeetingState(screenShareIdentity: identity);
 }
 
 void main() {
-  testWidgets('every participant can open microphone and camera tests', (
-    tester,
-  ) async {
+  testWidgets('meeting settings only hold the device tests', (tester) async {
     final opened = <bool>[];
     await tester.pumpWidget(
       MaterialApp(
@@ -63,33 +51,4 @@ void main() {
     expect(sharing.state.screenShareIdentity, 'current-session');
     sharing.dispose();
   });
-
-  testWidgets(
-    'meeting settings start disabled and persist explicit owner changes',
-    (tester) async {
-      final api = _SharingApi();
-      final sharing = MeetingSharing(roomId: '123-456-789', api: api);
-      await sharing.refresh();
-      await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('tr'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: MeetingSettingsDialog(sharing: sharing)),
-        ),
-      );
-      final toggle = find.byType(SwitchListTile);
-      expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
-      await tester.tap(toggle);
-      await tester.pumpAndSettle();
-      expect(api.changes, [true]);
-      expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
-      await tester.tap(toggle);
-      await tester.pumpAndSettle();
-      expect(api.changes, [true, false]);
-      expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
-      await tester.pumpWidget(const SizedBox());
-      sharing.dispose();
-    },
-  );
 }

@@ -10,6 +10,7 @@ import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
 import 'package:v_meeting/meeting/meeting_display.dart';
 import 'package:v_meeting/meeting/meeting_media.dart';
+import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/meeting/meeting_platform.dart';
 import 'package:v_meeting/meeting/meeting_session.dart';
 import 'package:v_meeting/meeting/members_screen.dart';
@@ -19,6 +20,7 @@ import 'package:v_meeting/meeting/widgets/meeting_controls_bar.dart';
 import 'package:v_meeting/meeting/widgets/meeting_joining_overlay.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 import 'package:v_meeting/meeting/widgets/meeting_settings_dialog.dart';
+import 'package:v_meeting/meeting/widgets/permissions_dialog.dart';
 import 'package:v_meeting/meeting/widgets/screen_source_picker.dart';
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/media_privacy.dart';
@@ -243,7 +245,8 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
 
   Future<void> _requestLeaveMeeting() async {
     if (_session.endingRoom || _exitDialogOpen) return;
-    if (!_session.canModerate) {
+    // Only people who may end the meeting are asked whether to.
+    if (!_session.can(MeetingPermission.endMeeting)) {
       _session.leave(MeetingExitReason.left);
       return;
     }
@@ -300,12 +303,26 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
           listenable: _session.room,
           builder: (context, _) => MembersScreen(
             members: _session.members(localName: _l10n.you),
-            viewerRole: _session.role,
+            viewerPermissions: _session.permissions,
             onMicrophoneChange: _session.moderateMicrophone,
-            onRoleChange: _session.changeRole,
-            onTransferOwnership: _session.transferOwnership,
+            onRemove: _session.removeMember,
           ),
         ),
+      ),
+    );
+  }
+
+  void _openPermissions() {
+    unawaited(
+      showPermissionsDialog(
+        context,
+        listenable: _session.room,
+        members: () => _session.members(localName: _l10n.you),
+        canChange: _session.canChangePermissions,
+        onChanged: _session.setPermission,
+        onTransferOwnership: _session.isOwner
+            ? _session.transferOwnership
+            : null,
       ),
     );
   }
@@ -325,14 +342,10 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   void _openMeetingSettings() {
-    final sharing = _session.canModerate ? _session.sharing : null;
-    if (sharing != null) unawaited(sharing.refresh());
     showDialog<void>(
       context: context,
-      builder: (_) => MeetingSettingsDialog(
-        sharing: sharing,
-        onDeviceTest: _openMeetingDeviceTest,
-      ),
+      builder: (_) =>
+          MeetingSettingsDialog(onDeviceTest: _openMeetingDeviceTest),
     );
   }
 
@@ -463,6 +476,10 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                                 ? session.toggleScreenShare
                                 : null,
                             onOpenSettings: _openMeetingSettings,
+                            onOpenPermissions:
+                                session.can(MeetingPermission.grantPermissions)
+                                ? _openPermissions
+                                : null,
                             onShowRoomCode: () => setState(() {
                               _showRoomCode = true;
                               _roomCodeRequests++;

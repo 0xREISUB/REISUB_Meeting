@@ -5,38 +5,31 @@ import 'package:v_meeting/meeting/meeting_member.dart';
 
 typedef MicrophoneModerationCallback =
     Future<void> Function(MemberEntry member, bool locked, bool requestUnmute);
-typedef RoleChangeCallback =
-    Future<void> Function(MemberEntry member, MeetingRole role);
 typedef MemberCallback = Future<void> Function(MemberEntry member);
 
-enum _MemberAction {
-  lock,
-  unlock,
-  requestUnmute,
-  makeOwner,
-  makeModerator,
-  makeParticipant,
-  transferOwnership,
-}
+enum _MemberAction { lock, unlock, requestUnmute, remove }
 
-/// Live participants with their roles. Admins get microphone controls for
-/// the people they may moderate; full admins can also change roles.
+/// Live participants, with the full admin marked. People who may mute
+/// others or ask them to unmute get those controls; permissions themselves
+/// are managed in the permissions window.
 class MembersScreen extends StatefulWidget {
   final List<String> names;
   final List<MemberEntry>? members;
-  final MeetingRole viewerRole;
+
+  /// What the viewer may do; decides which controls appear.
+  final Set<MeetingPermission> viewerPermissions;
   final MicrophoneModerationCallback? onMicrophoneChange;
-  final RoleChangeCallback? onRoleChange;
-  final MemberCallback? onTransferOwnership;
+
+  /// Removes someone from the meeting for good.
+  final MemberCallback? onRemove;
 
   const MembersScreen({
     super.key,
     this.names = const [],
     this.members,
-    this.viewerRole = MeetingRole.participant,
+    this.viewerPermissions = const {},
     this.onMicrophoneChange,
-    this.onRoleChange,
-    this.onTransferOwnership,
+    this.onRemove,
   });
 
   @override
@@ -47,20 +40,45 @@ class _MembersScreenState extends State<MembersScreen> {
   final Set<String> _busy = {};
   Object? _error;
 
+  bool get _canMute =>
+      widget.viewerPermissions.contains(MeetingPermission.muteOthers);
+  bool get _canRequestUnmute =>
+      widget.viewerPermissions.contains(MeetingPermission.requestUnmute);
+  bool get _canRemove =>
+      widget.onRemove != null &&
+      widget.viewerPermissions.contains(MeetingPermission.removeMembers);
+
   bool _canModerateMicrophone(MemberEntry member) =>
       widget.onMicrophoneChange != null &&
-      canModerateMember(widget.viewerRole, member);
+      canModerateMember(widget.viewerPermissions, member);
 
-  bool _canManageRole(MemberEntry member) =>
-      widget.viewerRole == MeetingRole.owner &&
-      !member.isLocal &&
-      member.identity.isNotEmpty &&
-      widget.onRoleChange != null;
+  Future<bool> _confirmRemove(MemberEntry member) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.removeMemberTitle(member.name)),
+        content: Text(l10n.removeMemberBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            key: const ValueKey('confirm-remove'),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.remove),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
 
   Future<void> _run(MemberEntry member, _MemberAction action) async {
     if (_busy.contains(member.identity)) return;
-    if (action == _MemberAction.transferOwnership &&
-        !await _confirmTransfer(member)) {
+    if (action == _MemberAction.remove && !await _confirmRemove(member)) {
       return;
     }
     if (!mounted) return;
@@ -81,49 +99,13 @@ class _MembersScreenState extends State<MembersScreen> {
           false,
           true,
         ),
-        _MemberAction.makeOwner => widget.onRoleChange!(
-          member,
-          MeetingRole.owner,
-        ),
-        _MemberAction.makeModerator => widget.onRoleChange!(
-          member,
-          MeetingRole.moderator,
-        ),
-        _MemberAction.makeParticipant => widget.onRoleChange!(
-          member,
-          MeetingRole.participant,
-        ),
-        _MemberAction.transferOwnership =>
-          widget.onTransferOwnership?.call(member) ?? Future<void>.value(),
+        _MemberAction.remove => widget.onRemove!(member),
       };
     } catch (error) {
       if (mounted) setState(() => _error = error);
     } finally {
       if (mounted) setState(() => _busy.remove(member.identity));
     }
-  }
-
-  Future<bool> _confirmTransfer(MemberEntry member) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.transferOwnershipTitle),
-        content: Text(l10n.transferOwnershipBody(member.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            key: const ValueKey('confirm-transfer'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.transfer),
-          ),
-        ],
-      ),
-    );
-    return confirmed == true;
   }
 
   List<PopupMenuEntry<_MemberAction>> _menuItems(
@@ -135,31 +117,47 @@ class _MembersScreenState extends State<MembersScreen> {
           value: value,
           child: Text(text, style: const TextStyle(color: Colors.white)),
         );
+    if (!canModerateMember(widget.viewerPermissions, member)) return [];
     final microphone = _canModerateMicrophone(member);
-    final roles = _canManageRole(member);
     return [
-      if (microphone) ...[
+      if (microphone && _canMute)
         if (member.isMicrophoneLocked)
           item(_MemberAction.unlock, l10n.unlockMicrophone)
         else
           item(_MemberAction.lock, l10n.lockMicrophone),
+      // Asking a locked person to unmute also unlocks them.
+      if (microphone &&
+          _canRequestUnmute &&
+          (_canMute || !member.isMicrophoneLocked))
         item(
           _MemberAction.requestUnmute,
           member.isMicrophoneLocked
               ? l10n.unlockAndRequestMicrophone
               : l10n.requestMicrophone,
         ),
-      ],
-      if (microphone && roles) const PopupMenuDivider(),
-      if (roles) ...[
-        if (member.role != MeetingRole.owner)
-          item(_MemberAction.makeOwner, l10n.makeOwner),
-        if (member.role != MeetingRole.moderator)
-          item(_MemberAction.makeModerator, l10n.makeModerator),
-        if (member.role != MeetingRole.participant)
-          item(_MemberAction.makeParticipant, l10n.removeAdminRole),
-        if (widget.onTransferOwnership != null)
-          item(_MemberAction.transferOwnership, l10n.transferOwnership),
+      if (_canRemove) ...[
+        if (microphone && (_canMute || _canRequestUnmute))
+          const PopupMenuDivider(),
+        PopupMenuItem(
+          value: _MemberAction.remove,
+          child: Row(
+            children: [
+              const Icon(
+                Icons.person_remove_rounded,
+                color: Colors.redAccent,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  l10n.removeFromMeeting,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     ];
   }
@@ -219,8 +217,7 @@ class _MembersScreenState extends State<MembersScreen> {
               itemBuilder: (context, index) {
                 final member = members?[index];
                 final hasActions =
-                    member != null &&
-                    (_canModerateMicrophone(member) || _canManageRole(member));
+                    member != null && _menuItems(member, l10n).isNotEmpty;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
@@ -249,8 +246,8 @@ class _MembersScreenState extends State<MembersScreen> {
                           ),
                         ),
                       ),
-                      if (member != null && member.role.canModerate)
-                        _RoleBadge(role: member.role),
+                      if (member != null && member.role == MeetingRole.owner)
+                        const _OwnerBadge(),
                       if (hasActions)
                         if (_busy.contains(member.identity))
                           const Padding(
@@ -285,18 +282,14 @@ class _MembersScreenState extends State<MembersScreen> {
   }
 }
 
-class _RoleBadge extends StatelessWidget {
-  const _RoleBadge({required this.role});
-
-  final MeetingRole role;
+class _OwnerBadge extends StatelessWidget {
+  const _OwnerBadge();
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final owner = role == MeetingRole.owner;
-    final color = owner ? const Color(0xFFFFC857) : const Color(0xFFB69BFF);
+    const color = Color(0xFFFFC857);
     return Container(
-      key: ValueKey('role-badge-${role.name}'),
+      key: const ValueKey('role-badge-owner'),
       margin: const EdgeInsets.only(left: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -306,15 +299,11 @@ class _RoleBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            owner ? Icons.star_rounded : Icons.shield_rounded,
-            size: 14,
-            color: color,
-          ),
+          const Icon(Icons.star_rounded, size: 14, color: color),
           const SizedBox(width: 4),
           Text(
-            owner ? l10n.roleOwner : l10n.roleModerator,
-            style: TextStyle(
+            AppLocalizations.of(context)!.roleOwner,
+            style: const TextStyle(
               color: color,
               fontSize: 12,
               fontWeight: FontWeight.w600,

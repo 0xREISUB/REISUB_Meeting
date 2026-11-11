@@ -1,32 +1,62 @@
 import 'package:livekit_client/livekit_client.dart';
 
-/// A participant's role in a meeting, as granted by the server.
+/// A participant's role in a meeting, as granted by the server. There is
+/// one full admin; everyone else is a participant with the permissions
+/// given to them.
 enum MeetingRole {
-  /// Full admin: everything an admin can do, plus changing roles.
+  /// Full admin: has every permission and can hand the role over.
   owner,
-
-  /// Admin: microphone moderation, screen-share policy, ending the meeting.
-  moderator,
   participant;
 
-  /// Reads the server's role name; unknown or empty means participant.
-  static MeetingRole parse(String? value) => switch (value) {
-    'owner' => owner,
-    'moderator' => moderator,
-    _ => participant,
-  };
-
-  bool get canModerate => this != participant;
+  /// Reads the server's role name; anything else, including the former
+  /// "moderator", means participant.
+  static MeetingRole parse(String? value) =>
+      value == 'owner' ? owner : participant;
 }
 
-/// Whether [viewer] may lock, unmute-request or stop the share of [target].
-/// The server protects owners from everyone and admins from other admins.
-bool canModerateMember(MeetingRole viewer, MemberEntry target) =>
-    viewer.canModerate &&
+/// What a participant may do besides taking part. The full admin has all
+/// of them; anyone else has only those given to them.
+enum MeetingPermission {
+  shareScreen('share_screen'),
+  muteOthers('mute_others'),
+  requestUnmute('request_unmute'),
+  removeMembers('remove_members'),
+  endMeeting('end_meeting'),
+  grantPermissions('grant_permissions');
+
+  const MeetingPermission(this.wireName);
+
+  /// The name the server uses.
+  final String wireName;
+
+  /// Permissions that can't be undone or affect everyone, shown in red.
+  bool get isDangerous =>
+      this == removeMembers || this == endMeeting || this == grantPermissions;
+
+  /// Reads a comma-separated list from the server, ignoring unknown names.
+  static Set<MeetingPermission> parseList(String? value) => {
+    for (final name in (value ?? '').split(','))
+      for (final permission in values)
+        if (permission.wireName == name.trim()) permission,
+  };
+
+  /// Reads a JSON list from the server, ignoring unknown names.
+  static Set<MeetingPermission> fromJson(Object? value) =>
+      value is List ? parseList(value.whereType<String>().join(',')) : {};
+}
+
+/// Whether someone with [viewerPermissions] may lock, unmute-request or
+/// remove [target]: never yourself or the full admin.
+bool canModerateMember(
+  Set<MeetingPermission> viewerPermissions,
+  MemberEntry target,
+) =>
     !target.isLocal &&
     target.identity.isNotEmpty &&
     target.role != MeetingRole.owner &&
-    !(viewer == MeetingRole.moderator && target.role == MeetingRole.moderator);
+    (viewerPermissions.contains(MeetingPermission.muteOthers) ||
+        viewerPermissions.contains(MeetingPermission.requestUnmute) ||
+        viewerPermissions.contains(MeetingPermission.removeMembers));
 
 /// A participant as shown in the meeting UI.
 class MemberEntry {
@@ -44,6 +74,9 @@ class MemberEntry {
   final bool mirrorCamera;
   final MeetingRole role;
 
+  /// Permissions given to this person; the full admin has them all.
+  final Set<MeetingPermission> grantedPermissions;
+
   const MemberEntry({
     required this.id,
     required this.name,
@@ -58,7 +91,13 @@ class MemberEntry {
     this.isScreenShare = false,
     this.mirrorCamera = true,
     this.role = MeetingRole.participant,
+    this.grantedPermissions = const {},
   });
+
+  /// What this person may do: everything for the full admin.
+  Set<MeetingPermission> get permissions => role == MeetingRole.owner
+      ? MeetingPermission.values.toSet()
+      : grantedPermissions;
 }
 
 /// The main video: a shared screen first, then [speakerId] or another

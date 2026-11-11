@@ -458,6 +458,108 @@ abstract class AppLocalizations {
   /// **'Show the small video'**
   String get showPictureInPicture;
 
+  /// No description provided for @permissionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get permissionsTitle;
+
+  /// No description provided for @searchMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search members'**
+  String get searchMembers;
+
+  /// No description provided for @noMembersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No members found'**
+  String get noMembersFound;
+
+  /// No description provided for @permissionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No permissions} =1{1 permission} other{{count} permissions}}'**
+  String permissionCount(int count);
+
+  /// No description provided for @permissionShareScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Share their screen'**
+  String get permissionShareScreen;
+
+  /// No description provided for @permissionShareScreenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Can show their screen to the meeting.'**
+  String get permissionShareScreenHint;
+
+  /// No description provided for @permissionMuteOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute others'**
+  String get permissionMuteOthers;
+
+  /// No description provided for @permissionMuteOthersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Can turn off and lock other people\'s microphones.'**
+  String get permissionMuteOthersHint;
+
+  /// No description provided for @permissionRequestUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask others to unmute'**
+  String get permissionRequestUnmute;
+
+  /// No description provided for @permissionRequestUnmuteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Can ask other people to turn their microphones on.'**
+  String get permissionRequestUnmuteHint;
+
+  /// No description provided for @permissionEndMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'End the meeting'**
+  String get permissionEndMeeting;
+
+  /// No description provided for @permissionEndMeetingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Can end the meeting for everyone.'**
+  String get permissionEndMeetingHint;
+
+  /// No description provided for @permissionGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Give permissions'**
+  String get permissionGrant;
+
+  /// No description provided for @permissionGrantHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Can give and take back these permissions.'**
+  String get permissionGrantHint;
+
+  /// No description provided for @ownerHasAllPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'The full admin has every permission.'**
+  String get ownerHasAllPermissions;
+
+  /// No description provided for @cannotChangeOwnPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t change your own permissions.'**
+  String get cannotChangeOwnPermissions;
+
+  /// No description provided for @selectMemberForPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a member to see their permissions.'**
+  String get selectMemberForPermissions;
+
   /// No description provided for @membersTitle.
   ///
   /// In en, this message translates to:
@@ -668,18 +770,6 @@ abstract class AppLocalizations {
   /// **'Camera device and live preview'**
   String get cameraInputHint;
 
-  /// No description provided for @allowScreenSharing.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow participants to share their screens'**
-  String get allowScreenSharing;
-
-  /// No description provided for @oneScreenShareHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Only one person can share their screen at a time.'**
-  String get oneScreenShareHint;
-
   /// No description provided for @microphoneManagement.
   ///
   /// In en, this message translates to:
@@ -782,35 +872,11 @@ abstract class AppLocalizations {
   /// **'Full admin'**
   String get roleOwner;
 
-  /// No description provided for @roleModerator.
-  ///
-  /// In en, this message translates to:
-  /// **'Admin'**
-  String get roleModerator;
-
   /// No description provided for @participantActions.
   ///
   /// In en, this message translates to:
   /// **'Participant actions'**
   String get participantActions;
-
-  /// No description provided for @makeOwner.
-  ///
-  /// In en, this message translates to:
-  /// **'Make full admin'**
-  String get makeOwner;
-
-  /// No description provided for @makeModerator.
-  ///
-  /// In en, this message translates to:
-  /// **'Make admin'**
-  String get makeModerator;
-
-  /// No description provided for @removeAdminRole.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove admin rights'**
-  String get removeAdminRole;
 
   /// No description provided for @transferOwnership.
   ///
@@ -827,7 +893,7 @@ abstract class AppLocalizations {
   /// No description provided for @transferOwnershipBody.
   ///
   /// In en, this message translates to:
-  /// **'{name} becomes a full admin and you stay an admin.'**
+  /// **'{name} becomes the full admin. You keep every permission.'**
   String transferOwnershipBody(String name);
 
   /// No description provided for @transfer.
@@ -839,7 +905,7 @@ abstract class AppLocalizations {
   /// No description provided for @lastOwnerLeaveHint.
   ///
   /// In en, this message translates to:
-  /// **'You are the only full admin. If you leave, full admin passes to an admin, or to a random participant if there is none.'**
+  /// **'You are the full admin. If you leave, the role passes to the person with the most permissions.'**
   String get lastOwnerLeaveHint;
 
   /// No description provided for @youAreOwnerNow.
@@ -847,12 +913,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are now a full admin.'**
   String get youAreOwnerNow;
-
-  /// No description provided for @youAreModeratorNow.
-  ///
-  /// In en, this message translates to:
-  /// **'You are now an admin.'**
-  String get youAreModeratorNow;
 
   /// No description provided for @lastOwnerError.
   ///
@@ -871,12 +931,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only full admins can do this.'**
   String get ownerRequiredError;
-
-  /// No description provided for @moderatorRequiredError.
-  ///
-  /// In en, this message translates to:
-  /// **'Only admins can do this.'**
-  String get moderatorRequiredError;
 
   /// No description provided for @meetingEndedByYou.
   ///
@@ -1091,7 +1145,7 @@ abstract class AppLocalizations {
   /// No description provided for @removedFromMeeting.
   ///
   /// In en, this message translates to:
-  /// **'You were removed from the meeting by the server.'**
+  /// **'You were removed from this meeting and can\'t join it again.'**
   String get removedFromMeeting;
 
   /// No description provided for @reconnectFailed.
@@ -1411,6 +1465,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Return to the meeting to stop sharing.'**
   String get screenShareNotificationBody;
+
+  /// No description provided for @permissionRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do that.'**
+  String get permissionRequiredError;
+
+  /// No description provided for @permissionRemoveMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove members'**
+  String get permissionRemoveMembers;
+
+  /// No description provided for @permissionRemoveMembersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Can remove someone from the meeting and keep them out.'**
+  String get permissionRemoveMembersHint;
+
+  /// No description provided for @removeFromMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from meeting'**
+  String get removeFromMeeting;
+
+  /// No description provided for @removeMemberTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from the meeting?'**
+  String removeMemberTitle(String name);
+
+  /// No description provided for @removeMemberBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They won\'t be able to join this meeting again.'**
+  String get removeMemberBody;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
 }
 
 class _AppLocalizationsDelegate

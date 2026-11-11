@@ -194,7 +194,7 @@ void main() {
         builder: (context, value, _) => localized(
           Scaffold(
             body: MembersScreen(
-              viewerRole: MeetingRole.owner,
+              viewerPermissions: MeetingPermission.values.toSet(),
               members: const [
                 MemberEntry(
                   id: 'guest',

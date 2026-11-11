@@ -16,6 +16,9 @@ class RoomCredentials {
   /// servers only send is_host.
   final MeetingRole? role;
 
+  /// Permissions at join time; live changes arrive as a LiveKit attribute.
+  final Set<MeetingPermission> permissions;
+
   /// Shareable invite link from the server, if it provides one.
   final String? inviteUrl;
 
@@ -29,6 +32,7 @@ class RoomCredentials {
     required this.participant,
     required this.isHost,
     this.role,
+    this.permissions = const {},
     this.inviteUrl,
   });
 
@@ -42,23 +46,19 @@ class RoomCredentials {
       role: json['role'] is String
           ? MeetingRole.parse(json['role'] as String)
           : null,
+      permissions: MeetingPermission.fromJson(json['permissions']),
       inviteUrl: json['invite_url'] as String?,
     );
   }
 }
 
+/// The room's shared state: who holds its single screen share.
 class MeetingState {
-  final bool allowParticipantScreenShare;
   final String screenShareIdentity;
 
-  const MeetingState({
-    this.allowParticipantScreenShare = false,
-    this.screenShareIdentity = '',
-  });
+  const MeetingState({this.screenShareIdentity = ''});
 
   factory MeetingState.fromJson(Map<String, dynamic> json) => MeetingState(
-    allowParticipantScreenShare:
-        json['allow_participant_screen_share'] as bool? ?? false,
     screenShareIdentity: json['screen_share_identity'] as String? ?? '',
   );
 }
@@ -129,13 +129,6 @@ class MeetingApi {
     MeetingState.fromJson,
   );
 
-  Future<MeetingState> updateMeetingSettings(
-    String roomId, {
-    required bool allowScreenShare,
-  }) => _sharingRequest(roomId, 'settings', {
-    'allow_participant_screen_share': allowScreenShare,
-  });
-
   Future<MeetingState> startScreenShare(String roomId, String identity) =>
       _sharingRequest(roomId, 'screen-share/start', {'identity': identity});
 
@@ -168,20 +161,39 @@ class MeetingApi {
     );
   }
 
-  /// Owners only. [role] is applied even if the user is not connected.
-  Future<void> setParticipantRole({
+  /// Replaces [identity]'s permissions. Needs the full admin or the
+  /// permission to give permissions; the full admin and yourself can't be
+  /// changed. Applies even if the user is not connected.
+  Future<void> setParticipantPermissions({
     required String roomId,
     required String identity,
-    required MeetingRole role,
+    required Set<MeetingPermission> permissions,
   }) async {
     await _send(
-      'POST',
-      '${_room(roomId)}/participants/${Uri.encodeComponent(identity)}/role',
-      data: {'role': role.name},
+      'PUT',
+      '${_room(roomId)}/participants/${Uri.encodeComponent(identity)}/permissions',
+      data: {
+        'permissions': [
+          for (final permission in MeetingPermission.values)
+            if (permissions.contains(permission)) permission.wireName,
+        ],
+      },
     );
   }
 
-  /// Owners only: [identity] becomes owner and the caller becomes moderator.
+  /// Removes [identity] from the meeting for good: the server disconnects
+  /// them and refuses their later joins. Needs the permission to remove
+  /// members; the full admin and yourself can't be removed.
+  Future<void> removeParticipant(String roomId, String identity) async {
+    await _send(
+      'POST',
+      '${_room(roomId)}/participants/${Uri.encodeComponent(identity)}/remove',
+      data: const {},
+    );
+  }
+
+  /// Full admin only: [identity] becomes the full admin and the caller keeps
+  /// every permission as a participant.
   Future<void> transferOwnership(String roomId, String identity) async {
     await _send(
       'POST',
@@ -363,7 +375,8 @@ class MeetingApi {
       'last_owner' => AppError.lastOwner,
       'target_protected' => AppError.targetProtected,
       'owner_required' => AppError.ownerRequired,
-      'not_room_owner' => AppError.moderatorRequired,
+      'permission_required' || 'not_room_owner' => AppError.permissionRequired,
+      'removed_from_room' => AppError.removedFromRoom,
       _ => null,
     };
     if (known != null) return MeetingApiException.localized(known);
