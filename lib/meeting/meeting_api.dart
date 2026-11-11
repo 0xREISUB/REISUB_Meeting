@@ -478,9 +478,15 @@ class MeetingApi {
       'owner_required' => AppError.ownerRequired,
       'permission_required' || 'not_room_owner' => AppError.permissionRequired,
       'removed_from_room' => AppError.removedFromRoom,
+      'guests_not_allowed' => AppError.loginRequired,
       _ => null,
     };
-    if (known != null) return MeetingApiException.localized(known);
+    if (known != null) {
+      return MeetingApiException.localized(
+        known,
+        loginRequired: known == AppError.loginRequired,
+      );
+    }
     final message = responseData is Map ? responseData['error'] : null;
     return message is String && message.isNotEmpty
         ? MeetingApiException(message)

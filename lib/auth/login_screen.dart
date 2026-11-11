@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/auth_api.dart';
+import 'package:v_meeting/auth/host_screen.dart';
 import 'package:v_meeting/auth/register_screen.dart';
 import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -10,7 +11,11 @@ import 'package:v_meeting/widgets/app_logo.dart';
 import 'package:v_meeting/widgets/language_menu_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.guestsRefused = false});
+
+  /// Opened because the server takes no guests: says so, and offers another
+  /// server when there is no screen to go back to.
+  final bool guestsRefused;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -95,6 +100,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
+                  if (widget.guestsRefused) ...[
+                    Container(
+                      key: const Key('login-guests-refused'),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.lock_person_rounded,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(l10n.guestsRefusedLogin)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   TextField(
                     key: const Key('login-nick'),
                     controller: _nickController,
@@ -143,6 +172,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                     child: Text(l10n.noAccountRegister),
                   ),
+                  // With nowhere to go back to, another server is the only
+                  // way out besides logging in.
+                  if (widget.guestsRefused && !Navigator.canPop(context))
+                    TextButton(
+                      key: const Key('login-change-server'),
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HostScreen(),
+                              ),
+                            ),
+                      child: Text(l10n.changeServer),
+                    ),
                 ],
               ),
             ),

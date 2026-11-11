@@ -4,6 +4,7 @@ import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/auth_api.dart';
 import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/auth/server_policy.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
 import 'package:v_meeting/widgets/language_menu_button.dart';
@@ -64,6 +65,8 @@ class _HostScreenState extends ConsumerState<HostScreen> {
     try {
       await ref.read(authApiProvider).checkServer(host);
       await ServerConfig.saveUrl(host);
+      // The new server's rules decide the next screen.
+      ref.invalidate(serverPolicyProvider);
       if (mounted) {
         final next = startHome(ref);
         Navigator.pushReplacement(

@@ -881,4 +881,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get waitingRoomRejoin =>
       'The waiting room is on. Join the meeting again to ask to be let in.';
+
+  @override
+  String get guestsRefusedLogin =>
+      'This server doesn\'t take guests. Log in to continue.';
+
+  @override
+  String get changeServer => 'Use another server';
+
+  @override
+  String get serverTerms => 'Server terms';
+
+  @override
+  String get serverTermsIntro => 'Rules set by the meeting server you use.';
+
+  @override
+  String get guestAccess => 'Guest access';
+
+  @override
+  String get guestsAllowedValue =>
+      'Allowed: meetings can be used without an account.';
+
+  @override
+  String get guestsRefusedValue =>
+      'Not allowed: you need an account to join or create meetings.';
+
+  @override
+  String get serverTermsUnreported =>
+      'This server doesn\'t state its terms. Guests are allowed.';
+
+  @override
+  String get serverTermsUnavailable => 'The server couldn\'t be reached.';
+
+  @override
+  String get retry => 'Try again';
 }

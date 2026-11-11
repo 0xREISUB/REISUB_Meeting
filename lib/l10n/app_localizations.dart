@@ -1621,6 +1621,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The waiting room is on. Join the meeting again to ask to be let in.'**
   String get waitingRoomRejoin;
+
+  /// No description provided for @guestsRefusedLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'This server doesn\'t take guests. Log in to continue.'**
+  String get guestsRefusedLogin;
+
+  /// No description provided for @changeServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use another server'**
+  String get changeServer;
+
+  /// No description provided for @serverTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Server terms'**
+  String get serverTerms;
+
+  /// No description provided for @serverTermsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules set by the meeting server you use.'**
+  String get serverTermsIntro;
+
+  /// No description provided for @guestAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest access'**
+  String get guestAccess;
+
+  /// No description provided for @guestsAllowedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed: meetings can be used without an account.'**
+  String get guestsAllowedValue;
+
+  /// No description provided for @guestsRefusedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed: you need an account to join or create meetings.'**
+  String get guestsRefusedValue;
+
+  /// No description provided for @serverTermsUnreported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server doesn\'t state its terms. Guests are allowed.'**
+  String get serverTermsUnreported;
+
+  /// No description provided for @serverTermsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The server couldn\'t be reached.'**
+  String get serverTermsUnavailable;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate

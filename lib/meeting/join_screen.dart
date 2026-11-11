@@ -8,6 +8,7 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/auth/server_policy.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
@@ -164,6 +165,8 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
     setState(() => _isSubmitting = true);
     try {
+      // The server may have stopped taking guests since the app started.
+      if (!await ensureMayEnterMeeting(context, ref) || !mounted) return;
       final result = await ref
           .read(meetingApiProvider)
           .joinRoom(roomId: room, name: name);

@@ -1,6 +1,7 @@
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/auth/server_policy.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/home/home_screen.dart';
@@ -75,6 +76,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
 
     setState(() => _isSubmitting = true);
     try {
+      if (!await ensureMayEnterMeeting(context, ref) || !mounted) return;
       final credentials = await ref.read(meetingApiProvider).createRoom(name);
       if (!mounted) return;
       Navigator.pushReplacement(

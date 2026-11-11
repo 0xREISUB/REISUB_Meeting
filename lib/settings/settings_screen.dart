@@ -6,6 +6,7 @@ import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/app/version.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/auth/server_policy.dart';
 import 'device_test_screen.dart';
 import 'meeting_preferences.dart';
 
@@ -93,6 +94,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         await ServerConfig.clearSessions();
         ref.read(signedInProvider.notifier).refresh();
       }
+      ref.invalidate(serverPolicyProvider);
       if (!mounted) {
         return;
       }

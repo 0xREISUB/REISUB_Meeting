@@ -4,11 +4,14 @@ import 'package:v_meeting/app/orientation.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/login_screen.dart';
+import 'package:v_meeting/auth/server_policy.dart';
+import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/create_screen.dart';
 import 'package:v_meeting/meeting/join_screen.dart';
 import 'package:v_meeting/settings/about_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
+import 'package:v_meeting/settings/server_terms_screen.dart';
 import 'package:v_meeting/settings/settings_screen.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
 
@@ -66,6 +69,17 @@ class HomeScreen extends ConsumerWidget {
                         Icon(Icons.language_outlined, size: 20),
                         SizedBox(width: 12),
                         Text(l10n.language),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int>(
+                    key: const ValueKey('menu-server-terms'),
+                    value: 6,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.gavel_rounded, size: 20),
+                        const SizedBox(width: 12),
+                        Text(l10n.serverTerms),
                       ],
                     ),
                   ),
@@ -132,8 +146,25 @@ class HomeScreen extends ConsumerWidget {
                     );
                     break;
                   case 4:
-                    // Back to a guest; rooms stay usable without an account.
+                    // Back to a guest, unless the server takes none: then
+                    // the start screen asks to log in again.
                     await ref.read(signedInProvider.notifier).signOut();
+                    ref.invalidate(serverPolicyProvider);
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const StartGate()),
+                        (_) => false,
+                      );
+                    }
+                    break;
+                  case 6:
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ServerTermsScreen(),
+                      ),
+                    );
                     break;
                   case 5:
                     Navigator.push(

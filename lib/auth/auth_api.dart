@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/http.dart';
 import 'package:v_meeting/auth/auth_error.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/auth/server_policy.dart';
 
 final authApiProvider = Provider<AuthApi>(
   (ref) => AuthApi(ref.watch(dioProvider)),
@@ -40,6 +41,21 @@ class AuthApi {
         throw const ServerCheckException();
       }
     } on DioException {
+      throw const ServerCheckException();
+    }
+  }
+
+  /// Reads [serverUrl]'s rules. Servers without the endpoint let guests in.
+  Future<ServerPolicy> fetchPolicy(String serverUrl) async {
+    try {
+      final response = await _dio.get<Object?>('$serverUrl/policy');
+      final data = response.data;
+      if (data is! Map) throw const ServerCheckException();
+      return ServerPolicy.fromJson(Map<String, dynamic>.from(data));
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) return ServerPolicy.legacy;
+      throw const ServerCheckException();
+    } on TypeError {
       throw const ServerCheckException();
     }
   }

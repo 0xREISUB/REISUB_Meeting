@@ -430,5 +430,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "guestsRefusedLogin": "This server doesn't take guests. Log in to continue.",
+  "changeServer": "Use another server",
+  "serverTerms": "Server terms",
+  "serverTermsIntro": "Rules set by the meeting server you use.",
+  "guestAccess": "Guest access",
+  "guestsAllowedValue": "Allowed: meetings can be used without an account.",
+  "guestsRefusedValue": "Not allowed: you need an account to join or create meetings.",
+  "serverTermsUnreported": "This server doesn't state its terms. Guests are allowed.",
+  "serverTermsUnavailable": "The server couldn't be reached.",
+  "retry": "Try again"
 }

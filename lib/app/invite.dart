@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/auth/account.dart';
+import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/auth/server_policy.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/meeting/join_screen.dart';
 
@@ -86,16 +89,33 @@ class PendingInviteController extends Notifier<InviteLink?> {
   void clear() => state = null;
 }
 
-/// The first screen once a server is set: the join screen for a pending
-/// invite, otherwise the home screen.
-Widget startHome(WidgetRef ref) {
-  final invite = ref.read(pendingInviteProvider);
-  return invite == null
-      ? const HomeScreen()
-      : JoinScreen(
-          initialRoomId: invite.roomId,
-          inviteServerUrl: invite.serverUrl,
-        );
+/// The first screen once a server is set; see [StartGate].
+Widget startHome(WidgetRef ref) => const StartGate();
+
+/// Decides the first screen once a server is set: login when the server
+/// takes no guests and nobody is signed in, otherwise the join screen for a
+/// pending invite, otherwise home. The invite waits through the login.
+class StartGate extends ConsumerWidget {
+  const StartGate({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final policy = ref.watch(serverPolicyProvider);
+    final signedIn = ref.watch(signedInProvider);
+    if (!policy.hasValue || !signedIn.hasValue) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (policy.value?.guestsAllowed == false && signedIn.value != true) {
+      return const LoginScreen(guestsRefused: true);
+    }
+    final invite = ref.read(pendingInviteProvider);
+    return invite == null
+        ? const HomeScreen()
+        : JoinScreen(
+            initialRoomId: invite.roomId,
+            inviteServerUrl: invite.serverUrl,
+          );
+  }
 }
 
 /// The landing page for an invite to [roomId], served next to the web app.

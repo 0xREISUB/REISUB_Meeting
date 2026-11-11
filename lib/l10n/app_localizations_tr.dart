@@ -875,4 +875,39 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get waitingRoomRejoin =>
       'Bekleme odası açık. İçeri alınmak için toplantıya yeniden katılın.';
+
+  @override
+  String get guestsRefusedLogin =>
+      'Bu sunucu misafir kabul etmiyor. Devam etmek için giriş yapın.';
+
+  @override
+  String get changeServer => 'Başka bir sunucu kullan';
+
+  @override
+  String get serverTerms => 'Sunucu koşulları';
+
+  @override
+  String get serverTermsIntro =>
+      'Kullandığınız toplantı sunucusunun koyduğu kurallar.';
+
+  @override
+  String get guestAccess => 'Misafir girişi';
+
+  @override
+  String get guestsAllowedValue =>
+      'İzin veriliyor: toplantılar hesap olmadan kullanılabilir.';
+
+  @override
+  String get guestsRefusedValue =>
+      'İzin verilmiyor: toplantıya katılmak ya da toplantı oluşturmak için hesap gerekir.';
+
+  @override
+  String get serverTermsUnreported =>
+      'Bu sunucu koşullarını bildirmiyor. Misafir girişine izin veriliyor.';
+
+  @override
+  String get serverTermsUnavailable => 'Sunucuya ulaşılamadı.';
+
+  @override
+  String get retry => 'Tekrar dene';
 }

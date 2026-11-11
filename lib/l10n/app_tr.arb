@@ -381,5 +381,15 @@
   "waitingForAdmissionHint": "Bu toplantıda bekleme odası açık. Biri sizi içeri aldığında toplantıya katılacaksınız.",
   "admissionRejected": "Toplantıya alınmadınız.",
   "waitingRequestEnded": "Katılma isteğiniz sona erdi.",
-  "waitingRoomRejoin": "Bekleme odası açık. İçeri alınmak için toplantıya yeniden katılın."
+  "waitingRoomRejoin": "Bekleme odası açık. İçeri alınmak için toplantıya yeniden katılın.",
+  "guestsRefusedLogin": "Bu sunucu misafir kabul etmiyor. Devam etmek için giriş yapın.",
+  "changeServer": "Başka bir sunucu kullan",
+  "serverTerms": "Sunucu koşulları",
+  "serverTermsIntro": "Kullandığınız toplantı sunucusunun koyduğu kurallar.",
+  "guestAccess": "Misafir girişi",
+  "guestsAllowedValue": "İzin veriliyor: toplantılar hesap olmadan kullanılabilir.",
+  "guestsRefusedValue": "İzin verilmiyor: toplantıya katılmak ya da toplantı oluşturmak için hesap gerekir.",
+  "serverTermsUnreported": "Bu sunucu koşullarını bildirmiyor. Misafir girişine izin veriliyor.",
+  "serverTermsUnavailable": "Sunucuya ulaşılamadı.",
+  "retry": "Tekrar dene"
 }

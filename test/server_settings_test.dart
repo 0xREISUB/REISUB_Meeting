@@ -169,9 +169,13 @@ void main() {
     );
     await tester.enterText(find.byKey(const Key('server-port')), '9443');
     await saveSettings(tester);
-    expect(requests.single.uri.toString(), 'https://meeting.test:9443/ping');
+    // The server is checked, then asked for its rules.
+    expect(requests.map((request) => request.uri.toString()), [
+      'https://meeting.test:9443/ping',
+      'https://meeting.test:9443/policy',
+    ]);
     expect(await ServerConfig.readUrl(), 'https://meeting.test:9443');
-    // Logging in is optional; the app goes straight home.
+    // This server takes guests; the app goes straight home.
     expect(find.byType(HomeScreen), findsOneWidget);
     await showSettings(tester);
     expect(fieldText(tester, 'server-host'), 'https://meeting.test');
