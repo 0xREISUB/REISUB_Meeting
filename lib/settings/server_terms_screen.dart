@@ -97,5 +97,27 @@ class _ServerTermsScreenState extends ConsumerState<ServerTermsScreen> {
         terms.guestsAllowed ? l10n.guestsAllowedValue : l10n.guestsRefusedValue,
       ),
     ),
+    ListTile(
+      key: const ValueKey('server-term-time-limit'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.timer_rounded),
+      title: Text(l10n.meetingTimeLimit),
+      subtitle: Text(switch (terms.meetingTimeLimit) {
+        final limit? => l10n.meetingTimeLimitValue(limit.inMinutes),
+        null => l10n.noMeetingTimeLimit,
+      }),
+    ),
+    // The wait only matters when meetings have a limit.
+    if (terms.meetingTimeLimit != null)
+      ListTile(
+        key: const ValueKey('server-term-cooldown'),
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.hourglass_bottom_rounded),
+        title: Text(l10n.meetingCooldownTerm),
+        subtitle: Text(switch (terms.meetingCooldown) {
+          final wait? => l10n.meetingCooldownValue(wait.inMinutes),
+          null => l10n.noMeetingCooldown,
+        }),
+      ),
   ];
 }

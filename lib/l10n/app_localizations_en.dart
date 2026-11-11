@@ -915,4 +915,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Try again';
+
+  @override
+  String get meetingCooldown =>
+      'You reached the meeting time limit. Wait a while before starting another meeting.';
+
+  @override
+  String meetingCooldownMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return 'You reached the meeting time limit. You can start another meeting in $_temp0.';
+  }
+
+  @override
+  String get meetingTimeLimit => 'Meeting time limit';
+
+  @override
+  String meetingTimeLimitValue(int minutes) {
+    return '$minutes minutes per meeting';
+  }
+
+  @override
+  String get noMeetingTimeLimit => 'No limit';
+
+  @override
+  String get meetingCooldownTerm => 'Wait after the limit';
+
+  @override
+  String meetingCooldownValue(int minutes) {
+    return '$minutes minutes before starting another meeting';
+  }
+
+  @override
+  String get noMeetingCooldown => 'No wait';
+
+  @override
+  String minutesLeftNotice(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes left in this meeting.',
+      one: '1 minute left in this meeting.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingTimeUp => 'The meeting reached its time limit and ended.';
+
+  @override
+  String meetingTimeLeft(String time) {
+    return 'Time left: $time';
+  }
 }

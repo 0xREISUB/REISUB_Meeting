@@ -23,6 +23,7 @@ enum AppError {
   permissionRequired,
   removedFromRoom,
   waitingRoomRejoin,
+  meetingCooldown,
   nowOwner,
   accountSessionExpired,
   loginRequired,
@@ -67,6 +68,10 @@ class AppException implements Exception {
     AppError.permissionRequired => l10n.permissionRequiredError,
     AppError.removedFromRoom => l10n.removedFromMeeting,
     AppError.waitingRoomRejoin => l10n.waitingRoomRejoin,
+    AppError.meetingCooldown =>
+      details is int
+          ? l10n.meetingCooldownMinutes(details as int)
+          : l10n.meetingCooldown,
     AppError.nowOwner => l10n.youAreOwnerNow,
     AppError.accountSessionExpired => l10n.accountSessionExpired,
     AppError.loginRequired => l10n.guestUnavailable,

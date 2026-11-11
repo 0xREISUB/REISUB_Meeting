@@ -391,5 +391,16 @@
   "guestsRefusedValue": "İzin verilmiyor: toplantıya katılmak ya da toplantı oluşturmak için hesap gerekir.",
   "serverTermsUnreported": "Bu sunucu koşullarını bildirmiyor. Misafir girişine izin veriliyor.",
   "serverTermsUnavailable": "Sunucuya ulaşılamadı.",
-  "retry": "Tekrar dene"
+  "retry": "Tekrar dene",
+  "meetingCooldown": "Toplantı süre sınırına ulaştınız. Yeni bir toplantı açmadan önce biraz bekleyin.",
+  "meetingCooldownMinutes": "Toplantı süre sınırına ulaştınız. {minutes} dakika sonra yeni bir toplantı açabilirsiniz.",
+  "meetingTimeLimit": "Toplantı süre sınırı",
+  "meetingTimeLimitValue": "Toplantı başına {minutes} dakika",
+  "noMeetingTimeLimit": "Sınır yok",
+  "meetingCooldownTerm": "Süre dolduktan sonra bekleme",
+  "meetingCooldownValue": "Yeni toplantı açmadan önce {minutes} dakika",
+  "noMeetingCooldown": "Bekleme yok",
+  "minutesLeftNotice": "Toplantının bitmesine {minutes} dakika kaldı.",
+  "meetingTimeUp": "Toplantı süre sınırına ulaştı ve sona erdi.",
+  "meetingTimeLeft": "Kalan süre: {time}"
 }

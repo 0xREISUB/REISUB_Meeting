@@ -1681,6 +1681,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get retry;
+
+  /// No description provided for @meetingCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached the meeting time limit. Wait a while before starting another meeting.'**
+  String get meetingCooldown;
+
+  /// No description provided for @meetingCooldownMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached the meeting time limit. You can start another meeting in {minutes, plural, =1{1 minute} other{{minutes} minutes}}.'**
+  String meetingCooldownMinutes(int minutes);
+
+  /// No description provided for @meetingTimeLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting time limit'**
+  String get meetingTimeLimit;
+
+  /// No description provided for @meetingTimeLimitValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes per meeting'**
+  String meetingTimeLimitValue(int minutes);
+
+  /// No description provided for @noMeetingTimeLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'No limit'**
+  String get noMeetingTimeLimit;
+
+  /// No description provided for @meetingCooldownTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait after the limit'**
+  String get meetingCooldownTerm;
+
+  /// No description provided for @meetingCooldownValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes before starting another meeting'**
+  String meetingCooldownValue(int minutes);
+
+  /// No description provided for @noMeetingCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'No wait'**
+  String get noMeetingCooldown;
+
+  /// No description provided for @minutesLeftNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{1 minute left in this meeting.} other{{minutes} minutes left in this meeting.}}'**
+  String minutesLeftNotice(int minutes);
+
+  /// No description provided for @meetingTimeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'The meeting reached its time limit and ended.'**
+  String get meetingTimeUp;
+
+  /// No description provided for @meetingTimeLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Time left: {time}'**
+  String meetingTimeLeft(String time);
 }
 
 class _AppLocalizationsDelegate

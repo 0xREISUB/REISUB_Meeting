@@ -440,5 +440,51 @@
   "guestsRefusedValue": "Not allowed: you need an account to join or create meetings.",
   "serverTermsUnreported": "This server doesn't state its terms. Guests are allowed.",
   "serverTermsUnavailable": "The server couldn't be reached.",
-  "retry": "Try again"
+  "retry": "Try again",
+  "meetingCooldown": "You reached the meeting time limit. Wait a while before starting another meeting.",
+  "meetingCooldownMinutes": "You reached the meeting time limit. You can start another meeting in {minutes, plural, =1{1 minute} other{{minutes} minutes}}.",
+  "meetingTimeLimit": "Meeting time limit",
+  "meetingTimeLimitValue": "{minutes} minutes per meeting",
+  "noMeetingTimeLimit": "No limit",
+  "meetingCooldownTerm": "Wait after the limit",
+  "meetingCooldownValue": "{minutes} minutes before starting another meeting",
+  "noMeetingCooldown": "No wait",
+  "minutesLeftNotice": "{minutes, plural, =1{1 minute left in this meeting.} other{{minutes} minutes left in this meeting.}}",
+  "meetingTimeUp": "The meeting reached its time limit and ended.",
+  "meetingTimeLeft": "Time left: {time}",
+  "@meetingCooldownMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@meetingTimeLimitValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@meetingCooldownValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@minutesLeftNotice": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@meetingTimeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

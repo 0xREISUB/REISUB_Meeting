@@ -22,6 +22,9 @@ class RoomCredentials {
   /// Shareable invite link from the server, if it provides one.
   final String? inviteUrl;
 
+  /// Seconds until the server ends the meeting; null without a time limit.
+  final int? secondsLeft;
+
   MeetingRole get initialRole =>
       role ?? (isHost ? MeetingRole.owner : MeetingRole.participant);
 
@@ -34,6 +37,7 @@ class RoomCredentials {
     this.role,
     this.permissions = const {},
     this.inviteUrl,
+    this.secondsLeft,
   });
 
   factory RoomCredentials.fromJson(Map<String, dynamic> json) {
@@ -48,6 +52,7 @@ class RoomCredentials {
           : null,
       permissions: MeetingPermission.fromJson(json['permissions']),
       inviteUrl: json['invite_url'] as String?,
+      secondsLeft: (json['seconds_left'] as num?)?.round(),
     );
   }
 }
@@ -60,10 +65,14 @@ class MeetingState {
   final bool waitingRoom;
   final List<WaitingPerson> waiting;
 
+  /// Seconds until the server ends the meeting; null without a time limit.
+  final int? secondsLeft;
+
   const MeetingState({
     this.screenShareIdentity = '',
     this.waitingRoom = false,
     this.waiting = const [],
+    this.secondsLeft,
   });
 
   factory MeetingState.fromJson(Map<String, dynamic> json) => MeetingState(
@@ -73,6 +82,7 @@ class MeetingState {
       for (final entry in json['waiting'] as List? ?? const [])
         WaitingPerson.fromJson(Map<String, dynamic>.from(entry as Map)),
     ],
+    secondsLeft: (json['seconds_left'] as num?)?.round(),
   );
 }
 
@@ -487,6 +497,16 @@ class MeetingApi {
         loginRequired: known == AppError.loginRequired,
       );
     }
+    if (code == 'meeting_cooldown') {
+      // Minutes to wait, rounded up so "0 minutes" is never shown.
+      final seconds = responseData is Map
+          ? (responseData['retry_after_seconds'] as num?)?.toInt()
+          : null;
+      return MeetingApiException.localized(
+        AppError.meetingCooldown,
+        details: seconds == null ? null : (seconds / 60).ceil(),
+      );
+    }
     final message = responseData is Map ? responseData['error'] : null;
     return message is String && message.isNotEmpty
         ? MeetingApiException(message)
@@ -506,6 +526,7 @@ class MeetingApiException extends AppException {
     super.code, {
     this.sessionExpired = false,
     this.loginRequired = false,
+    super.details,
   }) : super.localized();
 
   /// The account session ended; requests now continue as a guest.

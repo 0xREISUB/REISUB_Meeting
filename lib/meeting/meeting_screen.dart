@@ -17,6 +17,7 @@ import 'package:v_meeting/meeting/members_screen.dart';
 import 'package:v_meeting/meeting/widgets/meeting_banners.dart';
 import 'package:v_meeting/meeting/widgets/meeting_chat_sheet.dart';
 import 'package:v_meeting/meeting/widgets/meeting_controls_bar.dart';
+import 'package:v_meeting/meeting/widgets/meeting_countdown.dart';
 import 'package:v_meeting/meeting/widgets/meeting_joining_overlay.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 import 'package:v_meeting/meeting/widgets/meeting_settings_dialog.dart';
@@ -66,6 +67,10 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     super.initState();
     // Starts loading whether to announce newcomers.
     ref.read(meetingPreferencesProvider);
+    _countdownTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _onClockTick(),
+    );
     WidgetsBinding.instance.addObserver(this);
     MeetingScreen._open++;
     final platform = ref.read(meetingPlatformProvider);
@@ -138,7 +143,53 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   void _onSessionChanged() {
     if (!mounted) return;
     _updateArrivals();
+    // A new count from the server warns at once, not at the next tick.
+    if (_session.timeLeft case final left?) _checkTimeWarnings(left);
     setState(() {});
+  }
+
+  // ---------------------------------------------------------------------------
+  // Time limit
+
+  Timer? _countdownTimer;
+  bool _warnedTenMinutes = false;
+  bool _warnedOneMinute = false;
+  String? _timeNotice;
+  Timer? _timeNoticeTimer;
+
+  static const _timeNoticeTime = Duration(seconds: 8);
+
+  void _onClockTick() {
+    if (!mounted) return;
+    final left = _session.timeLeft;
+    if (left == null) return;
+    _checkTimeWarnings(left);
+    // The countdown only shows, and moves, in the last stretch.
+    if (left <= MeetingCountdown.window) setState(() {});
+  }
+
+  /// Tells everyone once when ten minutes are left, or fewer on joining
+  /// late, and once more at one minute. A limit the server extends arms
+  /// the warnings again.
+  void _checkTimeWarnings(Duration left) {
+    if (left > MeetingCountdown.window) _warnedTenMinutes = false;
+    if (left > const Duration(minutes: 1)) _warnedOneMinute = false;
+    if (left <= const Duration(minutes: 1)) {
+      if (_warnedOneMinute) return;
+      _warnedOneMinute = _warnedTenMinutes = true;
+      _showTimeNotice(1);
+    } else if (left <= MeetingCountdown.window && !_warnedTenMinutes) {
+      _warnedTenMinutes = true;
+      _showTimeNotice((left.inSeconds / 60).ceil());
+    }
+  }
+
+  void _showTimeNotice(int minutes) {
+    _timeNoticeTimer?.cancel();
+    setState(() => _timeNotice = _l10n.minutesLeftNotice(minutes));
+    _timeNoticeTimer = Timer(_timeNoticeTime, () {
+      if (mounted) setState(() => _timeNotice = null);
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -249,7 +300,10 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     final notice = switch (reason) {
       MeetingExitReason.left => null,
       MeetingExitReason.endedByYou => _l10n.meetingEndedByYou,
-      MeetingExitReason.disconnected => _session.connection.message(_l10n),
+      MeetingExitReason.disconnected =>
+        _session.timeLimitReached
+            ? _l10n.meetingTimeUp
+            : _session.connection.message(_l10n),
     };
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pushAndRemoveUntil(
@@ -486,6 +540,8 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     for (final timer in _arrivalTimers.values) {
       timer.cancel();
     }
+    _countdownTimer?.cancel();
+    _timeNoticeTimer?.cancel();
     _display.exit();
     _session
       ..removeListener(_onSessionChanged)
@@ -656,7 +712,14 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                     onClose: () => setState(() => _showRoomCode = false),
                   ),
                 ),
-              if (_arrivals.isNotEmpty)
+              if (session.timeLeft case final left?
+                  when left <= MeetingCountdown.window)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: IgnorePointer(child: MeetingCountdown(left: left)),
+                ),
+              if (_arrivals.isNotEmpty || _timeNotice != null)
                 Positioned(
                   top: 12,
                   left: 16,
@@ -668,6 +731,11 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                         mainAxisSize: MainAxisSize.min,
                         spacing: 8,
                         children: [
+                          if (_timeNotice case final notice?)
+                            _DropIn(
+                              key: ValueKey('time-$notice'),
+                              child: MeetingTimeNotice(text: notice),
+                            ),
                           for (final person in _arrivals.reversed.take(
                             _maxArrivalNotices,
                           ))

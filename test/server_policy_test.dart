@@ -103,6 +103,46 @@ void main() {
     expect(ServerPolicy.legacy.guestsAllowed, isTrue);
   });
 
+  test('the policy reads the time limit and the wait after it', () {
+    final policy = ServerPolicy.fromJson({
+      'guests_allowed': true,
+      'meeting_time_limit_minutes': 40,
+      'meeting_cooldown_minutes': 15,
+    });
+    expect(policy.meetingTimeLimit, const Duration(minutes: 40));
+    expect(policy.meetingCooldown, const Duration(minutes: 15));
+    // Zero or missing means none.
+    final open = ServerPolicy.fromJson({'meeting_time_limit_minutes': 0});
+    expect(open.meetingTimeLimit, isNull);
+    expect(open.meetingCooldown, isNull);
+  });
+
+  testWidgets('the server terms show the time limit and the wait', (
+    tester,
+  ) async {
+    final dio = Dio()
+      ..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) => handler.resolve(
+            Response<Object?>(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'guests_allowed': true,
+                'meeting_time_limit_minutes': 40,
+                'meeting_cooldown_minutes': 15,
+              },
+            ),
+          ),
+        ),
+      );
+    addTearDown(dio.close);
+    await tester.pumpWidget(app(const ServerTermsScreen(), dio));
+    await tester.pumpAndSettle();
+    expect(find.text('Toplantı başına 40 dakika'), findsOneWidget);
+    expect(find.text('Yeni toplantı açmadan önce 15 dakika'), findsOneWidget);
+  });
+
   testWidgets('a server without guests opens login first', (tester) async {
     final paths = <String>[];
     await tester.pumpWidget(

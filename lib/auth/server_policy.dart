@@ -8,7 +8,12 @@ import 'package:v_meeting/auth/server_config.dart';
 /// The rules a meeting server sets for its users.
 @immutable
 class ServerPolicy {
-  const ServerPolicy({required this.guestsAllowed, this.reported = true});
+  const ServerPolicy({
+    required this.guestsAllowed,
+    this.reported = true,
+    this.meetingTimeLimit,
+    this.meetingCooldown,
+  });
 
   /// A server too old to state its rules; it lets guests in.
   static const legacy = ServerPolicy(guestsAllowed: true, reported: false);
@@ -19,17 +24,34 @@ class ServerPolicy {
   /// False when the server does not state its rules.
   final bool reported;
 
-  factory ServerPolicy.fromJson(Map<String, dynamic> json) =>
-      ServerPolicy(guestsAllowed: json['guests_allowed'] as bool? ?? true);
+  /// How long a meeting may last; null for no limit.
+  final Duration? meetingTimeLimit;
+
+  /// How long someone waits, after their meeting reached the limit, before
+  /// starting another; null for no wait.
+  final Duration? meetingCooldown;
+
+  factory ServerPolicy.fromJson(Map<String, dynamic> json) => ServerPolicy(
+    guestsAllowed: json['guests_allowed'] as bool? ?? true,
+    meetingTimeLimit: _minutes(json['meeting_time_limit_minutes']),
+    meetingCooldown: _minutes(json['meeting_cooldown_minutes']),
+  );
+
+  /// Zero, missing or not a number means none.
+  static Duration? _minutes(Object? value) =>
+      value is num && value > 0 ? Duration(minutes: value.round()) : null;
 
   @override
   bool operator ==(Object other) =>
       other is ServerPolicy &&
       other.guestsAllowed == guestsAllowed &&
-      other.reported == reported;
+      other.reported == reported &&
+      other.meetingTimeLimit == meetingTimeLimit &&
+      other.meetingCooldown == meetingCooldown;
 
   @override
-  int get hashCode => Object.hash(guestsAllowed, reported);
+  int get hashCode =>
+      Object.hash(guestsAllowed, reported, meetingTimeLimit, meetingCooldown);
 }
 
 /// The saved server's rules, read when the app starts or the server

@@ -69,8 +69,11 @@ class MeetingSession extends ChangeNotifier {
     required this._ui,
     RoomCredentials? credentials,
     bool showEntryGate = true,
+    DateTime Function()? clock,
   }) : _credentials = credentials,
+       _clock = clock ?? DateTime.now,
        connection = MeetingConnection(room) {
+    _setSecondsLeft(credentials?.secondsLeft);
     connection.addListener(_onConnectionChanged);
     room.addListener(_onRoomChanged);
     _roomEvents = room.createListener()
@@ -321,6 +324,7 @@ class MeetingSession extends ChangeNotifier {
       switch (result) {
         case JoinAdmitted(:final credentials):
           _credentials = credentials;
+          _setSecondsLeft(credentials.secondsLeft);
         case JoinWaiting(:final requestId):
           // Someone already in the meeting is let back in by the server;
           // if it asks to wait anyway, rejoining goes through the join screen.
@@ -458,6 +462,8 @@ class MeetingSession extends ChangeNotifier {
   void _onSharingChanged() {
     if (_inactive) return;
     final state = sharing!.state;
+    // The server's count is the truth; it also lifts or adds a limit.
+    if (sharing!.loaded) _setSecondsLeft(state.secondsLeft, clear: true);
     if (_ownsScreenShare &&
         !changingScreenShare &&
         state.screenShareIdentity != room.localParticipant?.identity) {
@@ -895,6 +901,39 @@ class MeetingSession extends ChangeNotifier {
   }
 
   bool get isSharingScreen => _localScreenSharing || _ownsScreenShare;
+
+  // ---------------------------------------------------------------------------
+  // Time limit
+
+  final DateTime Function() _clock;
+
+  /// When the server will end the meeting, on this device's clock; null
+  /// without a time limit. Kept from the server's seconds left rather than
+  /// its clock, so a wrong device clock does not matter.
+  DateTime? _deadline;
+
+  void _setSecondsLeft(int? seconds, {bool clear = false}) {
+    if (seconds == null) {
+      if (clear) _deadline = null;
+      return;
+    }
+    _deadline = _clock().add(Duration(seconds: seconds));
+  }
+
+  /// How long until the server ends the meeting; null without a limit.
+  Duration? get timeLeft {
+    final deadline = _deadline;
+    if (deadline == null) return null;
+    final left = deadline.difference(_clock());
+    return left.isNegative ? Duration.zero : left;
+  }
+
+  /// Whether the meeting has reached its time limit, with a few seconds'
+  /// leeway for the server closing it a little early.
+  bool get timeLimitReached {
+    final left = timeLeft;
+    return left != null && left <= const Duration(seconds: 5);
+  }
 
   // ---------------------------------------------------------------------------
   // Waiting room

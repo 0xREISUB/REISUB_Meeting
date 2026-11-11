@@ -910,4 +910,48 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get retry => 'Tekrar dene';
+
+  @override
+  String get meetingCooldown =>
+      'Toplantı süre sınırına ulaştınız. Yeni bir toplantı açmadan önce biraz bekleyin.';
+
+  @override
+  String meetingCooldownMinutes(int minutes) {
+    return 'Toplantı süre sınırına ulaştınız. $minutes dakika sonra yeni bir toplantı açabilirsiniz.';
+  }
+
+  @override
+  String get meetingTimeLimit => 'Toplantı süre sınırı';
+
+  @override
+  String meetingTimeLimitValue(int minutes) {
+    return 'Toplantı başına $minutes dakika';
+  }
+
+  @override
+  String get noMeetingTimeLimit => 'Sınır yok';
+
+  @override
+  String get meetingCooldownTerm => 'Süre dolduktan sonra bekleme';
+
+  @override
+  String meetingCooldownValue(int minutes) {
+    return 'Yeni toplantı açmadan önce $minutes dakika';
+  }
+
+  @override
+  String get noMeetingCooldown => 'Bekleme yok';
+
+  @override
+  String minutesLeftNotice(int minutes) {
+    return 'Toplantının bitmesine $minutes dakika kaldı.';
+  }
+
+  @override
+  String get meetingTimeUp => 'Toplantı süre sınırına ulaştı ve sona erdi.';
+
+  @override
+  String meetingTimeLeft(String time) {
+    return 'Kalan süre: $time';
+  }
 }

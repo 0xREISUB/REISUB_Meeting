@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:v_meeting/l10n/app_localizations_tr.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
@@ -377,6 +378,41 @@ void main() {
     expect(
       WaitingUpdate.fromJson({'status': 'rejected'}).status,
       WaitingStatus.rejected,
+    );
+    dio.close();
+  });
+
+  test('the wait after a time limit is told in minutes', () async {
+    final dio = Dio()
+      ..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) => handler.reject(
+            DioException(
+              requestOptions: options,
+              type: DioExceptionType.badResponse,
+              response: Response<dynamic>(
+                requestOptions: options,
+                statusCode: 429,
+                data: {
+                  'error': 'wait',
+                  'code': 'meeting_cooldown',
+                  'retry_after_seconds': 61,
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+    Object? error;
+    try {
+      await MeetingApi(dio: dio).createRoom('Ali');
+    } catch (caught) {
+      error = caught;
+    }
+    expect(
+      localizeError(error!, AppLocalizationsTr()),
+      'Toplantı süre sınırına ulaştınız. 2 dakika sonra yeni bir toplantı '
+      'açabilirsiniz.',
     );
     dio.close();
   });
