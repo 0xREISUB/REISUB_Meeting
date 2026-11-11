@@ -82,7 +82,7 @@ server's moderation and meeting-settings APIs.
 For the Linux Debian package, run this command in the folder containing the download:
 
 ```sh
-sudo apt install ./reisub-meeting_1.2.0-4_amd64.deb
+sudo apt install ./reisub-meeting_2.0.0-5_amd64.deb
 ```
 
 The current amd64 package targets Ubuntu 24.04 / Zorin OS 18 libraries. See the
@@ -161,7 +161,7 @@ sunucunun moderasyon ve toplantı ayarları API'leri gereklidir.
 Linux Debian paketini indirdiğiniz klasörde şu komutla kurabilirsiniz:
 
 ```sh
-sudo apt install ./reisub-meeting_1.2.0-4_amd64.deb
+sudo apt install ./reisub-meeting_2.0.0-5_amd64.deb
 ```
 
 Mevcut amd64 paketi Ubuntu 24.04 / Zorin OS 18 kütüphanelerini kullanır. Uyumluluk
