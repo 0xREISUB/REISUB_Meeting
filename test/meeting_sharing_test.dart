@@ -28,7 +28,7 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: MeetingSettingsDialog(
+          body: AudioVideoSettingsDialog(
             onDeviceTest: (camera) async => opened.add(camera),
           ),
         ),

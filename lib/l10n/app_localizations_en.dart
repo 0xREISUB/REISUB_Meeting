@@ -816,4 +816,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get remove => 'Remove';
+
+  @override
+  String get permissionAdmitMembers => 'Let people in';
+
+  @override
+  String get permissionAdmitMembersHint =>
+      'Can turn the waiting room on and off and let waiting people in or turn them away.';
+
+  @override
+  String get audioVideoSettings => 'Audio and video';
+
+  @override
+  String get waitingRoom => 'Waiting room';
+
+  @override
+  String get waitingRoomHint => 'Newcomers wait until someone lets them in.';
+
+  @override
+  String get notifyArrivals => 'Notify me when someone arrives';
+
+  @override
+  String get notifyArrivalsHint =>
+      'Shows a notice at the top when someone starts waiting.';
+
+  @override
+  String get waitingPeople => 'Waiting';
+
+  @override
+  String waitingPeopleCount(int count) {
+    return 'Waiting ($count)';
+  }
+
+  @override
+  String get admitAll => 'Let everyone in';
+
+  @override
+  String get admit => 'Let in';
+
+  @override
+  String get reject => 'Turn away';
+
+  @override
+  String get noOneWaiting => 'No one is waiting';
+
+  @override
+  String arrivalTitle(String name) {
+    return '$name wants to join';
+  }
+
+  @override
+  String get waitingForAdmission => 'Waiting for someone to let you in';
+
+  @override
+  String get waitingForAdmissionHint =>
+      'This meeting has a waiting room. You\'ll join as soon as someone lets you in.';
+
+  @override
+  String get admissionRejected => 'You weren\'t let into the meeting.';
+
+  @override
+  String get waitingRequestEnded => 'Your request to join has ended.';
+
+  @override
+  String get waitingRoomRejoin =>
+      'The waiting room is on. Join the meeting again to ask to be let in.';
 }

@@ -311,6 +311,76 @@ void main() {
     dio.close();
   });
 
+  test('the waiting room uses its routes and reads each answer', () async {
+    final requests = <RequestOptions>[];
+    Object? reply(RequestOptions options) {
+      final path = options.uri.path;
+      if (path == '/rooms/join') {
+        return {'status': 'waiting', 'request_id': 'r 1'};
+      }
+      if (path.endsWith('/waiting/r%201') && options.method == 'GET') {
+        return {
+          'status': 'admitted',
+          'room_id': '123-456-789',
+          'livekit_url': 'wss://example.test',
+          'token': 't',
+          'participant': 'Ali',
+        };
+      }
+      return {
+        'screen_share_identity': '',
+        'waiting_room': true,
+        'waiting': [
+          {'request_id': 'r2', 'name': 'Can'},
+        ],
+      };
+    }
+
+    final dio = Dio()
+      ..interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            requests.add(options);
+            handler.resolve(
+              Response<dynamic>(
+                requestOptions: options,
+                statusCode: 200,
+                data: reply(options),
+              ),
+            );
+          },
+        ),
+      );
+    final api = MeetingApi(dio: dio);
+    final joined = await api.joinRoom(roomId: '123-456-789', name: 'Ali');
+    expect(joined, isA<JoinWaiting>());
+    final requestId = (joined as JoinWaiting).requestId;
+    final update = await api.waitingStatus('123-456-789', requestId);
+    expect(update.status, WaitingStatus.admitted);
+    expect(update.credentials!.token, 't');
+    await api.cancelWaiting('123-456-789', requestId);
+    final state = await api.setWaitingRoom('123-456-789', true);
+    expect(state.waitingRoom, isTrue);
+    expect(state.waiting.single.name, 'Can');
+    await api.answerWaiting('123-456-789', 'r2', admit: true);
+    await api.answerWaiting('123-456-789', 'r2', admit: false);
+    expect(requests.map((r) => '${r.method} ${r.uri.path}'), [
+      'POST /rooms/join',
+      'GET /rooms/123-456-789/waiting/r%201',
+      'DELETE /rooms/123-456-789/waiting/r%201',
+      'PUT /rooms/123-456-789/settings',
+      'POST /rooms/123-456-789/waiting/r2/admit',
+      'POST /rooms/123-456-789/waiting/r2/reject',
+    ]);
+    expect(requests[3].data, {'waiting_room': true});
+    // A refusal is read too.
+    expect(
+      WaitingUpdate.fromJson({'status': 'rejected'}).status,
+      WaitingStatus.rejected,
+    );
+    dio.close();
+  });
+
   test('known server error codes are shown in the app language', () async {
     final dio = Dio()
       ..interceptors.add(

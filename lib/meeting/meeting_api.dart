@@ -52,15 +52,77 @@ class RoomCredentials {
   }
 }
 
-/// The room's shared state: who holds its single screen share.
+/// The room's shared state: who holds its single screen share, whether
+/// newcomers wait to be let in, and who is waiting. Only people who may
+/// let others in get the waiting list.
 class MeetingState {
   final String screenShareIdentity;
+  final bool waitingRoom;
+  final List<WaitingPerson> waiting;
 
-  const MeetingState({this.screenShareIdentity = ''});
+  const MeetingState({
+    this.screenShareIdentity = '',
+    this.waitingRoom = false,
+    this.waiting = const [],
+  });
 
   factory MeetingState.fromJson(Map<String, dynamic> json) => MeetingState(
     screenShareIdentity: json['screen_share_identity'] as String? ?? '',
+    waitingRoom: json['waiting_room'] as bool? ?? false,
+    waiting: [
+      for (final entry in json['waiting'] as List? ?? const [])
+        WaitingPerson.fromJson(Map<String, dynamic>.from(entry as Map)),
+    ],
   );
+}
+
+/// Someone in the waiting room.
+class WaitingPerson {
+  const WaitingPerson({required this.requestId, required this.name});
+
+  final String requestId;
+  final String name;
+
+  factory WaitingPerson.fromJson(Map<String, dynamic> json) => WaitingPerson(
+    requestId: json['request_id'] as String,
+    name: json['name'] as String,
+  );
+}
+
+/// The outcome of asking to join a room: a seat, or a place in its waiting
+/// room.
+sealed class JoinResult {
+  const JoinResult();
+}
+
+class JoinAdmitted extends JoinResult {
+  const JoinAdmitted(this.credentials);
+  final RoomCredentials credentials;
+}
+
+class JoinWaiting extends JoinResult {
+  const JoinWaiting(this.requestId);
+  final String requestId;
+}
+
+enum WaitingStatus { waiting, admitted, rejected }
+
+/// Where a waiting request stands; [credentials] once admitted.
+class WaitingUpdate {
+  const WaitingUpdate(this.status, [this.credentials]);
+  final WaitingStatus status;
+  final RoomCredentials? credentials;
+
+  factory WaitingUpdate.fromJson(Map<String, dynamic> json) =>
+      switch (json['status']) {
+        'admitted' => WaitingUpdate(
+          WaitingStatus.admitted,
+          RoomCredentials.fromJson(json),
+        ),
+        'rejected' => const WaitingUpdate(WaitingStatus.rejected),
+        'waiting' => const WaitingUpdate(WaitingStatus.waiting),
+        _ => throw const FormatException('unknown waiting status'),
+      };
 }
 
 class MeetingChatMessage {
@@ -115,13 +177,50 @@ class MeetingApi {
     invalid: AppError.invalidRoomData,
   );
 
-  Future<RoomCredentials> joinRoom({
+  /// Joins a room, or, when its waiting room is on, asks to be let in.
+  Future<JoinResult> joinRoom({
     required String roomId,
     required String name,
   }) async => _decode(
     await _send('POST', '/rooms/join', data: {'room_id': roomId, 'name': name}),
-    RoomCredentials.fromJson,
+    (json) => json['status'] == 'waiting'
+        ? JoinWaiting(json['request_id'] as String)
+        : JoinAdmitted(RoomCredentials.fromJson(json)),
     invalid: AppError.invalidRoomData,
+  );
+
+  /// Where this user's request to join stands.
+  Future<WaitingUpdate> waitingStatus(String roomId, String requestId) async =>
+      _decode(
+        await _send('GET', _waiting(roomId, requestId)),
+        WaitingUpdate.fromJson,
+        invalid: AppError.invalidRoomData,
+      );
+
+  /// Gives up waiting.
+  Future<void> cancelWaiting(String roomId, String requestId) async {
+    await _send('DELETE', _waiting(roomId, requestId));
+  }
+
+  /// Turns the waiting room on or off. Needs the permission to let people
+  /// in.
+  Future<MeetingState> setWaitingRoom(String roomId, bool on) async => _decode(
+    await _send('PUT', '${_room(roomId)}/settings', data: {'waiting_room': on}),
+    MeetingState.fromJson,
+  );
+
+  /// Lets a waiting person in, or turns them away.
+  Future<MeetingState> answerWaiting(
+    String roomId,
+    String requestId, {
+    required bool admit,
+  }) async => _decode(
+    await _send(
+      'POST',
+      '${_waiting(roomId, requestId)}/${admit ? 'admit' : 'reject'}',
+      data: const {},
+    ),
+    MeetingState.fromJson,
   );
 
   Future<MeetingState> getMeetingState(String roomId) async => _decode(
@@ -238,6 +337,8 @@ class MeetingApi {
   );
 
   static String _room(String roomId) => '/rooms/${Uri.encodeComponent(roomId)}';
+  static String _waiting(String roomId, String requestId) =>
+      '${_room(roomId)}/waiting/${Uri.encodeComponent(requestId)}';
 
   /// Sends an authenticated request and returns the decoded response body.
   ///

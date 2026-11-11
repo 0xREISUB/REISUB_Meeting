@@ -96,11 +96,11 @@ void main() {
           : AppLocalizationsTr();
       await tester.pumpWidget(
         localized(
-          Scaffold(body: MeetingSettingsDialog(onDeviceTest: (_) async {})),
+          Scaffold(body: AudioVideoSettingsDialog(onDeviceTest: (_) async {})),
           language,
         ),
       );
-      expect(find.text(l10n.meetingSettings), findsOneWidget);
+      expect(find.text(l10n.audioVideoSettings), findsOneWidget);
       expect(find.text(l10n.microphoneSelectionTest), findsOneWidget);
       expect(find.text(l10n.cameraSelectionTest), findsOneWidget);
     });

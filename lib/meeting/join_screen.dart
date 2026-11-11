@@ -11,6 +11,7 @@ import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/meeting/waiting_room_screen.dart';
 
 class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key, this.initialRoomId, this.inviteServerUrl});
@@ -163,16 +164,28 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final credentials = await ref
+      final result = await ref
           .read(meetingApiProvider)
           .joinRoom(roomId: room, name: name);
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MeetingScreen(credentials: credentials),
-        ),
-      );
+      switch (result) {
+        case JoinAdmitted(:final credentials):
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MeetingScreen(credentials: credentials),
+            ),
+          );
+        case JoinWaiting(:final requestId):
+          // Back here if turned away or the wait is cancelled.
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  WaitingRoomScreen(roomId: room, requestId: requestId),
+            ),
+          );
+      }
     } on MeetingApiException catch (error) {
       if (mounted) {
         if (error.sessionExpired) {

@@ -313,11 +313,24 @@ class MeetingSession extends ChangeNotifier {
       await room.disconnect();
       if (_disposed) return;
       connection.startConnecting();
-      _credentials = await api.joinRoom(
+      final result = await api.joinRoom(
         roomId: previous.roomId,
         name: previous.participant,
       );
       if (_disposed) return;
+      switch (result) {
+        case JoinAdmitted(:final credentials):
+          _credentials = credentials;
+        case JoinWaiting(:final requestId):
+          // Someone already in the meeting is let back in by the server;
+          // if it asks to wait anyway, rejoining goes through the join screen.
+          unawaited(
+            api
+                .cancelWaiting(previous.roomId, requestId)
+                .catchError((Object _) {}),
+          );
+          throw const AppException.localized(AppError.waitingRoomRejoin);
+      }
       await connect();
     } catch (error) {
       // An expired account continues as a guest on the next attempt.
@@ -882,6 +895,32 @@ class MeetingSession extends ChangeNotifier {
   }
 
   bool get isSharingScreen => _localScreenSharing || _ownsScreenShare;
+
+  // ---------------------------------------------------------------------------
+  // Waiting room
+
+  /// Whether this user may turn the waiting room on and let people in.
+  bool get canAdmit => can(MeetingPermission.admitMembers);
+  bool get waitingRoomOn => sharing?.state.waitingRoom ?? false;
+
+  /// People waiting to be let in, oldest first; only for those who may.
+  List<WaitingPerson> get waiting =>
+      canAdmit ? (sharing?.state.waiting ?? const []) : const [];
+
+  /// Throws the server's error so the caller can show it.
+  Future<void> setWaitingRoom(bool on) async {
+    if (!canAdmit) return;
+    await sharing?.setWaitingRoom(on);
+  }
+
+  /// Lets [person] in or turns them away. Throws the server's error.
+  Future<void> answerWaiting(
+    WaitingPerson person, {
+    required bool admit,
+  }) async {
+    if (!canAdmit) return;
+    await sharing?.answer(person.requestId, admit: admit);
+  }
 
   /// Whether this participant may share their screen at all.
   bool get screenSharingAllowed => can(MeetingPermission.shareScreen);

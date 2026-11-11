@@ -20,6 +20,7 @@ enum MeetingPermission {
   shareScreen('share_screen'),
   muteOthers('mute_others'),
   requestUnmute('request_unmute'),
+  admitMembers('admit_members'),
   removeMembers('remove_members'),
   endMeeting('end_meeting'),
   grantPermissions('grant_permissions');

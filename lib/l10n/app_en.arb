@@ -397,5 +397,38 @@
         "type": "String"
       }
     }
+  },
+  "permissionAdmitMembers": "Let people in",
+  "permissionAdmitMembersHint": "Can turn the waiting room on and off and let waiting people in or turn them away.",
+  "audioVideoSettings": "Audio and video",
+  "waitingRoom": "Waiting room",
+  "waitingRoomHint": "Newcomers wait until someone lets them in.",
+  "notifyArrivals": "Notify me when someone arrives",
+  "notifyArrivalsHint": "Shows a notice at the top when someone starts waiting.",
+  "waitingPeople": "Waiting",
+  "waitingPeopleCount": "Waiting ({count})",
+  "admitAll": "Let everyone in",
+  "admit": "Let in",
+  "reject": "Turn away",
+  "noOneWaiting": "No one is waiting",
+  "arrivalTitle": "{name} wants to join",
+  "waitingForAdmission": "Waiting for someone to let you in",
+  "waitingForAdmissionHint": "This meeting has a waiting room. You'll join as soon as someone lets you in.",
+  "admissionRejected": "You weren't let into the meeting.",
+  "waitingRequestEnded": "Your request to join has ended.",
+  "waitingRoomRejoin": "The waiting room is on. Join the meeting again to ask to be let in.",
+  "@waitingPeopleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@arrivalTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

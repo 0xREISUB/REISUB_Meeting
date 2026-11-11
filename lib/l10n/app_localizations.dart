@@ -1507,6 +1507,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove'**
   String get remove;
+
+  /// No description provided for @permissionAdmitMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Let people in'**
+  String get permissionAdmitMembers;
+
+  /// No description provided for @permissionAdmitMembersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Can turn the waiting room on and off and let waiting people in or turn them away.'**
+  String get permissionAdmitMembersHint;
+
+  /// No description provided for @audioVideoSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio and video'**
+  String get audioVideoSettings;
+
+  /// No description provided for @waitingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting room'**
+  String get waitingRoom;
+
+  /// No description provided for @waitingRoomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Newcomers wait until someone lets them in.'**
+  String get waitingRoomHint;
+
+  /// No description provided for @notifyArrivals.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me when someone arrives'**
+  String get notifyArrivals;
+
+  /// No description provided for @notifyArrivalsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows a notice at the top when someone starts waiting.'**
+  String get notifyArrivalsHint;
+
+  /// No description provided for @waitingPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get waitingPeople;
+
+  /// No description provided for @waitingPeopleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting ({count})'**
+  String waitingPeopleCount(int count);
+
+  /// No description provided for @admitAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Let everyone in'**
+  String get admitAll;
+
+  /// No description provided for @admit.
+  ///
+  /// In en, this message translates to:
+  /// **'Let in'**
+  String get admit;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn away'**
+  String get reject;
+
+  /// No description provided for @noOneWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'No one is waiting'**
+  String get noOneWaiting;
+
+  /// No description provided for @arrivalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants to join'**
+  String arrivalTitle(String name);
+
+  /// No description provided for @waitingForAdmission.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for someone to let you in'**
+  String get waitingForAdmission;
+
+  /// No description provided for @waitingForAdmissionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting has a waiting room. You\'ll join as soon as someone lets you in.'**
+  String get waitingForAdmissionHint;
+
+  /// No description provided for @admissionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'You weren\'t let into the meeting.'**
+  String get admissionRejected;
+
+  /// No description provided for @waitingRequestEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request to join has ended.'**
+  String get waitingRequestEnded;
+
+  /// No description provided for @waitingRoomRejoin.
+  ///
+  /// In en, this message translates to:
+  /// **'The waiting room is on. Join the meeting again to ask to be let in.'**
+  String get waitingRoomRejoin;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'meeting_api.dart';
 
+/// The room's shared state, polled from the server: the single screen
+/// share, and the waiting room with the people in it.
 class MeetingSharing extends ChangeNotifier {
   MeetingSharing({required this.roomId, required this.api});
 
@@ -64,6 +66,10 @@ class MeetingSharing extends ChangeNotifier {
       _update(() => api.startScreenShare(roomId, identity));
   Future<void> release(String identity) =>
       _update(() => api.stopScreenShare(roomId, identity));
+  Future<void> setWaitingRoom(bool on) =>
+      _update(() => api.setWaitingRoom(roomId, on));
+  Future<void> answer(String requestId, {required bool admit}) =>
+      _update(() => api.answerWaiting(roomId, requestId, admit: admit));
 
   @override
   void dispose() {

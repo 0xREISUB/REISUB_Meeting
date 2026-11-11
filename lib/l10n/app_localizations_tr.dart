@@ -809,4 +809,70 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get remove => 'Çıkar';
+
+  @override
+  String get permissionAdmitMembers => 'Bekleyenleri içeri alma';
+
+  @override
+  String get permissionAdmitMembersHint =>
+      'Bekleme odasını açıp kapatabilir, gelenleri içeri alabilir ya da reddedebilir.';
+
+  @override
+  String get audioVideoSettings => 'Ses ve görüntü';
+
+  @override
+  String get waitingRoom => 'Bekleme odası';
+
+  @override
+  String get waitingRoomHint =>
+      'Gelenler, yetkililer içeri alana kadar bekler.';
+
+  @override
+  String get notifyArrivals => 'Gelenler için bildirim al';
+
+  @override
+  String get notifyArrivalsHint =>
+      'Biri beklemeye başlayınca üstte bildirim gösterir.';
+
+  @override
+  String get waitingPeople => 'Bekleyenler';
+
+  @override
+  String waitingPeopleCount(int count) {
+    return 'Bekleyenler ($count)';
+  }
+
+  @override
+  String get admitAll => 'Hepsini içeri al';
+
+  @override
+  String get admit => 'İçeri al';
+
+  @override
+  String get reject => 'Reddet';
+
+  @override
+  String get noOneWaiting => 'Bekleyen yok';
+
+  @override
+  String arrivalTitle(String name) {
+    return '$name katılmak istiyor';
+  }
+
+  @override
+  String get waitingForAdmission => 'Yetkililerin sizi içeri alması bekleniyor';
+
+  @override
+  String get waitingForAdmissionHint =>
+      'Bu toplantıda bekleme odası açık. Biri sizi içeri aldığında toplantıya katılacaksınız.';
+
+  @override
+  String get admissionRejected => 'Toplantıya alınmadınız.';
+
+  @override
+  String get waitingRequestEnded => 'Katılma isteğiniz sona erdi.';
+
+  @override
+  String get waitingRoomRejoin =>
+      'Bekleme odası açık. İçeri alınmak için toplantıya yeniden katılın.';
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/meeting/widgets/meeting_waiting.dart';
 
 /// The floating bar with microphone, camera, people, chat, screen-share,
 /// more-options and leave buttons.
@@ -16,9 +17,12 @@ class MeetingControlsBar extends StatelessWidget {
     required this.onToggleMicrophone,
     required this.onToggleCamera,
     required this.onOpenMembers,
+    this.waitingCount,
+    this.onOpenWaiting,
     required this.onOpenChat,
     required this.onToggleScreenShare,
-    required this.onOpenSettings,
+    required this.onOpenAudioVideo,
+    this.onOpenSettings,
     this.onOpenPermissions,
     required this.onShowRoomCode,
     required this.onLeave,
@@ -36,11 +40,19 @@ class MeetingControlsBar extends StatelessWidget {
   final VoidCallback onToggleMicrophone;
   final VoidCallback onToggleCamera;
   final VoidCallback onOpenMembers;
+
+  /// People in the waiting room; null hides its button (the waiting room is
+  /// off, or the viewer may not let people in).
+  final int? waitingCount;
+  final VoidCallback? onOpenWaiting;
   final VoidCallback onOpenChat;
 
   /// Null disables the screen-share button.
   final VoidCallback? onToggleScreenShare;
-  final VoidCallback onOpenSettings;
+  final VoidCallback onOpenAudioVideo;
+
+  /// Opens the meeting settings; null hides them from the menu.
+  final VoidCallback? onOpenSettings;
 
   /// Opens the permissions window; null hides it from the menu.
   final VoidCallback? onOpenPermissions;
@@ -83,6 +95,11 @@ class MeetingControlsBar extends StatelessWidget {
             isActive: true,
             onTap: onOpenMembers,
           ),
+          if (waitingCount != null)
+            WaitingRoomButton(
+              count: waitingCount!,
+              onTap: onOpenWaiting ?? () {},
+            ),
           ControlButton(
             icon: Icons.chat_bubble_rounded,
             isActive: true,
@@ -116,17 +133,29 @@ class MeetingControlsBar extends StatelessWidget {
             onSelected: (value) {
               if (value == 'room_id') {
                 onShowRoomCode();
+              } else if (value == 'audio_video') {
+                onOpenAudioVideo();
               } else if (value == 'meeting_settings') {
-                onOpenSettings();
+                onOpenSettings?.call();
               } else if (value == 'permissions') {
                 onOpenPermissions?.call();
               }
             },
             itemBuilder: (context) => [
+              if (onOpenSettings != null)
+                PopupMenuItem<String>(
+                  key: const ValueKey('menu-meeting-settings'),
+                  value: 'meeting_settings',
+                  child: Text(
+                    l10n.meetingSettings,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
               PopupMenuItem<String>(
-                value: 'meeting_settings',
+                key: const ValueKey('menu-audio-video'),
+                value: 'audio_video',
                 child: Text(
-                  l10n.meetingSettings,
+                  l10n.audioVideoSettings,
                   style: const TextStyle(color: Colors.white),
                 ),
               ),

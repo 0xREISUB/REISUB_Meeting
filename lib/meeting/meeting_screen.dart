@@ -20,7 +20,9 @@ import 'package:v_meeting/meeting/widgets/meeting_controls_bar.dart';
 import 'package:v_meeting/meeting/widgets/meeting_joining_overlay.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 import 'package:v_meeting/meeting/widgets/meeting_settings_dialog.dart';
+import 'package:v_meeting/meeting/widgets/meeting_waiting.dart';
 import 'package:v_meeting/meeting/widgets/permissions_dialog.dart';
+import 'package:v_meeting/settings/meeting_preferences.dart';
 import 'package:v_meeting/meeting/widgets/screen_source_picker.dart';
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/media_privacy.dart';
@@ -62,6 +64,8 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   @override
   void initState() {
     super.initState();
+    // Starts loading whether to announce newcomers.
+    ref.read(meetingPreferencesProvider);
     WidgetsBinding.instance.addObserver(this);
     MeetingScreen._open++;
     final platform = ref.read(meetingPlatformProvider);
@@ -132,7 +136,88 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   void _onSessionChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    _updateArrivals();
+    setState(() {});
+  }
+
+  // ---------------------------------------------------------------------------
+  // Waiting room
+
+  /// Waiting people already seen, so each one is announced once.
+  final _seenWaiting = <String>{};
+
+  /// Newcomers announced at the top, newest last.
+  final _arrivals = <WaitingPerson>[];
+  final _arrivalTimers = <String, Timer>{};
+
+  static const _arrivalNoticeTime = Duration(seconds: 20);
+  static const _maxArrivalNotices = 3;
+
+  bool get _notifyArrivals =>
+      ref.read(meetingPreferencesProvider).value?.notifyArrivals ?? true;
+
+  void _updateArrivals() {
+    final waiting = _session.waitingRoomOn
+        ? _session.waiting
+        : const <WaitingPerson>[];
+    final present = {for (final person in waiting) person.requestId};
+    // Let in or turned away, by anyone: their notice goes.
+    for (final person in [..._arrivals]) {
+      if (!present.contains(person.requestId)) _dropArrival(person);
+    }
+    // Until the preference has loaded, newcomers wait for the next poll so
+    // a switched-off notice is not shown by mistake.
+    final preferences = ref.read(meetingPreferencesProvider).value;
+    if (preferences == null) return;
+    final notify = preferences.notifyArrivals;
+    for (final person in waiting) {
+      if (_seenWaiting.add(person.requestId) && notify) {
+        _arrivals.add(person);
+        _arrivalTimers[person.requestId] = Timer(_arrivalNoticeTime, () {
+          if (mounted) setState(() => _dropArrival(person));
+        });
+      }
+    }
+  }
+
+  void _dropArrival(WaitingPerson person) {
+    _arrivals.removeWhere((other) => other.requestId == person.requestId);
+    _arrivalTimers.remove(person.requestId)?.cancel();
+  }
+
+  Future<void> _answerArrival(
+    WaitingPerson person, {
+    required bool admit,
+  }) async {
+    setState(() => _dropArrival(person));
+    try {
+      await _session.answerWaiting(person, admit: admit);
+    } catch (error) {
+      if (mounted) _showMessage(localizeError(error, _l10n));
+    }
+  }
+
+  void _openWaitingSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1C1C1E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      builder: (context) => SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.55,
+        child: ListenableBuilder(
+          listenable: _session,
+          builder: (context, _) => WaitingListSheet(
+            waiting: _session.waiting,
+            onAnswer: _session.answerWaiting,
+          ),
+        ),
+      ),
+    );
   }
 
   void _scheduleControlsHide() {
@@ -341,11 +426,26 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     );
   }
 
-  void _openMeetingSettings() {
+  void _openAudioVideoSettings() {
     showDialog<void>(
       context: context,
       builder: (_) =>
-          MeetingSettingsDialog(onDeviceTest: _openMeetingDeviceTest),
+          AudioVideoSettingsDialog(onDeviceTest: _openMeetingDeviceTest),
+    );
+  }
+
+  void _openMeetingSettings() {
+    showDialog<void>(
+      context: context,
+      builder: (_) => MeetingSettingsDialog(
+        listenable: _session,
+        waitingRoomOn: () => _session.waitingRoomOn,
+        onWaitingRoomChanged: _session.setWaitingRoom,
+        notifyArrivals: _notifyArrivals,
+        onNotifyArrivalsChanged: (on) => ref
+            .read(meetingPreferencesProvider.notifier)
+            .change(notifyArrivals: on),
+      ),
     );
   }
 
@@ -383,6 +483,9 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     unawaited(platform.setKeepScreenOn(false));
     unawaited(platform.stopMeetingService());
     _controlsTimer?.cancel();
+    for (final timer in _arrivalTimers.values) {
+      timer.cancel();
+    }
     _display.exit();
     _session
       ..removeListener(_onSessionChanged)
@@ -475,7 +578,15 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                             onToggleScreenShare: session.canToggleScreenShare
                                 ? session.toggleScreenShare
                                 : null,
-                            onOpenSettings: _openMeetingSettings,
+                            onOpenAudioVideo: _openAudioVideoSettings,
+                            onOpenSettings: session.canAdmit
+                                ? _openMeetingSettings
+                                : null,
+                            waitingCount:
+                                session.canAdmit && session.waitingRoomOn
+                                ? session.waiting.length
+                                : null,
+                            onOpenWaiting: _openWaitingSheet,
                             onOpenPermissions:
                                 session.can(MeetingPermission.grantPermissions)
                                 ? _openPermissions
@@ -545,6 +656,38 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                     onClose: () => setState(() => _showRoomCode = false),
                   ),
                 ),
+              if (_arrivals.isNotEmpty)
+                Positioned(
+                  top: 12,
+                  left: 16,
+                  right: 16,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 460),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: 8,
+                        children: [
+                          for (final person in _arrivals.reversed.take(
+                            _maxArrivalNotices,
+                          ))
+                            _DropIn(
+                              key: ValueKey('drop-${person.requestId}'),
+                              child: ArrivalNotice(
+                                person: person,
+                                onAdmit: () =>
+                                    _answerArrival(person, admit: true),
+                                onReject: () =>
+                                    _answerArrival(person, admit: false),
+                                onDismiss: () =>
+                                    setState(() => _dropArrival(person)),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               if (!session.entryGate.ready)
                 Positioned.fill(
                   child: MeetingJoiningOverlay(
@@ -559,6 +702,31 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Slides [child] down from above and fades it in once, when it first
+/// appears.
+class _DropIn extends StatelessWidget {
+  const _DropIn({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, -24 * (1 - value)),
+          child: child,
+        ),
+      ),
+      child: child,
     );
   }
 }
