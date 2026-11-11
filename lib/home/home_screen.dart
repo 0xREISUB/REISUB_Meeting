@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/orientation.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/login_screen.dart';
@@ -19,6 +20,15 @@ class HomeScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final signedIn = ref.watch(signedInProvider).value ?? false;
 
+    return PortraitOnPhone(child: _scaffold(context, ref, l10n, signedIn));
+  }
+
+  Widget _scaffold(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    bool signedIn,
+  ) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,

@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:v_meeting/app/orientation.dart' as app;
 import 'package:v_meeting/meeting/meeting_platform.dart';
 
 /// Shows meetings on phones in landscape fullscreen and restores the normal
@@ -14,11 +14,7 @@ class MeetingDisplayMode {
   bool _active = false;
   Timer? _systemUiTimer;
 
-  static bool isNativePhone(BuildContext context) =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS) &&
-      MediaQuery.sizeOf(context).shortestSide < 600;
+  static bool isNativePhone(BuildContext context) => app.isNativePhone(context);
 
   void enterIfPhone(BuildContext context) {
     if (_active || !isNativePhone(context)) return;
@@ -53,7 +49,9 @@ class MeetingDisplayMode {
     _systemUiTimer?.cancel();
     if (!_active) return;
     _active = false;
-    unawaited(SystemChrome.setPreferredOrientations([]));
+    // Back to what the screens outside the meeting allow, e.g. upright on
+    // the home screen.
+    app.AppOrientation.restore();
     unawaited(_platform.setFullscreen(false));
   }
 }

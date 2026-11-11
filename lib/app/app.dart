@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:v_meeting/app/orientation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/app_startup.dart';
 import 'package:v_meeting/app/deep_links.dart';
@@ -60,6 +61,7 @@ class _VMeetingAppState extends ConsumerState<VMeetingApp> {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: buildAppTheme(),
+      navigatorObservers: [appRouteObserver],
       home: const StartupScreen(),
     );
   }
