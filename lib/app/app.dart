@@ -13,6 +13,8 @@ import 'package:v_meeting/auth/host_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/join_screen.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/widgets/brand_loader.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 class VMeetingApp extends ConsumerStatefulWidget {
   const VMeetingApp({super.key});
@@ -90,7 +92,10 @@ class StartupScreen extends ConsumerWidget {
       AsyncData(value: StartDestination.home) => startHome(ref),
       AsyncData(value: StartDestination.serverSetup) ||
       AsyncError() => const HostScreen(),
-      _ => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      // The app's own loading sign while it finds where to start.
+      _ => const Scaffold(
+        body: GlassBackground(child: Center(child: BrandLoader())),
+      ),
     };
   }
 }
