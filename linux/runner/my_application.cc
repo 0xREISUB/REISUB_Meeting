@@ -55,10 +55,24 @@ static void my_application_activate(GApplication* application) {
   // Rounded corners: with a compositor the window can be see-through, so
   // only the app, which clips itself to rounded corners, is drawn. The
   // window's own background goes, and its shadow follows the same corners.
+  //
+  // Not on X11: there GTK blends every frame of a see-through Flutter view
+  // through the CPU, and large windows stutter. Wayland has no such cost.
+  // REISUB_OPAQUE_WINDOW=1 keeps the window opaque anywhere.
   GdkScreen* window_screen = gtk_window_get_screen(window);
   GdkVisual* rgba_visual = gdk_screen_get_rgba_visual(window_screen);
+  const gchar* opaque = g_getenv("REISUB_OPAQUE_WINDOW");
   gboolean see_through =
+      (opaque == nullptr || g_strcmp0(opaque, "") == 0 ||
+       g_strcmp0(opaque, "0") == 0) &&
       rgba_visual != nullptr && gdk_screen_is_composited(window_screen);
+#ifdef GDK_WINDOWING_X11
+  if (GDK_IS_X11_SCREEN(window_screen)) {
+    see_through = FALSE;
+  }
+#endif
+  // Tells the app whether to round its corners.
+  g_setenv("REISUB_ROUNDED_WINDOW", see_through ? "1" : "0", TRUE);
   if (see_through) {
     gtk_widget_set_visual(GTK_WIDGET(window), rgba_visual);
     gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);

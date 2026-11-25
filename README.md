@@ -59,6 +59,18 @@ clients, with English and Turkish interfaces.
 4. Create a meeting or join with a room code. Logging in is optional; without
    an account the app uses a guest session.
 
+**Linux and window corners.** On a Wayland session the window has rounded
+corners. On X11 it opens with square corners on purpose: X11 would make every
+frame of a rounded, see-through window go through the CPU, and large windows
+on high refresh rate screens would stutter. Nothing is wrong if your corners
+are square; for the rounded ones, log in to a Wayland session (on GNOME, pick
+it with the gear button on the login screen). If the window ever stutters on
+Wayland, start the app with `REISUB_OPAQUE_WINDOW=1` to keep it opaque:
+
+```sh
+REISUB_OPAQUE_WINDOW=1 reisub-meeting
+```
+
 ### Public server
 
 A public REISUB Meeting server is open to everyone until **8 December 2026**.
@@ -135,6 +147,18 @@ istemcilerinde Türkçe ve İngilizce arayüz sunar.
    Meeting sunucunuzun adresini ve portunu girin.
 4. Toplantı oluşturun ya da oda koduyla katılın. Giriş yapmak isteğe bağlıdır;
    hesap olmadan uygulama misafir oturumu kullanır.
+
+**Linux ve pencere köşeleri.** Wayland oturumunda pencerenin köşeleri
+yuvarlaktır. X11'de pencere bilerek düz köşeli açılır: X11'de yuvarlak köşeli,
+saydam bir pencerenin her karesi işlemciden geçer ve yüksek yenileme hızlı
+ekranlarda büyük pencereler takılır. Köşeleriniz düzse bir sorun yok;
+yuvarlak köşeler için Wayland oturumuyla giriş yapın (GNOME'da giriş
+ekranındaki dişli düğmesinden seçilir). Wayland'de pencere takılırsa uygulamayı
+`REISUB_OPAQUE_WINDOW=1` ile başlatarak opak tutabilirsiniz:
+
+```sh
+REISUB_OPAQUE_WINDOW=1 reisub-meeting
+```
 
 ### Herkese açık sunucu
 

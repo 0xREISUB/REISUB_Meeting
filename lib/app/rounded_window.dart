@@ -1,10 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Rounds the corners of the app's window on Linux, whose window, with the
 /// system's title bar hidden, would otherwise be square. The runner makes
-/// the window see-through so the corners show the desktop. A maximised or
+/// the window see-through so the corners show the desktop, on Wayland only:
+/// on X11 that costs too much, and the corners stay square. A maximised or
 /// full-screen window meets the screen's edges and stays square.
 ///
 /// Windows 11 and macOS round their windows themselves.
@@ -15,8 +18,12 @@ class RoundedWindow extends StatefulWidget {
 
   static const radius = 12.0;
 
+  /// Whether the runner made the window see-through, which it does only
+  /// on Wayland (see linux/runner/my_application.cc).
   static bool get supported =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.linux &&
+      Platform.environment['REISUB_ROUNDED_WINDOW'] == '1';
 
   @override
   State<RoundedWindow> createState() => _RoundedWindowState();
