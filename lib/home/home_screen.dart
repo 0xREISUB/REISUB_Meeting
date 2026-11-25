@@ -5,6 +5,7 @@ import 'package:v_meeting/home/home_tab.dart';
 import 'package:v_meeting/home/social_tab.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/settings/settings_view.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The app's main screen: Social, Home and Settings tabs, switched from a
 /// bar at the bottom. A tab slides in from its side, and the tabs can also
@@ -47,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return PortraitOnPhone(
       child: Scaffold(
         extendBody: true,
-        body: _AmbientBackground(
+        body: GlassBackground(
           child: PageView(
             key: const ValueKey('home-tabs'),
             controller: _pages,
@@ -84,42 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Two soft glows of the app's colour behind the tabs, so the glass bar
-/// has light to catch.
-class _AmbientBackground extends StatelessWidget {
-  const _AmbientBackground({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
-    Widget glow(Alignment at, double alpha) => Positioned.fill(
-      child: IgnorePointer(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: at,
-              radius: 1.1,
-              colors: [
-                accent.withValues(alpha: alpha),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-    return Stack(
-      children: [
-        glow(const Alignment(-1.1, -1.2), 0.16),
-        glow(const Alignment(1.2, 1.1), 0.20),
-        Positioned.fill(child: child),
-      ],
     );
   }
 }
