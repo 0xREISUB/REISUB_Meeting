@@ -155,7 +155,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
     final signedIn = ref.watch(signedInProvider).value ?? false;
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      // Room at the end for the bottom bar, in the tab, or the system's.
+      padding: EdgeInsets.only(
+        top: 12,
+        bottom: 12 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         if (widget.showTitle)
           Padding(

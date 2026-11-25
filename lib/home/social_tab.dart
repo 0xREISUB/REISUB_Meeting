@@ -11,9 +11,15 @@ class SocialTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return SafeArea(
+      bottom: false,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(28),
+          padding: EdgeInsets.fromLTRB(
+            28,
+            28,
+            28,
+            28 + MediaQuery.paddingOf(context).bottom,
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 380),
             child: GlassSurface(

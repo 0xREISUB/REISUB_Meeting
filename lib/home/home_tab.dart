@@ -14,23 +14,27 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // Not the bottom: the bar floats there, beside it the page goes on.
+    final barRoom = MediaQuery.paddingOf(context).bottom;
     return SafeArea(
+      bottom: false,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isCompact =
               constraints.maxWidth < 400 || constraints.maxHeight < 620;
           final verticalPadding = isCompact ? 20.0 : 32.0;
           return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: verticalPadding,
+            padding: EdgeInsets.fromLTRB(
+              24,
+              verticalPadding,
+              24,
+              verticalPadding + barRoom,
             ),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: (constraints.maxHeight - verticalPadding * 2).clamp(
-                  0,
-                  double.infinity,
-                ),
+                minHeight:
+                    (constraints.maxHeight - verticalPadding * 2 - barRoom)
+                        .clamp(0, double.infinity),
               ),
               child: Center(
                 child: ConstrainedBox(

@@ -56,12 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
             children: const [
               SocialTab(),
               HomeTab(),
-              SafeArea(child: SettingsView(showTitle: true)),
+              SafeArea(bottom: false, child: SettingsView(showTitle: true)),
             ],
           ),
         ),
-        // The pages run under the floating bar, so it blurs them; their
-        // safe areas keep content clear of it.
+        // The pages run under the floating bar, so it blurs them, and
+        // only beside it they show through. Their scrolling ends with room
+        // for the bar, so nothing stays hidden under it.
         bottomNavigationBar: GlassNavBar(
           key: const ValueKey('home-navigation'),
           selectedIndex: _tab,
