@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/app.dart';
 import 'package:v_meeting/app/deep_links.dart';
+import 'package:v_meeting/app/smooth_wheel.dart';
 import 'package:v_meeting/app/invite.dart';
 
 Future<void> main(List<String> args) async {
-  WidgetsFlutterBinding.ensureInitialized();
+  SmoothWheelBinding();
   final invite = await DeepLinks.launchInvite(args);
   runApp(
     ProviderScope(
