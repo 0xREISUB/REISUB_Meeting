@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/l10n/localized_error.dart';
+import 'package:v_meeting/social/avatar_picker.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
 import 'package:v_meeting/social/social_actions.dart';
 import 'package:v_meeting/social/social_api.dart';
@@ -106,6 +109,70 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
   );
   late var _presence = widget.profile.presence;
   bool _saving = false;
+  bool _uploading = false;
+
+  /// Chooses a new profile photo, or, when there is one, offers to remove
+  /// it instead.
+  Future<void> _changePhoto(bool hasPhoto) async {
+    final l10n = AppLocalizations.of(context)!;
+    final api = ref.read(socialApiProvider);
+    if (hasPhoto) {
+      final choose = await showDialog<bool>(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: Text(l10n.profilePhoto),
+          children: [
+            SimpleDialogOption(
+              key: const ValueKey('photo-choose'),
+              onPressed: () => Navigator.pop(context, true),
+              child: ListTile(
+                leading: const Icon(Icons.photo_library_rounded),
+                title: Text(l10n.choosePhoto),
+              ),
+            ),
+            SimpleDialogOption(
+              key: const ValueKey('photo-remove'),
+              onPressed: () => Navigator.pop(context, false),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
+                title: Text(l10n.removePhoto),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (choose == null || !mounted) return;
+      if (!choose) {
+        await runSocialAction(context, ref, api.deleteAvatar);
+        return;
+      }
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    Uint8List? photo;
+    try {
+      photo = await pickProfilePicture();
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(localizeError(error, l10n))),
+      );
+      return;
+    }
+    if (photo == null || !mounted) return;
+    setState(() => _uploading = true);
+    final saved = await runSocialAction(
+      context,
+      ref,
+      () => api.uploadAvatar(photo!),
+    );
+    if (!mounted) return;
+    setState(() => _uploading = false);
+    if (saved) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.photoSaved)));
+    }
+  }
 
   Future<void> _save() async {
     setState(() => _saving = true);
@@ -142,6 +209,10 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final profile = widget.profile;
+    // The photo as it is now: it changes here, after the profile opened.
+    final avatarUrl =
+        ref.watch(socialOverviewProvider).value?.profile.avatarUrl ??
+        profile.avatarUrl;
     return ListView(
       padding: widget.padding,
       children: [
@@ -155,8 +226,16 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
                     : _displayName.text,
                 seed: profile.nick,
                 presence: _presence,
+                avatarUrl: avatarUrl,
                 size: 104,
               ),
+              if (_uploading)
+                const Positioned.fill(
+                  child: Padding(
+                    padding: EdgeInsets.all(4),
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  ),
+                ),
               Positioned(
                 left: -6,
                 bottom: -2,
@@ -166,7 +245,9 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
                   iconSize: 18,
                   tint: brandColor,
                   icon: Icons.photo_camera_rounded,
-                  onPressed: () => showSocialComingSoon(context),
+                  onPressed: _uploading
+                      ? null
+                      : () => _changePhoto(avatarUrl.isNotEmpty),
                 ),
               ),
             ],

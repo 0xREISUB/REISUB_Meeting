@@ -2185,6 +2185,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile saved.'**
   String get profileSaved;
+
+  /// No description provided for @choosePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a photo'**
+  String get choosePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @profilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo'**
+  String get profilePhoto;
+
+  /// No description provided for @photoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo updated.'**
+  String get photoSaved;
+
+  /// No description provided for @errorInvalidImage.
+  ///
+  /// In en, this message translates to:
+  /// **'This file could not be opened as a picture.'**
+  String get errorInvalidImage;
+
+  /// No description provided for @errorImageTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This picture is too large.'**
+  String get errorImageTooLarge;
 }
 
 class _AppLocalizationsDelegate

@@ -293,6 +293,7 @@ class _ProfileCard extends StatelessWidget {
                 PresenceAvatar(
                   name: profile.displayName,
                   seed: profile.nick,
+                  avatarUrl: profile.avatarUrl,
                   presence: profile.presence,
                   size: 56,
                 ),

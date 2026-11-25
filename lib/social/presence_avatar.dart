@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'package:v_meeting/meeting/widgets/participant_tile.dart';
 import 'package:v_meeting/social/social_models.dart';
+import 'package:v_meeting/social/user_avatar.dart';
 
 /// Someone's avatar with a dot for whether they can be reached.
 class PresenceAvatar extends StatelessWidget {
@@ -10,12 +10,16 @@ class PresenceAvatar extends StatelessWidget {
     required this.name,
     required this.seed,
     required this.presence,
+    this.avatarUrl = '',
     this.size = 44,
   });
 
   final String name;
   final String seed;
   final Presence presence;
+
+  /// The profile picture's path on the server; empty without one.
+  final String avatarUrl;
   final double size;
 
   @override
@@ -26,7 +30,7 @@ class PresenceAvatar extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          MemberAvatar(name: name, seed: seed, size: size, fitTile: false),
+          UserAvatar(name: name, seed: seed, avatarUrl: avatarUrl, size: size),
           Positioned(
             right: -1,
             bottom: -1,

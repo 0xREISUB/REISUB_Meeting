@@ -504,6 +504,8 @@ class MeetingApi {
       'already_team_member' => AppError.alreadyTeamMember,
       'team_full' => AppError.teamFull,
       'invalid_team' => AppError.invalidTeam,
+      'invalid_image' => AppError.invalidImage,
+      'image_too_large' => AppError.imageTooLarge,
       _ => null,
     };
     if (known != null) {

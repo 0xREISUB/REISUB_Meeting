@@ -636,5 +636,11 @@
       }
     }
   },
-  "profileSaved": "Profile saved."
+  "profileSaved": "Profile saved.",
+  "choosePhoto": "Choose a photo",
+  "removePhoto": "Remove photo",
+  "profilePhoto": "Profile photo",
+  "photoSaved": "Profile photo updated.",
+  "errorInvalidImage": "This file could not be opened as a picture.",
+  "errorImageTooLarge": "This picture is too large."
 }

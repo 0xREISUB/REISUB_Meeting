@@ -70,6 +70,7 @@ class _TeamMembersState extends ConsumerState<_TeamMembers> {
                   PresenceAvatar(
                     name: friend.displayName,
                     seed: friend.nick,
+                    avatarUrl: friend.avatarUrl,
                     presence: friend.presence,
                     size: 34,
                   ),
@@ -215,6 +216,7 @@ class _TeamMembersState extends ConsumerState<_TeamMembers> {
                             leading: PresenceAvatar(
                               name: member.person.displayName,
                               seed: member.person.nick,
+                              avatarUrl: member.person.avatarUrl,
                               presence: member.person.presence,
                               size: 38,
                             ),

@@ -1217,4 +1217,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSaved => 'Profile saved.';
+
+  @override
+  String get choosePhoto => 'Choose a photo';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get profilePhoto => 'Profile photo';
+
+  @override
+  String get photoSaved => 'Profile photo updated.';
+
+  @override
+  String get errorInvalidImage => 'This file could not be opened as a picture.';
+
+  @override
+  String get errorImageTooLarge => 'This picture is too large.';
 }

@@ -1201,4 +1201,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get profileSaved => 'Profil kaydedildi.';
+
+  @override
+  String get choosePhoto => 'Fotoğraf seç';
+
+  @override
+  String get removePhoto => 'Fotoğrafı kaldır';
+
+  @override
+  String get profilePhoto => 'Profil fotoğrafı';
+
+  @override
+  String get photoSaved => 'Profil fotoğrafı güncellendi.';
+
+  @override
+  String get errorInvalidImage => 'Bu dosya bir resim olarak açılamadı.';
+
+  @override
+  String get errorImageTooLarge => 'Bu resim çok büyük.';
 }

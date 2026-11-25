@@ -45,12 +45,14 @@ class SocialProfile {
     required this.nick,
     required this.presence,
     this.statusMessage = '',
+    this.avatarUrl = '',
   });
 
   factory SocialProfile.fromJson(Map<String, dynamic> json) => SocialProfile(
     displayName: json['display_name'] as String? ?? json['nick'] as String,
     nick: json['nick'] as String,
     statusMessage: json['status_message'] as String? ?? '',
+    avatarUrl: json['avatar_url'] as String? ?? '',
     // Hiding shows as offline to friends.
     presence: json['presence'] == 'invisible'
         ? Presence.offline
@@ -61,6 +63,9 @@ class SocialProfile {
   final String nick;
   final Presence presence;
   final String statusMessage;
+
+  /// The profile picture's path on the server; empty without one.
+  final String avatarUrl;
 }
 
 /// The server's word for a presence the user picks.
@@ -78,6 +83,7 @@ class Friend {
     required this.presence,
     this.statusMessage = '',
     this.offlineFor,
+    this.avatarUrl = '',
   });
 
   factory Friend.fromJson(Map<String, dynamic> json) {
@@ -89,6 +95,7 @@ class Friend {
       statusMessage: json['status_message'] as String? ?? '',
       presence: Presence.parse(json['presence']),
       offlineFor: lastSeen == null ? null : Duration(seconds: lastSeen),
+      avatarUrl: json['avatar_url'] as String? ?? '',
     );
   }
 
@@ -100,6 +107,9 @@ class Friend {
 
   /// How long ago an offline friend was last seen.
   final Duration? offlineFor;
+
+  /// The profile picture's path on the server; empty without one.
+  final String avatarUrl;
 }
 
 /// A friend request: incoming, to answer, or outgoing, waiting.
@@ -109,6 +119,7 @@ class FriendRequest {
     required this.userId,
     required this.displayName,
     required this.nick,
+    this.avatarUrl = '',
   });
 
   factory FriendRequest.fromJson(Map<String, dynamic> json) {
@@ -118,6 +129,7 @@ class FriendRequest {
       userId: '${user['id']}',
       displayName: user['display_name'] as String? ?? user['nick'] as String,
       nick: user['nick'] as String,
+      avatarUrl: user['avatar_url'] as String? ?? '',
     );
   }
 
@@ -125,6 +137,7 @@ class FriendRequest {
   final String userId;
   final String displayName;
   final String nick;
+  final String avatarUrl;
 }
 
 enum TeamRole {
@@ -207,6 +220,7 @@ class SocialMessage {
     required this.sender,
     required this.mine,
     this.roomId,
+    this.senderAvatarUrl = '',
   });
 
   factory SocialMessage.fromJson(Map<String, dynamic> json) {
@@ -218,6 +232,7 @@ class SocialMessage {
       sender: json['sender'] as String? ?? '',
       mine: json['is_mine'] as bool? ?? false,
       roomId: roomId == null || roomId.isEmpty ? null : roomId,
+      senderAvatarUrl: json['sender_avatar_url'] as String? ?? '',
     );
   }
 
@@ -229,6 +244,9 @@ class SocialMessage {
 
   /// Set when the message invites to a meeting.
   final String? roomId;
+
+  /// The sender's profile picture's path on the server; empty without one.
+  final String senderAvatarUrl;
 
   /// "14:05", or with the date for an older message.
   String timeLabel(DateTime now) {

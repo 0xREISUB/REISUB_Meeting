@@ -475,5 +475,11 @@
   "removeFromTeam": "Takımdan çıkar",
   "removeFriend": "Arkadaşlıktan çıkar",
   "removeFriendBody": "{name} arkadaş listenden çıkarılacak.",
-  "profileSaved": "Profil kaydedildi."
+  "profileSaved": "Profil kaydedildi.",
+  "choosePhoto": "Fotoğraf seç",
+  "removePhoto": "Fotoğrafı kaldır",
+  "profilePhoto": "Profil fotoğrafı",
+  "photoSaved": "Profil fotoğrafı güncellendi.",
+  "errorInvalidImage": "Bu dosya bir resim olarak açılamadı.",
+  "errorImageTooLarge": "Bu resim çok büyük."
 }

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'package:v_meeting/meeting/widgets/participant_tile.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
 import 'package:v_meeting/social/social_actions.dart';
 import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_models.dart';
 import 'package:v_meeting/social/team_members_dialog.dart';
 import 'package:v_meeting/social/teams_list.dart';
+import 'package:v_meeting/social/user_avatar.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
 /// A conversation with a friend or a team: who it is with on top, the
@@ -255,6 +255,7 @@ class _ChatHeader extends ConsumerWidget {
             PresenceAvatar(
               name: friend.displayName,
               seed: friend.nick,
+              avatarUrl: friend.avatarUrl,
               presence: friend.presence,
               size: 42,
             )
@@ -436,11 +437,11 @@ class _Bubble extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          MemberAvatar(
+                          UserAvatar(
                             name: sender,
                             seed: sender,
+                            avatarUrl: message.senderAvatarUrl,
                             size: 18,
-                            fitTile: false,
                           ),
                           const SizedBox(width: 6),
                           Text(

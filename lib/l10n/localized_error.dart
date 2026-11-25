@@ -37,6 +37,8 @@ enum AppError {
   alreadyTeamMember,
   teamFull,
   invalidTeam,
+  invalidImage,
+  imageTooLarge,
 }
 
 /// Keep application errors as data so an already visible error follows a locale
@@ -95,6 +97,8 @@ class AppException implements Exception {
     AppError.alreadyTeamMember => l10n.errorAlreadyTeamMember,
     AppError.teamFull => l10n.errorTeamFull,
     AppError.invalidTeam => l10n.errorInvalidTeam,
+    AppError.invalidImage => l10n.errorInvalidImage,
+    AppError.imageTooLarge => l10n.errorImageTooLarge,
     null => message!,
   };
 

@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/account.dart';
@@ -29,6 +32,21 @@ class SocialApi {
       if (presence != null) 'presence': presenceChoice(presence),
     },
   );
+
+  /// Sets the profile picture from a JPEG.
+  Future<void> uploadAvatar(Uint8List jpeg) => _api.send(
+    'PUT',
+    '/me/avatar',
+    data: FormData.fromMap({
+      'avatar': MultipartFile.fromBytes(
+        jpeg,
+        filename: 'avatar.jpg',
+        contentType: DioMediaType('image', 'jpeg'),
+      ),
+    }),
+  );
+
+  Future<void> deleteAvatar() => _api.send('DELETE', '/me/avatar');
 
   Future<void> sendFriendRequest(String nick) =>
       _api.send('POST', '/friends/requests', data: {'nick': nick.trim()});

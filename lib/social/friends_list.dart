@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'package:v_meeting/meeting/widgets/participant_tile.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
 import 'package:v_meeting/social/social_actions.dart';
 import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_models.dart';
+import 'package:v_meeting/social/user_avatar.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
 /// Friend requests waiting for an answer, then the friends: those who can
@@ -117,6 +117,7 @@ class _FriendRow extends ConsumerWidget {
       leading: PresenceAvatar(
         name: friend.displayName,
         seed: friend.nick,
+        avatarUrl: friend.avatarUrl,
         presence: friend.presence,
         size: 42,
       ),
@@ -186,7 +187,12 @@ class _RequestRow extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
       child: Row(
         children: [
-          MemberAvatar(name: request.displayName, seed: request.nick, size: 42),
+          UserAvatar(
+            name: request.displayName,
+            seed: request.nick,
+            avatarUrl: request.avatarUrl,
+            size: 42,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
