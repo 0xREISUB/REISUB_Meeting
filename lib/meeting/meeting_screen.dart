@@ -18,6 +18,7 @@ import 'package:v_meeting/meeting/widgets/meeting_banners.dart';
 import 'package:v_meeting/meeting/widgets/meeting_chat_sheet.dart';
 import 'package:v_meeting/meeting/widgets/meeting_controls_bar.dart';
 import 'package:v_meeting/meeting/widgets/meeting_countdown.dart';
+import 'package:v_meeting/meeting/widgets/meeting_notices.dart';
 import 'package:v_meeting/meeting/widgets/meeting_joining_overlay.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 import 'package:v_meeting/meeting/widgets/meeting_settings_dialog.dart';
@@ -142,106 +143,47 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
 
   void _onSessionChanged() {
     if (!mounted) return;
-    _updateArrivals();
+    _notices.updateWaiting(
+      _session.waitingRoomOn ? _session.waiting : const [],
+      notify: ref.read(meetingPreferencesProvider).value?.notifyArrivals,
+    );
     // A new count from the server warns at once, not at the next tick.
-    if (_session.timeLeft case final left?) _checkTimeWarnings(left);
+    if (_session.timeLeft case final left?) _notices.updateTimeLeft(left);
     setState(() {});
+  }
+
+  /// Newcomers and the time limit, announced at the top.
+  late final _notices = MeetingNotices()..addListener(_onNoticesChanged);
+
+  void _onNoticesChanged() {
+    if (mounted) setState(() {});
   }
 
   // ---------------------------------------------------------------------------
   // Time limit
 
   Timer? _countdownTimer;
-  bool _warnedTenMinutes = false;
-  bool _warnedOneMinute = false;
-  String? _timeNotice;
-  Timer? _timeNoticeTimer;
-
-  static const _timeNoticeTime = Duration(seconds: 8);
 
   void _onClockTick() {
     if (!mounted) return;
     final left = _session.timeLeft;
     if (left == null) return;
-    _checkTimeWarnings(left);
+    _notices.updateTimeLeft(left);
     // The countdown only shows, and moves, in the last stretch.
     if (left <= MeetingCountdown.window) setState(() {});
-  }
-
-  /// Tells everyone once when ten minutes are left, or fewer on joining
-  /// late, and once more at one minute. A limit the server extends arms
-  /// the warnings again.
-  void _checkTimeWarnings(Duration left) {
-    if (left > MeetingCountdown.window) _warnedTenMinutes = false;
-    if (left > const Duration(minutes: 1)) _warnedOneMinute = false;
-    if (left <= const Duration(minutes: 1)) {
-      if (_warnedOneMinute) return;
-      _warnedOneMinute = _warnedTenMinutes = true;
-      _showTimeNotice(1);
-    } else if (left <= MeetingCountdown.window && !_warnedTenMinutes) {
-      _warnedTenMinutes = true;
-      _showTimeNotice((left.inSeconds / 60).ceil());
-    }
-  }
-
-  void _showTimeNotice(int minutes) {
-    _timeNoticeTimer?.cancel();
-    setState(() => _timeNotice = _l10n.minutesLeftNotice(minutes));
-    _timeNoticeTimer = Timer(_timeNoticeTime, () {
-      if (mounted) setState(() => _timeNotice = null);
-    });
   }
 
   // ---------------------------------------------------------------------------
   // Waiting room
 
-  /// Waiting people already seen, so each one is announced once.
-  final _seenWaiting = <String>{};
-
-  /// Newcomers announced at the top, newest last.
-  final _arrivals = <WaitingPerson>[];
-  final _arrivalTimers = <String, Timer>{};
-
-  static const _arrivalNoticeTime = Duration(seconds: 20);
-  static const _maxArrivalNotices = 3;
-
   bool get _notifyArrivals =>
       ref.read(meetingPreferencesProvider).value?.notifyArrivals ?? true;
-
-  void _updateArrivals() {
-    final waiting = _session.waitingRoomOn
-        ? _session.waiting
-        : const <WaitingPerson>[];
-    final present = {for (final person in waiting) person.requestId};
-    // Let in or turned away, by anyone: their notice goes.
-    for (final person in [..._arrivals]) {
-      if (!present.contains(person.requestId)) _dropArrival(person);
-    }
-    // Until the preference has loaded, newcomers wait for the next poll so
-    // a switched-off notice is not shown by mistake.
-    final preferences = ref.read(meetingPreferencesProvider).value;
-    if (preferences == null) return;
-    final notify = preferences.notifyArrivals;
-    for (final person in waiting) {
-      if (_seenWaiting.add(person.requestId) && notify) {
-        _arrivals.add(person);
-        _arrivalTimers[person.requestId] = Timer(_arrivalNoticeTime, () {
-          if (mounted) setState(() => _dropArrival(person));
-        });
-      }
-    }
-  }
-
-  void _dropArrival(WaitingPerson person) {
-    _arrivals.removeWhere((other) => other.requestId == person.requestId);
-    _arrivalTimers.remove(person.requestId)?.cancel();
-  }
 
   Future<void> _answerArrival(
     WaitingPerson person, {
     required bool admit,
   }) async {
-    setState(() => _dropArrival(person));
+    _notices.dismiss(person);
     try {
       await _session.answerWaiting(person, admit: admit);
     } catch (error) {
@@ -537,11 +479,10 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     unawaited(platform.setKeepScreenOn(false));
     unawaited(platform.stopMeetingService());
     _controlsTimer?.cancel();
-    for (final timer in _arrivalTimers.values) {
-      timer.cancel();
-    }
     _countdownTimer?.cancel();
-    _timeNoticeTimer?.cancel();
+    _notices
+      ..removeListener(_onNoticesChanged)
+      ..dispose();
     _display.exit();
     _session
       ..removeListener(_onSessionChanged)
@@ -719,41 +660,14 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
                   left: 12,
                   child: IgnorePointer(child: MeetingCountdown(left: left)),
                 ),
-              if (_arrivals.isNotEmpty || _timeNotice != null)
+              if (!_notices.isEmpty)
                 Positioned(
                   top: 12,
                   left: 16,
                   right: 16,
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 460),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: 8,
-                        children: [
-                          if (_timeNotice case final notice?)
-                            _DropIn(
-                              key: ValueKey('time-$notice'),
-                              child: MeetingTimeNotice(text: notice),
-                            ),
-                          for (final person in _arrivals.reversed.take(
-                            _maxArrivalNotices,
-                          ))
-                            _DropIn(
-                              key: ValueKey('drop-${person.requestId}'),
-                              child: ArrivalNotice(
-                                person: person,
-                                onAdmit: () =>
-                                    _answerArrival(person, admit: true),
-                                onReject: () =>
-                                    _answerArrival(person, admit: false),
-                                onDismiss: () =>
-                                    setState(() => _dropArrival(person)),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+                  child: MeetingNoticeStack(
+                    notices: _notices,
+                    onAnswer: _answerArrival,
                   ),
                 ),
               if (!session.entryGate.ready)
@@ -770,31 +684,6 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Slides [child] down from above and fades it in once, when it first
-/// appears.
-class _DropIn extends StatelessWidget {
-  const _DropIn({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) => Opacity(
-        opacity: value,
-        child: Transform.translate(
-          offset: Offset(0, -24 * (1 - value)),
-          child: child,
-        ),
-      ),
-      child: child,
     );
   }
 }

@@ -11,6 +11,7 @@ import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
+import 'package:v_meeting/meeting/meeting_deadline.dart';
 import 'package:v_meeting/meeting/meeting_entry_gate.dart';
 import 'package:v_meeting/meeting/meeting_media.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
@@ -71,9 +72,9 @@ class MeetingSession extends ChangeNotifier {
     bool showEntryGate = true,
     DateTime Function()? clock,
   }) : _credentials = credentials,
-       _clock = clock ?? DateTime.now,
+       _deadline = MeetingDeadline(clock: clock),
        connection = MeetingConnection(room) {
-    _setSecondsLeft(credentials?.secondsLeft);
+    _deadline.setSecondsLeft(credentials?.secondsLeft);
     connection.addListener(_onConnectionChanged);
     room.addListener(_onRoomChanged);
     _roomEvents = room.createListener()
@@ -324,7 +325,7 @@ class MeetingSession extends ChangeNotifier {
       switch (result) {
         case JoinAdmitted(:final credentials):
           _credentials = credentials;
-          _setSecondsLeft(credentials.secondsLeft);
+          _deadline.setSecondsLeft(credentials.secondsLeft);
         case JoinWaiting(:final requestId):
           // Someone already in the meeting is let back in by the server;
           // if it asks to wait anyway, rejoining goes through the join screen.
@@ -463,7 +464,9 @@ class MeetingSession extends ChangeNotifier {
     if (_inactive) return;
     final state = sharing!.state;
     // The server's count is the truth; it also lifts or adds a limit.
-    if (sharing!.loaded) _setSecondsLeft(state.secondsLeft, clear: true);
+    if (sharing!.loaded) {
+      _deadline.setSecondsLeft(state.secondsLeft, clear: true);
+    }
     if (_ownsScreenShare &&
         !changingScreenShare &&
         state.screenShareIdentity != room.localParticipant?.identity) {
@@ -905,35 +908,13 @@ class MeetingSession extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Time limit
 
-  final DateTime Function() _clock;
-
-  /// When the server will end the meeting, on this device's clock; null
-  /// without a time limit. Kept from the server's seconds left rather than
-  /// its clock, so a wrong device clock does not matter.
-  DateTime? _deadline;
-
-  void _setSecondsLeft(int? seconds, {bool clear = false}) {
-    if (seconds == null) {
-      if (clear) _deadline = null;
-      return;
-    }
-    _deadline = _clock().add(Duration(seconds: seconds));
-  }
+  final MeetingDeadline _deadline;
 
   /// How long until the server ends the meeting; null without a limit.
-  Duration? get timeLeft {
-    final deadline = _deadline;
-    if (deadline == null) return null;
-    final left = deadline.difference(_clock());
-    return left.isNegative ? Duration.zero : left;
-  }
+  Duration? get timeLeft => _deadline.timeLeft;
 
-  /// Whether the meeting has reached its time limit, with a few seconds'
-  /// leeway for the server closing it a little early.
-  bool get timeLimitReached {
-    final left = timeLeft;
-    return left != null && left <= const Duration(seconds: 5);
-  }
+  /// Whether the meeting has reached its time limit.
+  bool get timeLimitReached => _deadline.reached;
 
   // ---------------------------------------------------------------------------
   // Waiting room
