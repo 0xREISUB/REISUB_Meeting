@@ -355,11 +355,15 @@ class _InviteBubble extends ConsumerWidget {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 360),
-          child: GlassSurface(
+          // Flat, as the other messages.
+          child: Container(
             key: ValueKey('invite-${message.id}'),
-            radius: 12,
-            shadow: false,
             padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+            decoration: BoxDecoration(
+              color: glassFill,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: glassStroke),
+            ),
             child: Row(
               children: [
                 const Icon(Icons.videocam_rounded, color: Colors.greenAccent),
@@ -497,6 +501,10 @@ class _Bubble extends StatelessWidget {
   }
 }
 
+/// The chat's even, opaque tone, on a computer's pane and a phone's
+/// screen alike: nothing of the page's glow shows through.
+const chatPaneColor = Color(0xFF1A1820);
+
 /// Nothing chosen yet: shown in the right pane on a computer.
 class ChatPlaceholder extends StatelessWidget {
   const ChatPlaceholder({super.key});
@@ -559,7 +567,10 @@ class ChatScreen extends ConsumerWidget {
       });
     }
     return Scaffold(
-      body: GlassBackground(
+      // Flat, as the chat pane on a computer.
+      backgroundColor: pageBackground,
+      body: ColoredBox(
+        color: chatPaneColor,
         child: SafeArea(
           child: current == null
               ? const SizedBox.shrink()

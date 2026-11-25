@@ -124,18 +124,26 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
                     20,
                     16 + MediaQuery.paddingOf(context).bottom,
                   ),
-                  child: GlassSurface(
+                  // Flat: an even tone and an even rim, no gradient.
+                  child: DecoratedBox(
                     key: const ValueKey('social-chat-pane'),
-                    radius: 16,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      child: open == null
-                          ? const ChatPlaceholder()
-                          : ChatPane(
-                              key: ValueKey('pane-${open.id}'),
-                              target: open,
-                              onClosed: () => setState(() => _open = null),
-                            ),
+                    decoration: BoxDecoration(
+                      color: chatPaneColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: glassStroke),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        child: open == null
+                            ? const ChatPlaceholder()
+                            : ChatPane(
+                                key: ValueKey('pane-${open.id}'),
+                                target: open,
+                                onClosed: () => setState(() => _open = null),
+                              ),
+                      ),
                     ),
                   ),
                 ),
