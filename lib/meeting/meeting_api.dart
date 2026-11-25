@@ -346,6 +346,11 @@ class MeetingApi {
     invalid: AppError.invalidMessageData,
   );
 
+  /// Sends an authenticated request to another API of this server, such as
+  /// the social one, with the same session and error handling.
+  Future<Object?> send(String method, String path, {Object? data}) =>
+      _send(method, path, data: data);
+
   static String _room(String roomId) => '/rooms/${Uri.encodeComponent(roomId)}';
   static String _waiting(String roomId, String requestId) =>
       '${_room(roomId)}/waiting/${Uri.encodeComponent(requestId)}';
@@ -489,6 +494,16 @@ class MeetingApi {
       'permission_required' || 'not_room_owner' => AppError.permissionRequired,
       'removed_from_room' => AppError.removedFromRoom,
       'guests_not_allowed' => AppError.loginRequired,
+      'account_required' => AppError.accountRequired,
+      'user_not_found' => AppError.userNotFound,
+      'cannot_add_self' => AppError.cannotAddSelf,
+      'already_friends' => AppError.alreadyFriends,
+      'request_pending' => AppError.requestPending,
+      'not_friends' => AppError.notFriends,
+      'team_role_required' => AppError.teamRoleRequired,
+      'already_team_member' => AppError.alreadyTeamMember,
+      'team_full' => AppError.teamFull,
+      'invalid_team' => AppError.invalidTeam,
       _ => null,
     };
     if (known != null) {

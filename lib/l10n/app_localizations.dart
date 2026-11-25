@@ -1999,6 +1999,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore'**
   String get windowRestore;
+
+  /// No description provided for @errorUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has that username.'**
+  String get errorUserNotFound;
+
+  /// No description provided for @errorCannotAddSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot add yourself as a friend.'**
+  String get errorCannotAddSelf;
+
+  /// No description provided for @errorAlreadyFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'You are already friends.'**
+  String get errorAlreadyFriends;
+
+  /// No description provided for @errorRequestPending.
+  ///
+  /// In en, this message translates to:
+  /// **'You already sent them a request.'**
+  String get errorRequestPending;
+
+  /// No description provided for @errorNotFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to be friends for this.'**
+  String get errorNotFriends;
+
+  /// No description provided for @errorTeamRoleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the team\'s owner or admins can do this.'**
+  String get errorTeamRoleRequired;
+
+  /// No description provided for @errorAlreadyTeamMember.
+  ///
+  /// In en, this message translates to:
+  /// **'They are already in the team.'**
+  String get errorAlreadyTeamMember;
+
+  /// No description provided for @errorTeamFull.
+  ///
+  /// In en, this message translates to:
+  /// **'A team can have at most 50 members.'**
+  String get errorTeamFull;
+
+  /// No description provided for @errorInvalidTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'The team name must be 1-40 characters.'**
+  String get errorInvalidTeam;
+
+  /// No description provided for @friendNickLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get friendNickLabel;
+
+  /// No description provided for @sendFriendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get sendFriendRequest;
+
+  /// No description provided for @friendRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request sent.'**
+  String get friendRequestSent;
+
+  /// No description provided for @teamNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Team name'**
+  String get teamNameLabel;
+
+  /// No description provided for @outgoingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent ({count})'**
+  String outgoingRequests(int count);
+
+  /// No description provided for @cancelFriendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Take back'**
+  String get cancelFriendRequest;
+
+  /// No description provided for @noFriendsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet. Add someone by their username from the top right.'**
+  String get noFriendsYet;
+
+  /// No description provided for @noTeamsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No teams yet. Create one from the top right.'**
+  String get noTeamsYet;
+
+  /// No description provided for @socialLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your social data.'**
+  String get socialLoadFailed;
+
+  /// No description provided for @meetingInviteFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} started a meeting'**
+  String meetingInviteFrom(String name);
+
+  /// No description provided for @meetingInviteMine.
+  ///
+  /// In en, this message translates to:
+  /// **'You started a meeting'**
+  String get meetingInviteMine;
+
+  /// No description provided for @teamMembersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get teamMembersTitle;
+
+  /// No description provided for @addTeamMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Add member'**
+  String get addTeamMember;
+
+  /// No description provided for @noFriendsToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no other friends to add to the team.'**
+  String get noFriendsToAdd;
+
+  /// No description provided for @leaveTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave team'**
+  String get leaveTeam;
+
+  /// No description provided for @leaveTeamBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You will leave {team}.'**
+  String leaveTeamBody(String team);
+
+  /// No description provided for @deleteTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete team'**
+  String get deleteTeam;
+
+  /// No description provided for @deleteTeamBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{team} and its chat will be deleted for everyone.'**
+  String deleteTeamBody(String team);
+
+  /// No description provided for @removeFromTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from team'**
+  String get removeFromTeam;
+
+  /// No description provided for @removeFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove friend'**
+  String get removeFriend;
+
+  /// No description provided for @removeFriendBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be removed from your friends.'**
+  String removeFriendBody(String name);
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved.'**
+  String get profileSaved;
 }
 
 class _AppLocalizationsDelegate

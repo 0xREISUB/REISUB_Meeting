@@ -27,6 +27,16 @@ enum AppError {
   nowOwner,
   accountSessionExpired,
   loginRequired,
+  accountRequired,
+  userNotFound,
+  cannotAddSelf,
+  alreadyFriends,
+  requestPending,
+  notFriends,
+  teamRoleRequired,
+  alreadyTeamMember,
+  teamFull,
+  invalidTeam,
 }
 
 /// Keep application errors as data so an already visible error follows a locale
@@ -75,6 +85,16 @@ class AppException implements Exception {
     AppError.nowOwner => l10n.youAreOwnerNow,
     AppError.accountSessionExpired => l10n.accountSessionExpired,
     AppError.loginRequired => l10n.guestUnavailable,
+    AppError.accountRequired => l10n.socialSignedOutBody,
+    AppError.userNotFound => l10n.errorUserNotFound,
+    AppError.cannotAddSelf => l10n.errorCannotAddSelf,
+    AppError.alreadyFriends => l10n.errorAlreadyFriends,
+    AppError.requestPending => l10n.errorRequestPending,
+    AppError.notFriends => l10n.errorNotFriends,
+    AppError.teamRoleRequired => l10n.errorTeamRoleRequired,
+    AppError.alreadyTeamMember => l10n.errorAlreadyTeamMember,
+    AppError.teamFull => l10n.errorTeamFull,
+    AppError.invalidTeam => l10n.errorInvalidTeam,
     null => message!,
   };
 

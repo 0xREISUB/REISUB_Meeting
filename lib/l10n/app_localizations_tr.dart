@@ -1095,4 +1095,110 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get windowRestore => 'Önceki boyuta getir';
+
+  @override
+  String get errorUserNotFound => 'Bu kullanıcı adıyla kimse yok.';
+
+  @override
+  String get errorCannotAddSelf => 'Kendini arkadaş olarak ekleyemezsin.';
+
+  @override
+  String get errorAlreadyFriends => 'Zaten arkadaşsınız.';
+
+  @override
+  String get errorRequestPending => 'Bu kişiye zaten istek gönderdin.';
+
+  @override
+  String get errorNotFriends => 'Bunun için arkadaş olmanız gerekiyor.';
+
+  @override
+  String get errorTeamRoleRequired =>
+      'Bunu yalnızca takımın sahibi ya da yöneticileri yapabilir.';
+
+  @override
+  String get errorAlreadyTeamMember => 'Bu kişi zaten takımda.';
+
+  @override
+  String get errorTeamFull => 'Takım en fazla 50 kişi olabilir.';
+
+  @override
+  String get errorInvalidTeam => 'Takım adı 1-40 karakter olmalı.';
+
+  @override
+  String get friendNickLabel => 'Kullanıcı adı';
+
+  @override
+  String get sendFriendRequest => 'İstek gönder';
+
+  @override
+  String get friendRequestSent => 'Arkadaşlık isteği gönderildi.';
+
+  @override
+  String get teamNameLabel => 'Takım adı';
+
+  @override
+  String outgoingRequests(int count) {
+    return 'Gönderilen ($count)';
+  }
+
+  @override
+  String get cancelFriendRequest => 'Geri çek';
+
+  @override
+  String get noFriendsYet =>
+      'Henüz arkadaşın yok. Sağ üstten kullanıcı adıyla ekleyebilirsin.';
+
+  @override
+  String get noTeamsYet =>
+      'Henüz bir takımın yok. Sağ üstten bir takım kurabilirsin.';
+
+  @override
+  String get socialLoadFailed => 'Sosyal bilgiler alınamadı.';
+
+  @override
+  String meetingInviteFrom(String name) {
+    return '$name bir toplantı başlattı';
+  }
+
+  @override
+  String get meetingInviteMine => 'Bir toplantı başlattın';
+
+  @override
+  String get teamMembersTitle => 'Üyeler';
+
+  @override
+  String get addTeamMember => 'Üye ekle';
+
+  @override
+  String get noFriendsToAdd => 'Takıma ekleyebileceğin başka arkadaşın yok.';
+
+  @override
+  String get leaveTeam => 'Takımdan ayrıl';
+
+  @override
+  String leaveTeamBody(String team) {
+    return '$team takımından ayrılacaksın.';
+  }
+
+  @override
+  String get deleteTeam => 'Takımı sil';
+
+  @override
+  String deleteTeamBody(String team) {
+    return '$team takımı ve sohbeti herkes için silinecek.';
+  }
+
+  @override
+  String get removeFromTeam => 'Takımdan çıkar';
+
+  @override
+  String get removeFriend => 'Arkadaşlıktan çıkar';
+
+  @override
+  String removeFriendBody(String name) {
+    return '$name arkadaş listenden çıkarılacak.';
+  }
+
+  @override
+  String get profileSaved => 'Profil kaydedildi.';
 }

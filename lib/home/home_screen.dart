@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/orientation.dart';
 import 'package:v_meeting/home/glass_nav_bar.dart';
 import 'package:v_meeting/home/home_tab.dart';
+import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_tab.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/settings/settings_view.dart';
@@ -10,7 +12,7 @@ import 'package:v_meeting/widgets/glass.dart';
 /// The app's main screen: Social, Home and Settings tabs, switched from a
 /// bar at the bottom. A tab slides in from its side, and the tabs can also
 /// be swiped. Home is in front when it opens.
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   /// Index of each tab, left to right.
@@ -19,10 +21,10 @@ class HomeScreen extends StatefulWidget {
   static const settingsTab = 2;
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _tab = HomeScreen.homeTab;
   late final _pages = PageController(initialPage: _tab);
 
@@ -45,6 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // Keeps the social overview refreshing in the background while the
+    // app is open, so friends see the user online on any tab.
+    ref.listen(socialOverviewProvider, (_, _) {});
     return PortraitOnPhone(
       child: Scaffold(
         extendBody: true,

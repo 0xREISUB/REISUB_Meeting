@@ -5,12 +5,14 @@ import 'package:v_meeting/social/chat_pane.dart';
 import 'package:v_meeting/social/friends_list.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
 import 'package:v_meeting/social/profile_screen.dart';
+import 'package:v_meeting/social/social_actions.dart';
+import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_models.dart';
 import 'package:v_meeting/social/teams_list.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
 /// The social tab for a logged-in user: the profile on top, then friends or
-/// teams.
+/// teams. On a computer the chosen conversation opens beside them.
 class SocialHome extends ConsumerStatefulWidget {
   const SocialHome({super.key});
 
@@ -29,27 +31,85 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
   /// The conversation open in the right pane, on a computer.
   ChatTarget? _open;
 
+  late final SocialOverviewController _overview;
+
+  @override
+  void initState() {
+    super.initState();
+    // Refresh often while the tab shows.
+    _overview = ref.read(socialOverviewProvider.notifier)..show();
+  }
+
+  @override
+  void dispose() {
+    _overview.hide();
+    super.dispose();
+  }
+
   void _openChat(ChatTarget target, bool wide) {
     if (wide) {
       setState(() => _open = target);
       return;
     }
-    final messages = ref.read(socialOverviewProvider).conversations;
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
-            ChatScreen(target: target, messages: messages[target.id] ?? []),
-      ),
+      MaterialPageRoute<void>(builder: (_) => ChatScreen(target: target)),
     );
+  }
+
+  Future<void> _add() async {
+    final l10n = AppLocalizations.of(context)!;
+    final api = ref.read(socialApiProvider);
+    if (_section == _friends) {
+      final nick = await askForText(
+        context,
+        title: l10n.addFriend,
+        label: l10n.friendNickLabel,
+        action: l10n.sendFriendRequest,
+        icon: Icons.alternate_email_rounded,
+      );
+      if (nick == null || !mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      if (await runSocialAction(
+        context,
+        ref,
+        () => api.sendFriendRequest(nick),
+      )) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.friendRequestSent)));
+      }
+    } else {
+      final name = await askForText(
+        context,
+        title: l10n.createTeam,
+        label: l10n.teamNameLabel,
+        action: l10n.createTeam,
+        icon: Icons.groups_rounded,
+      );
+      if (name == null || !mounted) return;
+      await runSocialAction(context, ref, () => api.createTeam(name));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final overview = ref.watch(socialOverviewProvider);
+    final data = overview.value;
+    if (data == null) {
+      return SafeArea(
+        bottom: false,
+        child: Center(
+          child: overview.hasError
+              ? _LoadFailed(
+                  onRetry: () => ref.invalidate(socialOverviewProvider),
+                )
+              : const CircularProgressIndicator(),
+        ),
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= _wideWidth;
-        final list = _list(context, wide);
+        final list = _list(context, data, wide);
         if (!wide) {
           return SafeArea(
             bottom: false,
@@ -61,8 +121,9 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
             ),
           );
         }
-        final open = _open;
-        final messages = ref.watch(socialOverviewProvider).conversations;
+        // The open friend or team as it is now; gone once unfriended or
+        // out of the team.
+        final open = _open == null ? null : data.current(_open!);
         return SafeArea(
           bottom: false,
           child: Row(
@@ -88,7 +149,7 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
                           : ChatPane(
                               key: ValueKey('pane-${open.id}'),
                               target: open,
-                              messages: messages[open.id] ?? const [],
+                              onClosed: () => setState(() => _open = null),
                             ),
                     ),
                   ),
@@ -102,9 +163,8 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
   }
 
   /// The profile, then friends or teams.
-  Widget _list(BuildContext context, bool wide) {
+  Widget _list(BuildContext context, SocialOverview overview, bool wide) {
     final l10n = AppLocalizations.of(context)!;
-    final overview = ref.watch(socialOverviewProvider);
     return ListView(
       key: const ValueKey('social-list'),
       padding: EdgeInsets.fromLTRB(
@@ -135,33 +195,12 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
               icon: _section == _friends
                   ? Icons.person_add_alt_1_rounded
                   : Icons.group_add_rounded,
-              onPressed: () => showSocialComingSoon(context),
+              onPressed: _add,
             ),
           ],
         ),
         const SizedBox(height: 16),
         _ProfileCard(profile: overview.profile),
-        if (overview.isPreview) ...[
-          const SizedBox(height: 10),
-          Row(
-            key: const ValueKey('social-preview-note'),
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.visibility_outlined,
-                size: 14,
-                color: glassMuted,
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  l10n.socialPreviewNote,
-                  style: const TextStyle(color: glassMuted, fontSize: 12),
-                ),
-              ),
-            ],
-          ),
-        ],
         const SizedBox(height: 16),
         GlassSegmented(
           labels: [l10n.friends, l10n.teams],
@@ -191,6 +230,7 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
                   key: const ValueKey('friends'),
                   friends: overview.friends,
                   requests: overview.requests,
+                  outgoing: overview.outgoing,
                   openId: _open?.id,
                   onOpen: (target) => _openChat(target, wide),
                 )
@@ -202,6 +242,31 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
                 ),
         ),
       ],
+    );
+  }
+}
+
+class _LoadFailed extends StatelessWidget {
+  const _LoadFailed({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        key: const ValueKey('social-load-failed'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 48, color: glassMuted),
+          const SizedBox(height: 12),
+          Text(l10n.socialLoadFailed, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          TextButton(onPressed: onRetry, child: Text(l10n.retry)),
+        ],
+      ),
     );
   }
 }

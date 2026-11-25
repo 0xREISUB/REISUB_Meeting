@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
-import 'package:v_meeting/social/presence_avatar.dart';
+import 'package:v_meeting/social/social_actions.dart';
+import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_models.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
@@ -25,6 +27,17 @@ class TeamsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (teams.isEmpty) {
+      return Padding(
+        key: const ValueKey('no-teams'),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+        child: Text(
+          AppLocalizations.of(context)!.noTeamsYet,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: glassMuted, height: 1.4),
+        ),
+      );
+    }
     final sorted = [...teams]
       ..sort((a, b) {
         if (a.meetingLive != b.meetingLive) return a.meetingLive ? -1 : 1;
@@ -45,7 +58,7 @@ class TeamsList extends StatelessWidget {
   }
 }
 
-class _TeamCard extends StatelessWidget {
+class _TeamCard extends ConsumerWidget {
   const _TeamCard({
     required this.team,
     required this.open,
@@ -56,8 +69,19 @@ class _TeamCard extends StatelessWidget {
   final bool open;
   final VoidCallback onOpen;
 
+  /// Joins the team's meeting, starting it when nobody is in it.
+  Future<void> _startMeeting(BuildContext context, WidgetRef ref) async {
+    String? roomId;
+    final started = await runSocialAction(context, ref, () async {
+      roomId = await ref.read(socialApiProvider).startTeamMeeting(team.id);
+    });
+    if (started && context.mounted) {
+      await joinSocialMeeting(context, ref, roomId!);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final role = switch (team.role) {
       TeamRole.owner => l10n.teamRoleOwner,
@@ -138,7 +162,8 @@ class _TeamCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  onPressed: () => showSocialComingSoon(context),
+                  key: ValueKey('team-meeting-${team.id}'),
+                  onPressed: () => _startMeeting(context, ref),
                   style: FilledButton.styleFrom(
                     backgroundColor: team.meetingLive
                         ? Colors.green.withValues(alpha: 0.85)

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
+import 'package:v_meeting/social/social_actions.dart';
+import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_models.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
@@ -80,7 +83,7 @@ class ProfileScreen extends StatelessWidget {
 }
 
 /// The user's own profile: how they show to friends and teams.
-class ProfileView extends StatefulWidget {
+class ProfileView extends ConsumerStatefulWidget {
   const ProfileView({
     super.key,
     required this.profile,
@@ -91,10 +94,10 @@ class ProfileView extends StatefulWidget {
   final EdgeInsetsGeometry padding;
 
   @override
-  State<ProfileView> createState() => _ProfileViewState();
+  ConsumerState<ProfileView> createState() => _ProfileViewState();
 }
 
-class _ProfileViewState extends State<ProfileView> {
+class _ProfileViewState extends ConsumerState<ProfileView> {
   late final _displayName = TextEditingController(
     text: widget.profile.displayName,
   );
@@ -102,6 +105,31 @@ class _ProfileViewState extends State<ProfileView> {
     text: widget.profile.statusMessage,
   );
   late var _presence = widget.profile.presence;
+  bool _saving = false;
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final saved = await runSocialAction(
+      context,
+      ref,
+      () => ref
+          .read(socialApiProvider)
+          .updateProfile(
+            displayName: _displayName.text,
+            statusMessage: _status.text,
+            presence: _presence,
+          ),
+    );
+    if (!mounted) return;
+    setState(() => _saving = false);
+    if (saved) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.profileSaved)));
+      navigator.maybePop();
+    }
+  }
 
   @override
   void dispose() {
@@ -223,7 +251,7 @@ class _ProfileViewState extends State<ProfileView> {
             tint: brandColor,
             icon: Icons.check_rounded,
             label: l10n.saveProfile,
-            onPressed: () => showSocialComingSoon(context),
+            onPressed: _saving ? null : _save,
           ),
         ),
       ],

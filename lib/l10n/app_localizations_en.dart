@@ -1112,4 +1112,109 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get windowRestore => 'Restore';
+
+  @override
+  String get errorUserNotFound => 'Nobody has that username.';
+
+  @override
+  String get errorCannotAddSelf => 'You cannot add yourself as a friend.';
+
+  @override
+  String get errorAlreadyFriends => 'You are already friends.';
+
+  @override
+  String get errorRequestPending => 'You already sent them a request.';
+
+  @override
+  String get errorNotFriends => 'You need to be friends for this.';
+
+  @override
+  String get errorTeamRoleRequired =>
+      'Only the team\'s owner or admins can do this.';
+
+  @override
+  String get errorAlreadyTeamMember => 'They are already in the team.';
+
+  @override
+  String get errorTeamFull => 'A team can have at most 50 members.';
+
+  @override
+  String get errorInvalidTeam => 'The team name must be 1-40 characters.';
+
+  @override
+  String get friendNickLabel => 'Username';
+
+  @override
+  String get sendFriendRequest => 'Send request';
+
+  @override
+  String get friendRequestSent => 'Friend request sent.';
+
+  @override
+  String get teamNameLabel => 'Team name';
+
+  @override
+  String outgoingRequests(int count) {
+    return 'Sent ($count)';
+  }
+
+  @override
+  String get cancelFriendRequest => 'Take back';
+
+  @override
+  String get noFriendsYet =>
+      'No friends yet. Add someone by their username from the top right.';
+
+  @override
+  String get noTeamsYet => 'No teams yet. Create one from the top right.';
+
+  @override
+  String get socialLoadFailed => 'Could not load your social data.';
+
+  @override
+  String meetingInviteFrom(String name) {
+    return '$name started a meeting';
+  }
+
+  @override
+  String get meetingInviteMine => 'You started a meeting';
+
+  @override
+  String get teamMembersTitle => 'Members';
+
+  @override
+  String get addTeamMember => 'Add member';
+
+  @override
+  String get noFriendsToAdd => 'You have no other friends to add to the team.';
+
+  @override
+  String get leaveTeam => 'Leave team';
+
+  @override
+  String leaveTeamBody(String team) {
+    return 'You will leave $team.';
+  }
+
+  @override
+  String get deleteTeam => 'Delete team';
+
+  @override
+  String deleteTeamBody(String team) {
+    return '$team and its chat will be deleted for everyone.';
+  }
+
+  @override
+  String get removeFromTeam => 'Remove from team';
+
+  @override
+  String get removeFriend => 'Remove friend';
+
+  @override
+  String removeFriendBody(String name) {
+    return '$name will be removed from your friends.';
+  }
+
+  @override
+  String get profileSaved => 'Profile saved.';
 }
