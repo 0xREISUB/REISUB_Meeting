@@ -9,6 +9,7 @@ import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 class CreateScreen extends ConsumerStatefulWidget {
   const CreateScreen({super.key});
@@ -114,6 +115,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -122,61 +124,73 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
           onPressed: _returnToMainMenu,
         ),
       ),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: (constraints.maxHeight - 44).clamp(
-                  0,
-                  double.infinity,
-                ),
-              ),
-              child: Center(
+      body: GlassBackground(
+        child: SafeArea(
+          bottom: false,
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Icon(Icons.add_box, size: 80, color: brandColor),
-                      const SizedBox(height: 32),
-                      Text(
-                        l10n.createRoom,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 48),
-
-                      TextField(
-                        controller: _nameController,
-                        focusNode: _nameFocusNode,
-                        decoration: InputDecoration(
-                          labelText: l10n.yourName,
-                          errorText: _isNameError ? l10n.nameError : null,
-                          prefixIcon: const Icon(Icons.person),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      ElevatedButton(
-                        onPressed: _isSubmitting
-                            ? null
-                            : () => _startMeeting(l10n),
-                        child: Text(
-                          _isSubmitting ? l10n.connecting : l10n.startMeeting,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                  constraints: BoxConstraints(
+                    minHeight: (constraints.maxHeight - 44).clamp(
+                      0,
+                      double.infinity,
+                    ),
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Icon(
+                            Icons.add_box,
+                            size: 80,
+                            color: brandColor,
                           ),
-                        ),
+                          const SizedBox(height: 32),
+                          Text(
+                            l10n.createRoom,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 48),
+
+                          TextField(
+                            controller: _nameController,
+                            focusNode: _nameFocusNode,
+                            decoration: InputDecoration(
+                              labelText: l10n.yourName,
+                              errorText: _isNameError ? l10n.nameError : null,
+                              prefixIcon: const Icon(Icons.person),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+
+                          ElevatedButton(
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => _startMeeting(l10n),
+                            child: Text(
+                              _isSubmitting
+                                  ? l10n.connecting
+                                  : l10n.startMeeting,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

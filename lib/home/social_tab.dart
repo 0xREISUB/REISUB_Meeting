@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The social tab. A placeholder until the social features arrive.
 class SocialTab extends StatelessWidget {
@@ -11,28 +13,44 @@ class SocialTab extends StatelessWidget {
     return SafeArea(
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.people_alt_rounded,
-                size: 72,
-                color: Theme.of(context).colorScheme.primary,
+          padding: const EdgeInsets.all(28),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 380),
+            child: GlassSurface(
+              radius: 28,
+              padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox.square(
+                    dimension: 88,
+                    child: GlassSurface(
+                      shape: BoxShape.circle,
+                      tint: brandColor,
+                      child: const Icon(
+                        Icons.people_alt_rounded,
+                        size: 44,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.social,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.socialComingSoon,
+                    key: const ValueKey('social-coming-soon'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: glassMuted),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              Text(
-                l10n.social,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.socialComingSoon,
-                key: const ValueKey('social-coming-soon'),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).hintColor),
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/auth/server_policy.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The rules the saved server sets, read again each time this opens.
 class ServerTermsScreen extends ConsumerStatefulWidget {
@@ -27,52 +28,58 @@ class _ServerTermsScreenState extends ConsumerState<ServerTermsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final policy = ref.watch(serverPolicyProvider);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(title: Text(l10n.serverTerms)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            l10n.serverTermsIntro,
-            style: TextStyle(color: Theme.of(context).hintColor),
-          ),
-          const SizedBox(height: 8),
-          FutureBuilder<String?>(
-            future: _serverUrl,
-            builder: (context, snapshot) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.dns_rounded),
-              title: Text(l10n.serverAddress),
-              subtitle: Text(snapshot.data ?? '—'),
-            ),
-          ),
-          const Divider(),
-          if (policy.isLoading && !policy.hasValue)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (policy.value case final terms?)
-            ..._terms(l10n, terms)
-          else
-            Column(
-              children: [
-                ListTile(
-                  key: const ValueKey('server-terms-unavailable'),
+      body: GlassBackground(
+        child: SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              Text(
+                l10n.serverTermsIntro,
+                style: TextStyle(color: Theme.of(context).hintColor),
+              ),
+              const SizedBox(height: 8),
+              FutureBuilder<String?>(
+                future: _serverUrl,
+                builder: (context, snapshot) => ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.cloud_off_rounded,
-                    color: Colors.redAccent,
-                  ),
-                  title: Text(l10n.serverTermsUnavailable),
+                  leading: const Icon(Icons.dns_rounded),
+                  title: Text(l10n.serverAddress),
+                  subtitle: Text(snapshot.data ?? '—'),
                 ),
-                TextButton.icon(
-                  onPressed: () => ref.invalidate(serverPolicyProvider),
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text(l10n.retry),
+              ),
+              const Divider(),
+              if (policy.isLoading && !policy.hasValue)
+                const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (policy.value case final terms?)
+                ..._terms(l10n, terms)
+              else
+                Column(
+                  children: [
+                    ListTile(
+                      key: const ValueKey('server-terms-unavailable'),
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(
+                        Icons.cloud_off_rounded,
+                        color: Colors.redAccent,
+                      ),
+                      title: Text(l10n.serverTermsUnavailable),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => ref.invalidate(serverPolicyProvider),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(l10n.retry),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

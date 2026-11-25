@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/app/locale.dart';
+import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 class LanguageScreen extends ConsumerWidget {
   const LanguageScreen({super.key});
@@ -13,35 +15,45 @@ class LanguageScreen extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(title: Text(l10n.language), centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            _LanguageCard(
-              flag: "🇹🇷",
-              title: "Türkçe",
-              subtitle: l10n.turkishLanguage,
-              selected: currentLocale.languageCode == "tr",
-              colorScheme: colorScheme,
-              onTap: () {
-                ref.read(localeProvider.notifier).select(const Locale("tr"));
-              },
-            ),
+      body: GlassBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                _LanguageCard(
+                  flag: "🇹🇷",
+                  title: "Türkçe",
+                  subtitle: l10n.turkishLanguage,
+                  selected: currentLocale.languageCode == "tr",
+                  colorScheme: colorScheme,
+                  onTap: () {
+                    ref
+                        .read(localeProvider.notifier)
+                        .select(const Locale("tr"));
+                  },
+                ),
 
-            const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-            _LanguageCard(
-              flag: "🇺🇸",
-              title: "English",
-              subtitle: l10n.englishLanguage,
-              selected: currentLocale.languageCode == "en",
-              colorScheme: colorScheme,
-              onTap: () {
-                ref.read(localeProvider.notifier).select(const Locale("en"));
-              },
+                _LanguageCard(
+                  flag: "🇺🇸",
+                  title: "English",
+                  subtitle: l10n.englishLanguage,
+                  selected: currentLocale.languageCode == "en",
+                  colorScheme: colorScheme,
+                  onTap: () {
+                    ref
+                        .read(localeProvider.notifier)
+                        .select(const Locale("en"));
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -72,13 +84,11 @@ class _LanguageCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         decoration: BoxDecoration(
-          color: selected
-              ? colorScheme.primaryContainer
-              : colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(18),
+          color: selected ? brandColor.withValues(alpha: 0.30) : glassFill,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? colorScheme.primary : Colors.transparent,
-            width: 2,
+            color: selected ? glassAccent : glassStroke,
+            width: selected ? 1.5 : 1,
           ),
         ),
         child: Material(
@@ -101,7 +111,7 @@ class _LanguageCard extends StatelessWidget {
                   ? Icon(
                       Icons.check_circle,
                       key: const ValueKey(true),
-                      color: colorScheme.primary,
+                      color: glassAccent,
                     )
                   : const SizedBox(width: 28, key: ValueKey(false)),
             ),

@@ -9,6 +9,7 @@ import 'package:v_meeting/meeting/meeting_media.dart';
 import 'device_test_session.dart';
 import 'media_preferences.dart';
 import 'media_privacy.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// Lets the meeting await capture cleanup, including a pending device open,
 /// before restoring its own publication.
@@ -258,6 +259,7 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
     final selectedMissing =
         _selected != null && !_devices.any((d) => d.deviceId == _selected);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(l10n.deviceTestTitle(name)),
         leading: widget.inMeeting
@@ -269,147 +271,160 @@ class _DeviceTestScreenState extends State<DeviceTestScreen>
               )
             : null,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text(
-            widget.inMeeting
-                ? l10n.meetingDeviceTestHint(name.toLowerCase())
-                : l10n.localDeviceTestHint,
-          ),
-          const SizedBox(height: 20),
-          if (_loading) const LinearProgressIndicator(),
-          DropdownButtonFormField<String>(
-            key: ValueKey('${widget.camera}:$_selected'),
-            initialValue: _selected ?? '',
-            isExpanded: true,
-            decoration: InputDecoration(labelText: l10n.devicePreference(name)),
-            items: [
-              DropdownMenuItem(
-                value: '',
-                child: Text(AppLocalizations.of(context)!.systemDefault),
+      body: GlassBackground(
+        child: SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              Text(
+                widget.inMeeting
+                    ? l10n.meetingDeviceTestHint(name.toLowerCase())
+                    : l10n.localDeviceTestHint,
               ),
-              if (selectedMissing)
-                DropdownMenuItem(
-                  value: _selected,
-                  child: Text(AppLocalizations.of(context)!.savedDeviceMissing),
+              const SizedBox(height: 20),
+              if (_loading) const LinearProgressIndicator(),
+              DropdownButtonFormField<String>(
+                key: ValueKey('${widget.camera}:$_selected'),
+                initialValue: _selected ?? '',
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: l10n.devicePreference(name),
                 ),
-              ..._devices.asMap().entries.map(
-                (entry) => DropdownMenuItem(
-                  value: entry.value.deviceId,
-                  child: Text(
-                    entry.value.label.isEmpty
-                        ? l10n.deviceNumber(name, entry.key + 1)
-                        : entry.value.label,
-                    overflow: TextOverflow.ellipsis,
+                items: [
+                  DropdownMenuItem(
+                    value: '',
+                    child: Text(AppLocalizations.of(context)!.systemDefault),
+                  ),
+                  if (selectedMissing)
+                    DropdownMenuItem(
+                      value: _selected,
+                      child: Text(
+                        AppLocalizations.of(context)!.savedDeviceMissing,
+                      ),
+                    ),
+                  ..._devices.asMap().entries.map(
+                    (entry) => DropdownMenuItem(
+                      value: entry.value.deviceId,
+                      child: Text(
+                        entry.value.label.isEmpty
+                            ? l10n.deviceNumber(name, entry.key + 1)
+                            : entry.value.label,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: busy || running || _loading ? null : _selectDevice,
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: busy || running ? null : _load,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(AppLocalizations.of(context)!.refreshDevices),
+                ),
+              ),
+              if (widget.camera)
+                SizedBox(
+                  height: 280,
+                  child: ColoredBox(
+                    color: Colors.black,
+                    child: running
+                        ? rtc.RTCVideoView(
+                            _renderer,
+                            mirror: true,
+                            objectFit: rtc
+                                .RTCVideoViewObjectFit
+                                .RTCVideoViewObjectFitContain,
+                          )
+                        : Center(
+                            child: Icon(
+                              Icons.videocam_off,
+                              color: Colors.white54,
+                              size: 48,
+                            ),
+                          ),
                   ),
                 ),
-              ),
-            ],
-            onChanged: busy || running || _loading ? null : _selectDevice,
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: busy || running ? null : _load,
-              icon: const Icon(Icons.refresh),
-              label: Text(AppLocalizations.of(context)!.refreshDevices),
-            ),
-          ),
-          if (widget.camera)
-            SizedBox(
-              height: 280,
-              child: ColoredBox(
-                color: Colors.black,
-                child: running
-                    ? rtc.RTCVideoView(
-                        _renderer,
-                        mirror: true,
-                        objectFit: rtc
-                            .RTCVideoViewObjectFit
-                            .RTCVideoViewObjectFitContain,
-                      )
-                    : Center(
-                        child: Icon(
-                          Icons.videocam_off,
-                          color: Colors.white54,
-                          size: 48,
-                        ),
-                      ),
-              ),
-            ),
-          if (!widget.camera && running) ...[
-            Text(AppLocalizations.of(context)!.microphoneLevelHint),
-            const SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: _level == null ? 0 : math.sqrt(_level!),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _level == null
-                  ? AppLocalizations.of(context)!.microphoneLevelWaiting
-                  : _level! > 0.01
-                  ? AppLocalizations.of(context)!.microphoneAudioDetected
-                  : AppLocalizations.of(context)!.microphoneSilent,
-            ),
-          ],
-          const SizedBox(height: 16),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                _error is AppException
-                    ? localizeError(_error!, l10n)
-                    : mediaCaptureError(
-                        _error!,
-                        camera: widget.camera,
-                        l10n: l10n,
-                      ),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
-          FilledButton.icon(
-            onPressed: busy || _loading
-                ? null
-                : running
-                ? _stop
-                : _start,
-            icon: busy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(running ? Icons.stop : Icons.play_arrow),
-            label: Text(
-              busy
-                  ? AppLocalizations.of(context)!.deviceOpening
-                  : running
-                  ? AppLocalizations.of(context)!.stopTest
-                  : AppLocalizations.of(context)!.startTest,
-            ),
-          ),
-          if (isWindowsDesktop) ...[
-            const SizedBox(height: 16),
-            Text(l10n.windowsDevicePermissionHint(name)),
-            OutlinedButton.icon(
-              onPressed: () async {
-                await _stop();
-                final opened = await openMediaPrivacy(camera: widget.camera);
-                if (!opened && _active) {
-                  setState(
-                    () => _error = AppException.localized(
-                      AppError.windowsDevicePrivacyUnavailable,
-                      details: widget.camera,
+              if (!widget.camera && running) ...[
+                Text(AppLocalizations.of(context)!.microphoneLevelHint),
+                const SizedBox(height: 12),
+                LinearProgressIndicator(
+                  value: _level == null ? 0 : math.sqrt(_level!),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _level == null
+                      ? AppLocalizations.of(context)!.microphoneLevelWaiting
+                      : _level! > 0.01
+                      ? AppLocalizations.of(context)!.microphoneAudioDetected
+                      : AppLocalizations.of(context)!.microphoneSilent,
+                ),
+              ],
+              const SizedBox(height: 16),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    _error is AppException
+                        ? localizeError(_error!, l10n)
+                        : mediaCaptureError(
+                            _error!,
+                            camera: widget.camera,
+                            l10n: l10n,
+                          ),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
                     ),
-                  );
-                }
-              },
-              icon: const Icon(Icons.privacy_tip_outlined),
-              label: Text(l10n.openWindowsDevicePrivacy(name)),
-            ),
-          ],
-        ],
+                  ),
+                ),
+              FilledButton.icon(
+                onPressed: busy || _loading
+                    ? null
+                    : running
+                    ? _stop
+                    : _start,
+                icon: busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(running ? Icons.stop : Icons.play_arrow),
+                label: Text(
+                  busy
+                      ? AppLocalizations.of(context)!.deviceOpening
+                      : running
+                      ? AppLocalizations.of(context)!.stopTest
+                      : AppLocalizations.of(context)!.startTest,
+                ),
+              ),
+              if (isWindowsDesktop) ...[
+                const SizedBox(height: 16),
+                Text(l10n.windowsDevicePermissionHint(name)),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await _stop();
+                    final opened = await openMediaPrivacy(
+                      camera: widget.camera,
+                    );
+                    if (!opened && _active) {
+                      setState(
+                        () => _error = AppException.localized(
+                          AppError.windowsDevicePrivacyUnavailable,
+                          details: widget.camera,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.privacy_tip_outlined),
+                  label: Text(l10n.openWindowsDevicePrivacy(name)),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

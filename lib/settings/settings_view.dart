@@ -14,6 +14,7 @@ import 'package:v_meeting/settings/language_screen.dart';
 import 'package:v_meeting/settings/server_terms_screen.dart';
 import 'device_test_screen.dart';
 import 'meeting_preferences.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The settings list, shown in the settings tab and in [SettingsScreen]:
 /// general and meeting choices, the server, device tests, the account and
@@ -145,7 +146,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final preferences =
         ref.watch(meetingPreferencesProvider).value ??
         const MeetingPreferences();
@@ -167,85 +167,84 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
-        _sectionTitle(context, l10n.general),
+        GlassSection(
+          title: l10n.general,
+          children: [
+            SwitchListTile(
+              secondary: const Icon(Icons.dark_mode_outlined),
+              title: Text(l10n.darkTheme),
+              subtitle: Text(l10n.comingSoon),
+              value: false,
+              onChanged: null,
+            ),
 
-        SwitchListTile(
-          secondary: const Icon(Icons.dark_mode_outlined),
-          title: Text(l10n.darkTheme),
-          subtitle: Text(l10n.comingSoon),
-          value: false,
-          onChanged: null,
+            SwitchListTile(
+              secondary: const Icon(Icons.notifications_outlined),
+              title: Text(l10n.notifications),
+              subtitle: Text(l10n.comingSoon),
+              value: false,
+              onChanged: null,
+            ),
+          ],
         ),
 
-        SwitchListTile(
-          secondary: const Icon(Icons.notifications_outlined),
-          title: Text(l10n.notifications),
-          subtitle: Text(l10n.comingSoon),
-          value: false,
-          onChanged: null,
+        GlassSection(
+          title: l10n.meeting,
+          children: [
+            SwitchListTile(
+              secondary: const Icon(Icons.mic),
+              title: Text(l10n.startWithMic),
+              value: preferences.startWithMicrophone,
+              onChanged: (value) =>
+                  updatePreferences(startWithMicrophone: value),
+            ),
+
+            SwitchListTile(
+              secondary: const Icon(Icons.videocam),
+              title: Text(l10n.startWithCamera),
+              value: preferences.startWithCamera,
+              onChanged: (value) => updatePreferences(startWithCamera: value),
+            ),
+
+            SwitchListTile(
+              secondary: const Icon(Icons.flip_camera_android),
+              title: Text(l10n.mirrorCamera),
+              value: preferences.mirrorCamera,
+              onChanged: (value) => updatePreferences(mirrorCamera: value),
+            ),
+
+            SwitchListTile(
+              secondary: const Icon(Icons.noise_control_off),
+              title: Text(l10n.noiseSuppression),
+              subtitle: Text(l10n.comingSoon),
+              value: false,
+              onChanged: null,
+            ),
+
+            SwitchListTile(
+              secondary: const Icon(Icons.high_quality),
+              title: Text(l10n.highQualityVideo),
+              subtitle: Text(l10n.comingSoon),
+              value: false,
+              onChanged: null,
+            ),
+          ],
         ),
 
-        const Divider(height: 32),
-
-        _sectionTitle(context, l10n.meeting),
-
-        SwitchListTile(
-          secondary: const Icon(Icons.mic),
-          title: Text(l10n.startWithMic),
-          value: preferences.startWithMicrophone,
-          onChanged: (value) => updatePreferences(startWithMicrophone: value),
-        ),
-
-        SwitchListTile(
-          secondary: const Icon(Icons.videocam),
-          title: Text(l10n.startWithCamera),
-          value: preferences.startWithCamera,
-          onChanged: (value) => updatePreferences(startWithCamera: value),
-        ),
-
-        SwitchListTile(
-          secondary: const Icon(Icons.flip_camera_android),
-          title: Text(l10n.mirrorCamera),
-          value: preferences.mirrorCamera,
-          onChanged: (value) => updatePreferences(mirrorCamera: value),
-        ),
-
-        SwitchListTile(
-          secondary: const Icon(Icons.noise_control_off),
-          title: Text(l10n.noiseSuppression),
-          subtitle: Text(l10n.comingSoon),
-          value: false,
-          onChanged: null,
-        ),
-
-        SwitchListTile(
-          secondary: const Icon(Icons.high_quality),
-          title: Text(l10n.highQualityVideo),
-          subtitle: Text(l10n.comingSoon),
-          value: false,
-          onChanged: null,
-        ),
-
-        const Divider(height: 32),
-
-        _sectionTitle(context, l10n.serverSettings),
-
-        // The web app always uses the server it was loaded from; another
-        // address would only fail on the browser's cross-origin rules.
-        if (kIsWeb)
-          ListTile(
-            key: const Key('web-server-info'),
-            leading: const Icon(Icons.dns_outlined),
-            title: Text(_serverHostController.text),
-            subtitle: Text(l10n.webServerFixed),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Card(
-              elevation: 0,
-              color: colorScheme.surfaceContainer,
-              child: Padding(
+        GlassSection(
+          title: l10n.serverSettings,
+          children: [
+            // The web app always uses the server it was loaded from; another
+            // address would only fail on the browser's cross-origin rules.
+            if (kIsWeb)
+              ListTile(
+                key: const Key('web-server-info'),
+                leading: const Icon(Icons.dns_outlined),
+                title: Text(_serverHostController.text),
+                subtitle: Text(l10n.webServerFixed),
+              )
+            else
+              Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
@@ -306,110 +305,115 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   ],
                 ),
               ),
-            ),
-          ),
-
-        const Divider(height: 32),
-
-        _sectionTitle(context, l10n.deviceTest),
-
-        ListTile(
-          leading: const Icon(Icons.mic_external_on),
-          title: Text(l10n.testMicrophone),
-          subtitle: Text(AppLocalizations.of(context)!.microphoneSelectionHint),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const DeviceTestScreen(camera: false),
-            ),
-          ),
+          ],
         ),
 
-        ListTile(
-          leading: const Icon(Icons.videocam),
-          title: Text(l10n.testCamera),
-          subtitle: Text(AppLocalizations.of(context)!.cameraSelectionHint),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const DeviceTestScreen(camera: true),
-            ),
-          ),
-        ),
-
-        ListTile(
-          leading: const Icon(Icons.volume_up),
-          title: Text(l10n.testSpeaker),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () {},
-        ),
-
-        const Divider(height: 32),
-
-        _sectionTitle(context, l10n.account),
-
-        if (signedIn)
-          ListTile(
-            key: const ValueKey('settings-logout'),
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: Text(
-              l10n.logout,
-              style: const TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
+        GlassSection(
+          title: l10n.deviceTest,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.mic_external_on),
+              title: Text(l10n.testMicrophone),
+              subtitle: Text(
+                AppLocalizations.of(context)!.microphoneSelectionHint,
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const DeviceTestScreen(camera: false),
+                ),
               ),
             ),
-            onTap: _logOut,
-          )
-        else
-          ListTile(
-            key: const ValueKey('settings-login'),
-            leading: const Icon(Icons.login),
-            title: Text(l10n.login),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () => _open(const LoginScreen()),
-          ),
 
-        const Divider(height: 32),
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: Text(l10n.testCamera),
+              subtitle: Text(AppLocalizations.of(context)!.cameraSelectionHint),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const DeviceTestScreen(camera: true),
+                ),
+              ),
+            ),
 
-        _sectionTitle(context, l10n.application),
-
-        ListTile(
-          key: const ValueKey('settings-language'),
-          leading: const Icon(Icons.language_outlined),
-          title: Text(l10n.language),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => _open(const LanguageScreen()),
+            ListTile(
+              leading: const Icon(Icons.volume_up),
+              title: Text(l10n.testSpeaker),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {},
+            ),
+          ],
         ),
 
-        ListTile(
-          key: const ValueKey('settings-server-terms'),
-          leading: const Icon(Icons.gavel_rounded),
-          title: Text(l10n.serverTerms),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => _open(const ServerTermsScreen()),
+        GlassSection(
+          title: l10n.account,
+          children: [
+            if (signedIn)
+              ListTile(
+                key: const ValueKey('settings-logout'),
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: Text(
+                  l10n.logout,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: _logOut,
+              )
+            else
+              ListTile(
+                key: const ValueKey('settings-login'),
+                leading: const Icon(Icons.login),
+                title: Text(l10n.login),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => _open(const LoginScreen()),
+              ),
+          ],
         ),
 
-        ListTile(
-          key: const ValueKey('settings-about'),
-          leading: const Icon(Icons.info_outline),
-          title: Text(l10n.about),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => _open(const AboutScreen()),
-        ),
+        GlassSection(
+          title: l10n.application,
+          children: [
+            ListTile(
+              key: const ValueKey('settings-language'),
+              leading: const Icon(Icons.language_outlined),
+              title: Text(l10n.language),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _open(const LanguageScreen()),
+            ),
 
-        ListTile(
-          leading: const Icon(Icons.tag_rounded),
-          title: Text(l10n.version),
-          subtitle: const Text(appVersion),
-        ),
+            ListTile(
+              key: const ValueKey('settings-server-terms'),
+              leading: const Icon(Icons.gavel_rounded),
+              title: Text(l10n.serverTerms),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _open(const ServerTermsScreen()),
+            ),
 
-        ListTile(
-          leading: const Icon(Icons.system_update_alt),
-          title: Text(l10n.checkForUpdates),
-          subtitle: Text(l10n.comingSoon),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () {},
+            ListTile(
+              key: const ValueKey('settings-about'),
+              leading: const Icon(Icons.info_outline),
+              title: Text(l10n.about),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _open(const AboutScreen()),
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.tag_rounded),
+              title: Text(l10n.version),
+              subtitle: const Text(appVersion),
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.system_update_alt),
+              title: Text(l10n.checkForUpdates),
+              subtitle: Text(l10n.comingSoon),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {},
+            ),
+          ],
         ),
 
         const SizedBox(height: 20),
@@ -430,18 +434,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       context,
       MaterialPageRoute(builder: (_) => const StartGate()),
       (_) => false,
-    );
-  }
-
-  static Widget _sectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      child: Text(
-        title,
-        style: Theme.of(
-          context,
-        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-      ),
     );
   }
 }

@@ -13,6 +13,7 @@ import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
 import 'package:v_meeting/meeting/waiting_room_screen.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key, this.initialRoomId, this.inviteServerUrl});
@@ -233,6 +234,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
           ),
         },
         child: Scaffold(
+          extendBodyBehindAppBar: true,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -242,114 +244,123 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
               onPressed: _returnToMainMenu,
             ),
           ),
-          body: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) => SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: (constraints.maxHeight - 44).clamp(
-                      0,
-                      double.infinity,
-                    ),
-                  ),
-                  child: Center(
+          body: GlassBackground(
+            child: SafeArea(
+              bottom: false,
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Icon(
-                            Icons.video_camera_front,
-                            size: 80,
-                            color: brandColor,
-                          ),
-                          const SizedBox(height: 32),
-                          Text(
-                            l10n.joinMeeting, // Dil paketinden
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 32),
-
-                          TextField(
-                            controller: _nameController,
-                            focusNode: _nameFocusNode,
-                            // With an invite only the name is missing.
-                            autofocus: widget.initialRoomId != null,
-                            textInputAction: TextInputAction.next,
-                            onSubmitted: (_) {
-                              FocusScope.of(
-                                context,
-                              ).requestFocus(_roomFocusNode);
-                            },
-                            onChanged: (val) {
-                              if (_isNameError && val.trim().isNotEmpty) {
-                                setState(() => _isNameError = false);
-                              }
-                            },
-                            decoration: InputDecoration(
-                              labelText: l10n.yourName, // Dil paketinden
-                              errorText: _isNameError ? l10n.nameError : null,
-                              prefixIcon: const Icon(Icons.person),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          TextField(
-                            controller: _roomController,
-                            focusNode: _roomFocusNode,
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) => _joinMeeting(),
-                            onChanged: (val) {
-                              if (_isRoomError &&
-                                  roomCodePattern.hasMatch(val)) {
-                                setState(() => _isRoomError = false);
-                              }
-                            },
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 4.0,
-                              color: _isRoomError ? Colors.red : brandColor,
-                            ),
-                            maxLength: 11,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9\-]'),
+                      constraints: BoxConstraints(
+                        minHeight: (constraints.maxHeight - 44).clamp(
+                          0,
+                          double.infinity,
+                        ),
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Icon(
+                                Icons.video_camera_front,
+                                size: 80,
+                                color: brandColor,
                               ),
-                              _RoomNumberFormatter(),
+                              const SizedBox(height: 32),
+                              Text(
+                                l10n.joinMeeting, // Dil paketinden
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 32),
+
+                              TextField(
+                                controller: _nameController,
+                                focusNode: _nameFocusNode,
+                                // With an invite only the name is missing.
+                                autofocus: widget.initialRoomId != null,
+                                textInputAction: TextInputAction.next,
+                                onSubmitted: (_) {
+                                  FocusScope.of(
+                                    context,
+                                  ).requestFocus(_roomFocusNode);
+                                },
+                                onChanged: (val) {
+                                  if (_isNameError && val.trim().isNotEmpty) {
+                                    setState(() => _isNameError = false);
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  labelText: l10n.yourName, // Dil paketinden
+                                  errorText: _isNameError
+                                      ? l10n.nameError
+                                      : null,
+                                  prefixIcon: const Icon(Icons.person),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              TextField(
+                                controller: _roomController,
+                                focusNode: _roomFocusNode,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => _joinMeeting(),
+                                onChanged: (val) {
+                                  if (_isRoomError &&
+                                      roomCodePattern.hasMatch(val)) {
+                                    setState(() => _isRoomError = false);
+                                  }
+                                },
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 4.0,
+                                  color: _isRoomError ? Colors.red : brandColor,
+                                ),
+                                maxLength: 11,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'[0-9\-]'),
+                                  ),
+                                  _RoomNumberFormatter(),
+                                ],
+                                decoration: InputDecoration(
+                                  labelText: l10n.roomId, // Dil paketinden
+                                  counterText: "",
+                                  errorText: _isRoomError
+                                      ? l10n.roomError
+                                      : null,
+                                  prefixIcon: const Icon(Icons.meeting_room),
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+
+                              ElevatedButton(
+                                onPressed: _isSubmitting ? null : _joinMeeting,
+                                child: Text(
+                                  _isSubmitting
+                                      ? l10n.connecting
+                                      : l10n.joinMeeting,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ],
-                            decoration: InputDecoration(
-                              labelText: l10n.roomId, // Dil paketinden
-                              counterText: "",
-                              errorText: _isRoomError ? l10n.roomError : null,
-                              prefixIcon: const Icon(Icons.meeting_room),
-                            ),
                           ),
-                          const SizedBox(height: 32),
-
-                          ElevatedButton(
-                            onPressed: _isSubmitting ? null : _joinMeeting,
-                            child: Text(
-                              _isSubmitting
-                                  ? l10n.connecting
-                                  : l10n.joinMeeting,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

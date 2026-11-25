@@ -9,6 +9,7 @@ import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
 import 'package:v_meeting/widgets/language_menu_button.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.guestsRefused = false});
@@ -74,120 +75,126 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: const [LanguageMenuButton(), SizedBox(width: 8)],
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: AutofillGroup(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const AppLogo(),
-                  const SizedBox(height: 24),
-                  Text(
-                    l10n.welcome,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
-                  if (widget.guestsRefused) ...[
-                    Container(
-                      key: const Key('login-guests-refused'),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.4),
+      body: GlassBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: AutofillGroup(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const AppLogo(),
+                      const SizedBox(height: 24),
+                      Text(
+                        l10n.welcome,
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 40),
+                      if (widget.guestsRefused) ...[
+                        Container(
+                          key: const Key('login-guests-refused'),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.amber.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.lock_person_rounded,
+                                color: Colors.amber,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(l10n.guestsRefusedLogin)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      TextField(
+                        key: const Key('login-nick'),
+                        controller: _nickController,
+                        enabled: !_isSubmitting,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [AutofillHints.username],
+                        decoration: InputDecoration(
+                          labelText: l10n.nickname,
+                          prefixIcon: const Icon(Icons.person),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.lock_person_rounded,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(child: Text(l10n.guestsRefusedLogin)),
-                        ],
+                      const SizedBox(height: 16),
+                      TextField(
+                        key: const Key('login-password'),
+                        controller: _passwordController,
+                        enabled: !_isSubmitting,
+                        obscureText: true,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.password],
+                        onSubmitted: (_) => _handleLogin(),
+                        decoration: InputDecoration(
+                          labelText: l10n.password,
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                  TextField(
-                    key: const Key('login-nick'),
-                    controller: _nickController,
-                    enabled: !_isSubmitting,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.username],
-                    decoration: InputDecoration(
-                      labelText: l10n.nickname,
-                      prefixIcon: const Icon(Icons.person),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    key: const Key('login-password'),
-                    controller: _passwordController,
-                    enabled: !_isSubmitting,
-                    obscureText: true,
-                    textInputAction: TextInputAction.done,
-                    autofillHints: const [AutofillHints.password],
-                    onSubmitted: (_) => _handleLogin(),
-                    decoration: InputDecoration(
-                      labelText: l10n.password,
-                      prefixIcon: const Icon(Icons.lock),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    key: const Key('login-submit'),
-                    onPressed: _isSubmitting ? null : _handleLogin,
-                    child: _isSubmitting
-                        ? const _ButtonProgress()
-                        : Text(
-                            l10n.login,
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RegisterScreen(),
-                            ),
-                          ),
-                    child: Text(l10n.noAccountRegister),
-                  ),
-                  // With nowhere to go back to, another server is the only
-                  // way out besides logging in.
-                  if (widget.guestsRefused && !Navigator.canPop(context))
-                    TextButton(
-                      key: const Key('login-change-server'),
-                      onPressed: _isSubmitting
-                          ? null
-                          : () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const HostScreen(),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        key: const Key('login-submit'),
+                        onPressed: _isSubmitting ? null : _handleLogin,
+                        child: _isSubmitting
+                            ? const _ButtonProgress()
+                            : Text(
+                                l10n.login,
+                                style: const TextStyle(fontSize: 18),
                               ),
-                            ),
-                      child: Text(l10n.changeServer),
-                    ),
-                ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen(),
+                                ),
+                              ),
+                        child: Text(l10n.noAccountRegister),
+                      ),
+                      // With nowhere to go back to, another server is the only
+                      // way out besides logging in.
+                      if (widget.guestsRefused && !Navigator.canPop(context))
+                        TextButton(
+                          key: const Key('login-change-server'),
+                          onPressed: _isSubmitting
+                              ? null
+                              : () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const HostScreen(),
+                                  ),
+                                ),
+                          child: Text(l10n.changeServer),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

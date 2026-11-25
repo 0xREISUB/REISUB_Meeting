@@ -6,6 +6,8 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// Shown while someone waits to be let into a meeting with a waiting room.
 /// It asks the server every [pollInterval]; once let in it opens the
@@ -114,87 +116,84 @@ class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
         if (!didPop) unawaited(_cancel());
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF121214),
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox.square(
-                      dimension: 72,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox.expand(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: Color(0xFFB69BFF),
+        body: GlassBackground(
+          child: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox.square(
+                        dimension: 72,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox.expand(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                color: brandColor,
+                              ),
                             ),
-                          ),
-                          Icon(
-                            Icons.hourglass_top_rounded,
-                            size: 30,
-                            color: Colors.white70,
-                          ),
-                        ],
+                            Icon(
+                              Icons.hourglass_top_rounded,
+                              size: 30,
+                              color: Colors.white70,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 28),
-                    Text(
-                      l10n.waitingForAdmission,
-                      key: const ValueKey('waiting-room-title'),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      l10n.waitingForAdmissionHint,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2C2C2E),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        widget.roomId,
+                      const SizedBox(height: 28),
+                      Text(
+                        l10n.waitingForAdmission,
+                        key: const ValueKey('waiting-room-title'),
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
+                          fontSize: 22,
                           fontWeight: FontWeight.w600,
-                          letterSpacing: 1.5,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                    OutlinedButton(
-                      key: const ValueKey('waiting-room-cancel'),
-                      onPressed: _cancel,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white24),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.waitingForAdmissionHint,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      const SizedBox(height: 20),
+                      GlassSurface(
+                        radius: 14,
+                        shadow: false,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 28,
-                          vertical: 14,
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        child: Text(
+                          widget.roomId,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.5,
+                          ),
                         ),
                       ),
-                      child: Text(l10n.cancel),
-                    ),
-                  ],
+                      const SizedBox(height: 32),
+                      OutlinedButton(
+                        key: const ValueKey('waiting-room-cancel'),
+                        onPressed: _cancel,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 28,
+                            vertical: 14,
+                          ),
+                        ),
+                        child: Text(l10n.cancel),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -3,6 +3,8 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/create_screen.dart';
 import 'package:v_meeting/meeting/join_screen.dart';
 import 'package:v_meeting/widgets/app_logo.dart';
+import 'package:v_meeting/widgets/glass.dart';
+import 'package:v_meeting/app/theme.dart';
 
 /// The home tab: the app's name and the buttons to create or join a
 /// meeting.
@@ -54,61 +56,37 @@ class HomeTab extends StatelessWidget {
                         l10n.appSubtitle,
                         style: TextStyle(
                           fontSize: isCompact ? 14 : 16,
-                          color: Colors.grey,
+                          color: glassMuted,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: isCompact ? 32 : 60),
 
-                      // ODA KUR BUTONU
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            vertical: isCompact ? 16 : 20,
+                      GlassButton(
+                        tint: brandColor,
+                        height: isCompact ? 56 : 62,
+                        fontSize: isCompact ? 16 : 18,
+                        icon: Icons.add_box_rounded,
+                        label: l10n.createRoom,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CreateScreen(),
                           ),
                         ),
-                        icon: const Icon(Icons.add_box, size: 24),
-                        label: Text(
-                          l10n.createRoom,
-                          style: TextStyle(
-                            fontSize: isCompact ? 16 : 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CreateScreen(),
-                            ),
-                          );
-                        },
                       ),
-                      SizedBox(height: isCompact ? 12 : 20),
-
-                      // ODAYA KATIL BUTONU
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            vertical: isCompact ? 16 : 20,
+                      SizedBox(height: isCompact ? 12 : 16),
+                      GlassButton(
+                        height: isCompact ? 56 : 62,
+                        fontSize: isCompact ? 16 : 18,
+                        icon: Icons.login_rounded,
+                        label: l10n.joinMeeting,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const JoinScreen(),
                           ),
                         ),
-                        icon: const Icon(Icons.login, size: 24),
-                        label: Text(
-                          l10n.joinMeeting,
-                          style: TextStyle(
-                            fontSize: isCompact ? 16 : 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const JoinScreen(),
-                            ),
-                          );
-                        },
                       ),
                     ],
                   ),
