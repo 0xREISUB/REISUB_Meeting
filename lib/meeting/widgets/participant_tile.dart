@@ -6,6 +6,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:livekit_client/livekit_client.dart' hide ConnectionState;
 import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/widgets/glass.dart';
+import 'package:v_meeting/social/user_avatar.dart';
 
 class MeetingParticipantTile extends StatelessWidget {
   final MemberEntry member;
@@ -72,12 +73,15 @@ class MeetingParticipantTile extends StatelessWidget {
                       size: isMain ? 64 : 36,
                       color: Colors.white24,
                     )
-                  : MemberAvatar(
+                  // Their profile picture, else their initials.
+                  : UserAvatar(
                       name: member.name,
                       seed: member.identity.isEmpty
                           ? member.name
                           : member.identity,
+                      avatarUrl: member.avatarUrl,
                       size: isMain ? 112 : 52,
+                      fitTile: true,
                     ),
             ),
           Positioned(

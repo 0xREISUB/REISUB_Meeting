@@ -3,9 +3,9 @@ import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
-import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 import 'package:v_meeting/meeting/widgets/permissions_dialog.dart';
 import 'package:v_meeting/meeting/widgets/permissions_colors.dart';
+import 'package:v_meeting/social/user_avatar.dart';
 
 class MemberPermissionsDetail extends StatelessWidget {
   const MemberPermissionsDetail({
@@ -54,10 +54,12 @@ class MemberPermissionsDetail extends StatelessWidget {
               ),
               const SizedBox(width: 4),
             ],
-            MemberAvatar(
+            UserAvatar(
               name: member.name,
               seed: member.identity.isEmpty ? member.name : member.identity,
+              avatarUrl: member.avatarUrl,
               size: 52,
+              fitTile: true,
             ),
             const SizedBox(width: 14),
             Expanded(

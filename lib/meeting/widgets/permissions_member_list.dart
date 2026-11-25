@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
-import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 import 'package:v_meeting/meeting/widgets/permissions_colors.dart';
+import 'package:v_meeting/social/user_avatar.dart';
 
 class PermissionsMemberList extends StatelessWidget {
   const PermissionsMemberList({
@@ -151,10 +151,12 @@ class _MemberRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Row(
               children: [
-                MemberAvatar(
+                UserAvatar(
                   name: member.name,
                   seed: member.identity.isEmpty ? member.name : member.identity,
+                  avatarUrl: member.avatarUrl,
                   size: 38,
+                  fitTile: true,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

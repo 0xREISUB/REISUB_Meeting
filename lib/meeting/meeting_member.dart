@@ -78,6 +78,9 @@ class MemberEntry {
   /// Permissions given to this person; the full admin has them all.
   final Set<MeetingPermission> grantedPermissions;
 
+  /// Their profile picture's path on the server; empty without one.
+  final String avatarUrl;
+
   const MemberEntry({
     required this.id,
     required this.name,
@@ -91,6 +94,7 @@ class MemberEntry {
     this.isScreenSharing = false,
     this.isScreenShare = false,
     this.mirrorCamera = true,
+    this.avatarUrl = '',
     this.role = MeetingRole.participant,
     this.grantedPermissions = const {},
   });

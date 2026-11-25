@@ -139,6 +139,9 @@ class MeetingSession extends ChangeNotifier {
 
   static const permissionsAttribute = 'meeting.permissions';
 
+  /// A participant's profile picture path, signed into their join token.
+  static const avatarAttribute = 'meeting.avatar_url';
+
   /// What this participant may do. The full admin may do everything; for
   /// anyone else the server keeps a LiveKit attribute up to date, and the
   /// join response is used until it arrives.
@@ -496,6 +499,7 @@ class MeetingSession extends ChangeNotifier {
         role: role,
         grantedPermissions: permissions,
         mirrorCamera: mirrorCamera,
+        avatarUrl: local?.attributes[avatarAttribute] ?? '',
         isMicEnabled: local?.isMicrophoneEnabled() ?? isMicEnabled,
         isSpeaking: local?.isSpeaking ?? false,
         videoTrack: local == null ? null : _videoTrack(local),
@@ -519,6 +523,7 @@ class MeetingSession extends ChangeNotifier {
             grantedPermissions: MeetingPermission.parseList(
               participant.attributes[permissionsAttribute],
             ),
+            avatarUrl: participant.attributes[avatarAttribute] ?? '',
             isMicEnabled: participant.isMicrophoneEnabled(),
             isSpeaking: participant.isSpeaking,
             videoTrack: _videoTrack(participant),

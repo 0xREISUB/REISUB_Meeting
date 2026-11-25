@@ -5,6 +5,7 @@ import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/meeting/widgets/participant_tile.dart';
 import 'package:v_meeting/meeting/widgets/floating_members.dart';
 import 'package:v_meeting/widgets/glass.dart';
+import 'package:v_meeting/social/user_avatar.dart';
 
 /// The floating panel's content: a title with the head count and a button
 /// to collapse it, then up to five previews, the last one standing in for
@@ -234,12 +235,14 @@ class _MoreParticipants extends StatelessWidget {
                           color: glassBadgeRim,
                           shape: BoxShape.circle,
                         ),
-                        child: MemberAvatar(
+                        child: UserAvatar(
                           name: faces[i].name,
                           seed: faces[i].identity.isEmpty
                               ? faces[i].name
                               : faces[i].identity,
+                          avatarUrl: faces[i].avatarUrl,
                           size: 32,
+                          fitTile: true,
                         ),
                       ),
                     ),
