@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:v_meeting/app/app.dart';
 import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/home/home_screen.dart';
+import 'package:v_meeting/settings/settings_view.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 
@@ -70,6 +72,27 @@ Dio fakeServer(
 
 String? bearer(RequestOptions options) =>
     options.headers['Authorization'] as String?;
+
+/// Opens the settings tab and scrolls to the account section.
+Future<void> openAccount(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.settings_outlined));
+  await tester.pumpAndSettle();
+  // The settings list itself; its text fields scroll too.
+  final list = find
+      .descendant(
+        of: find.byType(SettingsView),
+        matching: find.byType(Scrollable),
+      )
+      .first;
+  // The list builds rows as they come into view.
+  for (var i = 0; i < 20; i++) {
+    if (find.byKey(const ValueKey('settings-about')).evaluate().isNotEmpty) {
+      break;
+    }
+    await tester.drag(list, const Offset(0, -300));
+    await tester.pumpAndSettle();
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -184,24 +207,21 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: VMeetingApp()));
     await tester.pumpAndSettle();
     expect(find.byType(HomeScreen), findsOneWidget);
-    await tester.tap(find.byTooltip('Profile menu'));
-    await tester.pumpAndSettle();
-    expect(find.text('Log In'), findsOneWidget);
-    expect(find.text('Log Out'), findsNothing);
+    await openAccount(tester);
+    expect(find.byKey(const ValueKey('settings-login')), findsOneWidget);
+    expect(find.byKey(const ValueKey('settings-logout')), findsNothing);
   });
 
   testWidgets('logging out keeps the user home as a guest', (tester) async {
     await ServerConfig.saveToken('account');
     await tester.pumpWidget(const ProviderScope(child: VMeetingApp()));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Profile menu'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Log Out'));
+    await openAccount(tester);
+    await tester.tap(find.byKey(const ValueKey('settings-logout')));
     await tester.pumpAndSettle();
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(await ServerConfig.readToken(), isNull);
-    await tester.tap(find.byTooltip('Profile menu'));
-    await tester.pumpAndSettle();
-    expect(find.text('Log In'), findsOneWidget);
+    await openAccount(tester);
+    expect(find.byKey(const ValueKey('settings-login')), findsOneWidget);
   });
 }

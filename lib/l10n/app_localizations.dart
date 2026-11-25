@@ -1747,6 +1747,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time left: {time}'**
   String meetingTimeLeft(String time);
+
+  /// No description provided for @social.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get social;
+
+  /// No description provided for @homeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeTab;
+
+  /// No description provided for @socialComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Social features are coming here soon.'**
+  String get socialComingSoon;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
 }
 
 class _AppLocalizationsDelegate

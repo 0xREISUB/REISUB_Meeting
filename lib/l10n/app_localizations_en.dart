@@ -971,4 +971,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String meetingTimeLeft(String time) {
     return 'Time left: $time';
   }
+
+  @override
+  String get social => 'Social';
+
+  @override
+  String get homeTab => 'Home';
+
+  @override
+  String get socialComingSoon => 'Social features are coming here soon.';
+
+  @override
+  String get account => 'Account';
 }

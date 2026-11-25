@@ -954,4 +954,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String meetingTimeLeft(String time) {
     return 'Kalan süre: $time';
   }
+
+  @override
+  String get social => 'Sosyal';
+
+  @override
+  String get homeTab => 'Ana sayfa';
+
+  @override
+  String get socialComingSoon => 'Sosyal özellikler yakında burada olacak.';
+
+  @override
+  String get account => 'Hesap';
 }

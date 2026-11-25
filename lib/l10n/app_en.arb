@@ -486,5 +486,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "social": "Social",
+  "homeTab": "Home",
+  "socialComingSoon": "Social features are coming here soon.",
+  "account": "Account"
 }

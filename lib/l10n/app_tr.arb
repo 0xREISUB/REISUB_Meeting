@@ -402,5 +402,9 @@
   "noMeetingCooldown": "Bekleme yok",
   "minutesLeftNotice": "Toplantının bitmesine {minutes} dakika kaldı.",
   "meetingTimeUp": "Toplantı süre sınırına ulaştı ve sona erdi.",
-  "meetingTimeLeft": "Kalan süre: {time}"
+  "meetingTimeLeft": "Kalan süre: {time}",
+  "social": "Sosyal",
+  "homeTab": "Ana sayfa",
+  "socialComingSoon": "Sosyal özellikler yakında burada olacak.",
+  "account": "Hesap"
 }
