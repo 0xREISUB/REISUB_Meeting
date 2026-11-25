@@ -13,6 +13,7 @@ import 'package:v_meeting/auth/host_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/join_screen.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/social/in_app_notifications.dart';
 import 'package:v_meeting/widgets/brand_loader.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
@@ -69,15 +70,19 @@ class _VMeetingAppState extends ConsumerState<VMeetingApp> {
       navigatorObservers: [appRouteObserver],
       // On a computer the app draws its own title bar, hidden until the
       // pointer rests at the top.
-      builder: DesktopWindowControls.supported
-          ? (context, child) {
-              final app = AutoHideTitleBar(
-                controls: const DesktopWindowControls(),
-                child: child!,
-              );
-              return RoundedWindow.supported ? RoundedWindow(child: app) : app;
-            }
-          : null,
+      builder: (context, child) {
+        // New messages show over every screen.
+        final app = InAppNotifications(
+          navigatorKey: _navigatorKey,
+          child: child!,
+        );
+        if (!DesktopWindowControls.supported) return app;
+        final framed = AutoHideTitleBar(
+          controls: const DesktopWindowControls(),
+          child: app,
+        );
+        return RoundedWindow.supported ? RoundedWindow(child: framed) : framed;
+      },
       home: const StartupScreen(),
     );
   }

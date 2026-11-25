@@ -138,9 +138,19 @@ class _FriendRow extends ConsumerWidget {
           fontSize: 12.5,
         ),
       ),
-      trailing: friend.presence == Presence.offline
-          ? null
-          : IconButton(
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (friend.unread > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: GlassCountBadge(
+                key: ValueKey('unread-${friend.id}'),
+                count: friend.unread,
+              ),
+            ),
+          if (friend.presence != Presence.offline)
+            IconButton(
               key: ValueKey('call-${friend.id}'),
               tooltip: l10n.callFriend,
               onPressed: () => _call(context, ref),
@@ -148,7 +158,11 @@ class _FriendRow extends ConsumerWidget {
                 Icons.call_rounded,
                 color: reachable ? Colors.greenAccent : glassMuted,
               ),
-            ),
+            )
+          else
+            const SizedBox(width: 12),
+        ],
+      ),
       onTap: onOpen,
     );
   }

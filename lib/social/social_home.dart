@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/social/chat_pane.dart';
 import 'package:v_meeting/social/friends_list.dart';
+import 'package:v_meeting/social/notifications.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
 import 'package:v_meeting/social/profile_screen.dart';
 import 'package:v_meeting/social/social_actions.dart';
@@ -27,6 +28,9 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
   static const _wideWidth = 840.0;
 
   var _section = _friends;
+
+  /// Whether it showed as two panes last time it was laid out.
+  var _wide = false;
 
   /// The conversation open in the right pane, on a computer.
   ChatTarget? _open;
@@ -77,6 +81,14 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
 
   @override
   Widget build(BuildContext context) {
+    // A chat asked for from elsewhere, such as by a notification.
+    ref.listen(socialOpenRequestProvider, (_, target) {
+      if (target == null) return;
+      ref.read(socialOpenRequestProvider.notifier).clear();
+      final current = ref.read(socialOverviewProvider).value?.current(target);
+      setState(() => _section = target.team != null ? 1 : _friends);
+      _openChat(current ?? target, _wide);
+    });
     final overview = ref.watch(socialOverviewProvider);
     final data = overview.value;
     if (data == null) {
@@ -94,6 +106,7 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= _wideWidth;
+        _wide = wide;
         final list = _list(context, data, wide);
         if (!wide) {
           return SafeArea(
@@ -198,7 +211,12 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
         GlassSegmented(
           labels: [l10n.friends, l10n.teams],
           selectedIndex: _section,
-          badges: {_friends: overview.requests.length},
+          badges: {
+            _friends:
+                overview.requests.length +
+                overview.friends.fold<int>(0, (sum, f) => sum + f.unread),
+            1: overview.teams.fold<int>(0, (sum, team) => sum + team.unread),
+          },
           onSelected: (section) => setState(() => _section = section),
         ),
         const SizedBox(height: 16),

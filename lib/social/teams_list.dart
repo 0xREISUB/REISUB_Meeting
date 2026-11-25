@@ -124,6 +124,13 @@ class _TeamCard extends ConsumerWidget {
                             const SizedBox(width: 8),
                             _RoleChip(label: role),
                           ],
+                          if (team.unread > 0) ...[
+                            const SizedBox(width: 8),
+                            GlassCountBadge(
+                              key: ValueKey('unread-team-${team.id}'),
+                              count: team.unread,
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 4),

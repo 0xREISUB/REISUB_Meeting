@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/orientation.dart';
 import 'package:v_meeting/home/glass_nav_bar.dart';
 import 'package:v_meeting/home/home_tab.dart';
+import 'package:v_meeting/social/notifications.dart';
 import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_tab.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -42,6 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final social = tab == HomeScreen.socialTab;
     if (social == _socialShown) return;
     _socialShown = social;
+    ref.read(socialTabShownProvider.notifier).set(social);
     final overview = ref.read(socialOverviewProvider.notifier);
     social ? overview.show() : overview.hide();
   }
@@ -62,6 +64,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Keeps the social overview refreshing in the background while the
     // app is open, so friends see the user online on any tab.
     ref.listen(socialOverviewProvider, (_, _) {});
+    // A notification asked for a chat: to the social tab, which opens it.
+    ref.listen(socialOpenRequestProvider, (_, target) {
+      if (target != null) _select(HomeScreen.socialTab);
+    });
+    final waiting = ref.watch(socialOverviewProvider).value?.waiting ?? 0;
     return PortraitOnPhone(
       child: Scaffold(
         extendBody: true,
@@ -100,6 +107,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 icon: Icons.people_alt_outlined,
                 selectedIcon: Icons.people_alt_rounded,
                 label: l10n.social,
+                badge: waiting,
               ),
               GlassNavItem(
                 icon: Icons.home_outlined,

@@ -114,6 +114,28 @@ class SocialApi {
     ];
   }
 
+  /// Messages others sent to any conversation since [after], and the id to
+  /// ask from next. Without [after], only that id.
+  Future<({int latestId, List<SocialNotification> messages})> notifications({
+    int? after,
+  }) async => _decode(
+    await _api.send(
+      'GET',
+      '/notifications${after == null ? '' : '?after=$after'}',
+    ),
+    (json) => (
+      latestId: (json['latest_id'] as num).toInt(),
+      messages: [
+        for (final item in json['messages'] as List? ?? const [])
+          SocialNotification.fromJson(Map<String, dynamic>.from(item as Map)),
+      ],
+    ),
+  );
+
+  /// Marks the conversation read up to [lastId].
+  Future<void> markRead(ChatTarget target, int lastId) =>
+      _api.send('POST', '${target.path}/read', data: {'last_id': lastId});
+
   Future<SocialMessage> sendMessage(ChatTarget target, String text) async =>
       _decode(
         await _api.send(

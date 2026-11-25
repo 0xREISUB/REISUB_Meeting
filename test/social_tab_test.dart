@@ -20,6 +20,31 @@ class FakeSocialServer {
   final calls = <String>[];
   final bodies = <String, Object?>{};
 
+  /// Messages the next notifications poll brings.
+  final pendingNotifications = <Map<String, Object?>>[];
+  var latestId = 100;
+
+  /// Queues a message from [sender] in [kind] [targetId]'s chat.
+  void notify({
+    required String kind,
+    required int targetId,
+    required String title,
+    required String sender,
+    String content = '',
+    String? roomId,
+  }) => pendingNotifications.add({
+    'id': ++latestId,
+    'sender_id': 99,
+    'sender': sender,
+    'content': content,
+    'room_id': ?roomId,
+    'created_at': '2026-11-25T18:30:00Z',
+    'is_mine': false,
+    'kind': kind,
+    'target_id': targetId,
+    'title': title,
+  });
+
   Map<String, Object?> person(int id, String nick, String presence) => {
     'id': id,
     'nick': nick,
@@ -38,7 +63,7 @@ class FakeSocialServer {
       'presence': 'online',
     },
     'friends': [
-      person(2, 'elif', 'online'),
+      {...person(2, 'elif', 'online'), 'unread': 2},
       person(3, 'burak', 'busy'),
       person(4, 'can', 'offline'),
     ],
@@ -58,6 +83,7 @@ class FakeSocialServer {
         'online_count': 2,
         'meeting_live': true,
         'room_id': '111-222-333',
+        'unread': 1,
       },
       {
         'id': 12,
@@ -77,6 +103,7 @@ class FakeSocialServer {
     final route = Uri.parse(path).path;
     return switch ((method, route)) {
       ('GET', '/social') => overview,
+      ('GET', '/notifications') => _notifications(path),
       ('GET', '/chats/friend/2/messages') => [
         {
           'id': 1,
@@ -118,6 +145,15 @@ class FakeSocialServer {
       ('POST', '/teams/11/meeting') => {'room_id': '111-222-333'},
       _ => <String, Object?>{},
     };
+  }
+
+  Map<String, Object?> _notifications(String path) {
+    if (Uri.parse(path).queryParameters['after'] == null) {
+      return {'latest_id': latestId, 'messages': <Object?>[]};
+    }
+    final messages = [...pendingNotifications];
+    pendingNotifications.clear();
+    return {'latest_id': latestId, 'messages': messages};
   }
 
   Dio dio() {

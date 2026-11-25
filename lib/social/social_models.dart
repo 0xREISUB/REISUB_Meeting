@@ -84,6 +84,7 @@ class Friend {
     this.statusMessage = '',
     this.offlineFor,
     this.avatarUrl = '',
+    this.unread = 0,
   });
 
   factory Friend.fromJson(Map<String, dynamic> json) {
@@ -96,6 +97,7 @@ class Friend {
       presence: Presence.parse(json['presence']),
       offlineFor: lastSeen == null ? null : Duration(seconds: lastSeen),
       avatarUrl: json['avatar_url'] as String? ?? '',
+      unread: (json['unread'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -110,6 +112,9 @@ class Friend {
 
   /// The profile picture's path on the server; empty without one.
   final String avatarUrl;
+
+  /// Their messages the user has not read.
+  final int unread;
 }
 
 /// A friend request: incoming, to answer, or outgoing, waiting.
@@ -164,6 +169,7 @@ class Team {
     required this.role,
     this.meetingLive = false,
     this.roomId,
+    this.unread = 0,
   });
 
   factory Team.fromJson(Map<String, dynamic> json) => Team(
@@ -175,6 +181,7 @@ class Team {
     role: TeamRole.parse(json['role']),
     meetingLive: json['meeting_live'] as bool? ?? false,
     roomId: json['room_id'] as String?,
+    unread: (json['unread'] as num?)?.toInt() ?? 0,
   );
 
   final String id;
@@ -187,6 +194,9 @@ class Team {
   /// Whether someone is in the team's meeting now.
   final bool meetingLive;
   final String? roomId;
+
+  /// The team chat's messages the user has not read.
+  final int unread;
 }
 
 /// "#7C4DFF" as a colour.
@@ -319,6 +329,12 @@ class SocialOverview {
   final List<FriendRequest> outgoing;
   final List<Team> teams;
 
+  /// Messages and requests waiting for the user, for the social tab's badge.
+  int get waiting =>
+      requests.length +
+      friends.fold<int>(0, (sum, friend) => sum + friend.unread) +
+      teams.fold<int>(0, (sum, team) => sum + team.unread);
+
   /// The friend or team behind a conversation, as it is now; null once
   /// they are gone.
   ChatTarget? current(ChatTarget target) {
@@ -333,4 +349,51 @@ class SocialOverview {
     }
     return null;
   }
+}
+
+/// A message someone sent while the user was elsewhere in the app.
+class SocialNotification {
+  const SocialNotification({
+    required this.message,
+    required this.target,
+    required this.title,
+  });
+
+  factory SocialNotification.fromJson(Map<String, dynamic> json) {
+    final targetId = '${json['target_id']}';
+    final title = json['title'] as String? ?? '';
+    final message = SocialMessage.fromJson(json);
+    // Only the ids matter: the overview fills in the rest when opened.
+    final target = json['kind'] == 'team'
+        ? ChatTarget.team(
+            Team(
+              id: targetId,
+              name: title,
+              color: Colors.deepPurpleAccent,
+              memberCount: 0,
+              onlineCount: 0,
+              role: TeamRole.member,
+            ),
+          )
+        : ChatTarget.friend(
+            Friend(
+              id: targetId,
+              displayName: title,
+              nick: title,
+              presence: Presence.offline,
+              avatarUrl: message.senderAvatarUrl,
+            ),
+          );
+    return SocialNotification(message: message, target: target, title: title);
+  }
+
+  final SocialMessage message;
+
+  /// Where it was sent: the friend's chat or the team's.
+  final ChatTarget target;
+
+  /// The friend's or the team's name.
+  final String title;
+
+  bool get fromTeam => target.team != null;
 }

@@ -8,11 +8,15 @@ class GlassNavItem {
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    this.badge = 0,
   });
 
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+
+  /// Things waiting on this tab, shown as a count on its icon.
+  final int badge;
 }
 
 /// A floating tab bar of frosted glass: the page shows blurred and a little
@@ -126,10 +130,21 @@ class _GlassTab extends StatelessWidget {
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutBack,
               scale: selected ? 1.1 : 1,
-              child: Icon(
-                selected ? item.selectedIcon : item.icon,
-                color: color,
-                size: 24,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    selected ? item.selectedIcon : item.icon,
+                    color: color,
+                    size: 24,
+                  ),
+                  if (item.badge > 0)
+                    Positioned(
+                      top: -6,
+                      right: -12,
+                      child: GlassCountBadge(count: item.badge),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 3),

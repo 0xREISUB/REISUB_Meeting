@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/social/notifications.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
 import 'package:v_meeting/social/social_actions.dart';
 import 'package:v_meeting/social/social_api.dart';
@@ -30,11 +31,53 @@ class ChatPane extends ConsumerStatefulWidget {
 class _ChatPaneState extends ConsumerState<ChatPane> {
   final _draft = TextEditingController();
   bool _sending = false;
+  late final ChatVisibility _visibility;
+  late final String _id = widget.target.id;
+
+  /// The last message marked read, and the last one there when it opened.
+  int _readTo = 0;
+  int? _openedAt;
+
+  @override
+  void initState() {
+    super.initState();
+    // Its new messages are not announced while it shows.
+    _visibility = ref.read(chatVisibilityProvider)..add(_id, _shows);
+  }
 
   @override
   void dispose() {
+    _visibility.remove(_id, _shows);
     _draft.dispose();
     super.dispose();
+  }
+
+  /// Whether it is on screen: nothing in front of it, and, beside the
+  /// social list on a computer, the social tab in front.
+  bool _shows() {
+    if (!mounted) return false;
+    if (!(ModalRoute.isCurrentOf(context) ?? true)) return false;
+    return widget.onBack != null || ref.read(socialTabShownProvider);
+  }
+
+  /// Marks what shows as read, when there is something new to mark.
+  void _markRead(List<SocialMessage> messages) {
+    if (messages.isEmpty || !_shows()) return;
+    final last = messages.last.id;
+    if (last <= _readTo) return;
+    _openedAt ??= last;
+    final unread =
+        widget.target.friend?.unread ?? widget.target.team?.unread ?? 0;
+    _readTo = last;
+    // Nothing unread when it opened, and nothing new since.
+    if (unread == 0 && last == _openedAt) return;
+    ref
+        .read(socialApiProvider)
+        .markRead(widget.target, last)
+        .then(
+          (_) => ref.read(socialOverviewProvider.notifier).refresh(),
+          onError: (_) => _readTo = 0,
+        );
   }
 
   Future<void> _send() async {
@@ -56,6 +99,13 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final l10n = AppLocalizations.of(context)!;
     final conversation = ref.watch(conversationProvider(widget.target));
     final messages = conversation.value;
+    // Read again when the social tab comes to the front.
+    ref.watch(socialTabShownProvider);
+    if (messages != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _markRead(messages);
+      });
+    }
     final now = DateTime.now();
     return Column(
       key: ValueKey('chat-${widget.target.id}'),
