@@ -46,7 +46,9 @@ class GlassNavBar extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 400),
           child: GlassSurface(
             radius: _radius,
-            sigma: 28,
+            // Lists scroll under the bar: it frosts them, lightly.
+            blur: true,
+            sigma: 18,
             child: Container(
               height: height,
               padding: const EdgeInsets.all(6),

@@ -394,7 +394,7 @@ class _PageDots extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassSurface(
       key: const ValueKey('meeting-page-dots'),
-      blur: false,
+      tint: glassSmoke,
       shadow: false,
       radius: 12,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),

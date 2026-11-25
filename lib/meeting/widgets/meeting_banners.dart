@@ -23,6 +23,7 @@ class MeetingConnectionBanner extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: GlassSurface(
+        blur: true,
         radius: 14,
         tint: disconnected ? Colors.red.shade700 : glassSmoke,
         child: Material(
@@ -191,6 +192,7 @@ class _RoomCodeBannerState extends State<RoomCodeBanner> {
       _Copied.inviteLink => l10n.inviteLinkCopied,
     };
     return GlassSurface(
+      blur: true,
       radius: 18,
       tint: glassSmoke,
       child: Material(

@@ -67,6 +67,7 @@ class MeetingControlsBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return GlassSurface(
       radius: 40,
+      blur: true,
       tint: glassSmoke,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(

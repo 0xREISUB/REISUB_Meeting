@@ -39,15 +39,19 @@ ColorFilter _saturate(double amount) {
   ]);
 }
 
-/// A pane of frosted glass. With [blur] off it skips the backdrop blur,
-/// which is costly, and lays a darker wash instead: for the many small
-/// labels drawn over video.
+/// A pane of glass: a faint wash with light catching its top edge.
+///
+/// Only with [blur] does it frost what lies behind. That is costly: the
+/// blur is worked out again on every frame that anything behind it moves.
+/// Over the app's still background it looks the same without, so only
+/// panes over moving content, such as video or a list scrolling under the
+/// bottom bar, turn it on.
 class GlassSurface extends StatelessWidget {
   const GlassSurface({
     super.key,
     required this.child,
     this.radius = 20,
-    this.blur = true,
+    this.blur = false,
     this.sigma = 24,
     this.tint,
     this.padding,
@@ -73,9 +77,7 @@ class GlassSurface extends StatelessWidget {
     final tint = this.tint;
     final colors = tint != null
         ? [tint.withValues(alpha: 0.55), tint.withValues(alpha: 0.30)]
-        : blur
-        ? [const Color(0x1FFFFFFF), const Color(0x0AFFFFFF)]
-        : [glassShade, glassShade.withValues(alpha: 0.7)];
+        : [const Color(0x1FFFFFFF), const Color(0x0AFFFFFF)];
     Widget pane = CustomPaint(
       foregroundPainter: GlassEdgePainter(radius: radius, circle: _circle),
       child: DecoratedBox(
@@ -171,23 +173,31 @@ class GlassBackground extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const ColoredBox(color: pageBackground),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(-1.1, -1.2),
-              radius: 1.1,
-              colors: [glow.withValues(alpha: 0.18), Colors.transparent],
-            ),
-          ),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(1.2, 1.1),
-              radius: 1.1,
-              colors: [glow.withValues(alpha: 0.22), Colors.transparent],
-            ),
+        // Its own layer: drawn once, not again whenever the page moves.
+        RepaintBoundary(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const ColoredBox(color: pageBackground),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(-1.1, -1.2),
+                    radius: 1.1,
+                    colors: [glow.withValues(alpha: 0.18), Colors.transparent],
+                  ),
+                ),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(1.2, 1.1),
+                    radius: 1.1,
+                    colors: [glow.withValues(alpha: 0.22), Colors.transparent],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         child,
@@ -207,7 +217,7 @@ class GlassIconButton extends StatefulWidget {
     this.size = 52,
     this.iconSize = 24,
     this.tooltip,
-    this.blur = true,
+    this.blur = false,
   });
 
   final IconData icon;

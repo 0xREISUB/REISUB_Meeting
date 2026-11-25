@@ -266,6 +266,7 @@ class ArrivalNotice extends StatelessWidget {
       direction: DismissDirection.up,
       onDismissed: (_) => onDismiss(),
       child: GlassSurface(
+        blur: true,
         radius: 18,
         tint: glassSmoke,
         child: Padding(

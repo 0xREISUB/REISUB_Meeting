@@ -33,6 +33,7 @@ class MeetingCountdown extends StatelessWidget {
       label: AppLocalizations.of(context)!.meetingTimeLeft(text),
       excludeSemantics: true,
       child: GlassSurface(
+        blur: true,
         key: const ValueKey('meeting-countdown'),
         radius: 20,
         tint: glassSmoke,
@@ -99,6 +100,7 @@ class MeetingTimeNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassSurface(
+      blur: true,
       key: const ValueKey('meeting-time-notice'),
       radius: 18,
       tint: glassSmoke,

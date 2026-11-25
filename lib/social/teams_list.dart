@@ -235,14 +235,17 @@ class _LiveDotState extends State<_LiveDot>
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: Tween(begin: 0.35, end: 1.0).animate(_pulse),
-      child: Container(
-        width: 8,
-        height: 8,
-        decoration: const BoxDecoration(
-          color: Colors.greenAccent,
-          shape: BoxShape.circle,
+    // Its own layer: the pulse repaints the dot alone, not the list.
+    return RepaintBoundary(
+      child: FadeTransition(
+        opacity: Tween(begin: 0.35, end: 1.0).animate(_pulse),
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: const BoxDecoration(
+            color: Colors.greenAccent,
+            shape: BoxShape.circle,
+          ),
         ),
       ),
     );
