@@ -52,6 +52,27 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, "REISUB Meeting");
   }
 
+  // Rounded corners: with a compositor the window can be see-through, so
+  // only the app, which clips itself to rounded corners, is drawn. The
+  // window's own background goes, and its shadow follows the same corners.
+  GdkScreen* window_screen = gtk_window_get_screen(window);
+  GdkVisual* rgba_visual = gdk_screen_get_rgba_visual(window_screen);
+  gboolean see_through =
+      rgba_visual != nullptr && gdk_screen_is_composited(window_screen);
+  if (see_through) {
+    gtk_widget_set_visual(GTK_WIDGET(window), rgba_visual);
+    gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
+    g_autoptr(GtkCssProvider) css = gtk_css_provider_new();
+    gtk_css_provider_load_from_data(
+        css,
+        "window, window.background { background-color: transparent; }"
+        "decoration { border-radius: 12px; }",
+        -1, nullptr);
+    gtk_style_context_add_provider_for_screen(
+        window_screen, GTK_STYLE_PROVIDER(css),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  }
+
   gtk_window_set_default_size(window, 1280, 720);
   g_autoptr(GdkPixbuf) icon = gdk_pixbuf_new_from_resource(
       "/xyz/reisub/meeting/logo.png", nullptr);
@@ -67,7 +88,7 @@ static void my_application_activate(GApplication* application) {
   GdkRGBA background_color;
   // Background defaults to black, override it here if necessary, e.g. #00000000
   // for transparent.
-  gdk_rgba_parse(&background_color, "#000000");
+  gdk_rgba_parse(&background_color, see_through ? "#00000000" : "#000000");
   fl_view_set_background_color(view, &background_color);
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:v_meeting/app/orientation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/app_startup.dart';
+import 'package:v_meeting/app/auto_hide_title_bar.dart';
+import 'package:v_meeting/app/window_controls.dart';
 import 'package:v_meeting/app/deep_links.dart';
 import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/app/locale.dart';
+import 'package:v_meeting/app/rounded_window.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/host_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -62,6 +65,17 @@ class _VMeetingAppState extends ConsumerState<VMeetingApp> {
       supportedLocales: AppLocalizations.supportedLocales,
       theme: buildAppTheme(),
       navigatorObservers: [appRouteObserver],
+      // On a computer the app draws its own title bar, hidden until the
+      // pointer rests at the top.
+      builder: DesktopWindowControls.supported
+          ? (context, child) {
+              final app = AutoHideTitleBar(
+                controls: const DesktopWindowControls(),
+                child: child!,
+              );
+              return RoundedWindow.supported ? RoundedWindow(child: app) : app;
+            }
+          : null,
       home: const StartupScreen(),
     );
   }
