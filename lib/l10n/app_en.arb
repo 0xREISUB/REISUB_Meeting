@@ -490,5 +490,85 @@
   "social": "Social",
   "homeTab": "Home",
   "socialComingSoon": "Social features are coming here soon.",
-  "account": "Account"
+  "account": "Account",
+  "socialSignedOutTitle": "Your friends and teams live here",
+  "socialSignedOutBody": "Log in to add friends, build teams and meet them with a single tap.",
+  "socialPreviewNote": "Preview: the people and teams here are examples.",
+  "friends": "Friends",
+  "teams": "Teams",
+  "friendRequests": "Requests ({count})",
+  "@friendRequests": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "presenceOnline": "Online",
+  "presenceBusy": "Busy",
+  "presenceInMeeting": "In a meeting",
+  "presenceOffline": "Offline",
+  "lastSeenMinutes": "{count} min ago",
+  "@lastSeenMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lastSeenHours": "{count} h ago",
+  "@lastSeenHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lastSeenDays": "{count} d ago",
+  "@lastSeenDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "callFriend": "Call",
+  "addFriend": "Add friend",
+  "acceptRequest": "Accept",
+  "declineRequest": "Decline",
+  "onlineCount": "{count} online",
+  "@onlineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createTeam": "Create team",
+  "teamMembers": "{count} members",
+  "@teamMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamLive": "Meeting in progress",
+  "joinTeamMeeting": "Join",
+  "startTeamMeeting": "Start",
+  "teamRoleOwner": "Owner",
+  "teamRoleAdmin": "Admin",
+  "myProfile": "My profile",
+  "displayName": "Display name",
+  "statusMessage": "Status message",
+  "shareProfile": "Share profile",
+  "editProfile": "Edit profile",
+  "saveProfile": "Save",
+  "presenceTitle": "Status",
+  "videoCall": "Video call",
+  "chooseConversation": "Choose a conversation",
+  "chooseConversationHint": "Pick a friend or a team on the left to open your conversation here.",
+  "windowMinimize": "Minimize",
+  "windowMaximize": "Maximize",
+  "windowRestore": "Restore"
 }

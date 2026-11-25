@@ -966,4 +966,133 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get account => 'Hesap';
+
+  @override
+  String get socialSignedOutTitle => 'Arkadaşların ve takımların burada';
+
+  @override
+  String get socialSignedOutBody =>
+      'Arkadaş eklemek, takım kurmak ve onlarla tek dokunuşla buluşmak için giriş yap.';
+
+  @override
+  String get socialPreviewNote =>
+      'Önizleme: bu ekrandaki kişiler ve takımlar örnek.';
+
+  @override
+  String get friends => 'Arkadaşlar';
+
+  @override
+  String get teams => 'Takımlar';
+
+  @override
+  String friendRequests(int count) {
+    return 'İstekler ($count)';
+  }
+
+  @override
+  String get presenceOnline => 'Çevrimiçi';
+
+  @override
+  String get presenceBusy => 'Meşgul';
+
+  @override
+  String get presenceInMeeting => 'Toplantıda';
+
+  @override
+  String get presenceOffline => 'Çevrimdışı';
+
+  @override
+  String lastSeenMinutes(int count) {
+    return '$count dk önce';
+  }
+
+  @override
+  String lastSeenHours(int count) {
+    return '$count saat önce';
+  }
+
+  @override
+  String lastSeenDays(int count) {
+    return '$count gün önce';
+  }
+
+  @override
+  String get callFriend => 'Ara';
+
+  @override
+  String get addFriend => 'Arkadaş ekle';
+
+  @override
+  String get acceptRequest => 'Kabul et';
+
+  @override
+  String get declineRequest => 'Reddet';
+
+  @override
+  String onlineCount(int count) {
+    return '$count çevrimiçi';
+  }
+
+  @override
+  String get createTeam => 'Takım kur';
+
+  @override
+  String teamMembers(int count) {
+    return '$count üye';
+  }
+
+  @override
+  String get teamLive => 'Toplantı sürüyor';
+
+  @override
+  String get joinTeamMeeting => 'Katıl';
+
+  @override
+  String get startTeamMeeting => 'Başlat';
+
+  @override
+  String get teamRoleOwner => 'Sahip';
+
+  @override
+  String get teamRoleAdmin => 'Yönetici';
+
+  @override
+  String get myProfile => 'Profilim';
+
+  @override
+  String get displayName => 'Görünen ad';
+
+  @override
+  String get statusMessage => 'Durum mesajı';
+
+  @override
+  String get shareProfile => 'Profili paylaş';
+
+  @override
+  String get editProfile => 'Profili düzenle';
+
+  @override
+  String get saveProfile => 'Kaydet';
+
+  @override
+  String get presenceTitle => 'Durum';
+
+  @override
+  String get videoCall => 'Görüntülü ara';
+
+  @override
+  String get chooseConversation => 'Bir sohbet seç';
+
+  @override
+  String get chooseConversationHint =>
+      'Soldan bir arkadaşına ya da takımına bas, konuşmanız burada açılsın.';
+
+  @override
+  String get windowMinimize => 'Küçült';
+
+  @override
+  String get windowMaximize => 'Büyüt';
+
+  @override
+  String get windowRestore => 'Önceki boyuta getir';
 }

@@ -62,7 +62,7 @@ class GlassNavBar extends StatelessWidget {
                         top: 0,
                         bottom: 0,
                         width: slot,
-                        child: _GlassBead(accent: accent),
+                        child: GlassBead(accent: accent),
                       ),
                       Row(
                         children: [
@@ -83,36 +83,6 @@ class GlassNavBar extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The tinted drop of glass behind the chosen tab.
-class _GlassBead extends StatelessWidget {
-  const _GlassBead({required this.accent});
-
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      foregroundPainter: const GlassEdgePainter(radius: 28),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              accent.withValues(alpha: 0.42),
-              accent.withValues(alpha: 0.16),
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(color: accent.withValues(alpha: 0.35), blurRadius: 18),
-          ],
         ),
       ),
     );

@@ -1,0 +1,232 @@
+import 'package:flutter/material.dart';
+import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/social/presence_avatar.dart';
+import 'package:v_meeting/social/social_models.dart';
+import 'package:v_meeting/widgets/glass.dart';
+
+/// Opens the profile: a window in the middle on a computer, a screen of
+/// its own on a phone.
+void showProfile(BuildContext context, SocialProfile profile) {
+  if (MediaQuery.sizeOf(context).width >= 840) {
+    showGlassDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        key: const ValueKey('profile-dialog'),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          width: 520,
+          height: 720,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 12, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.myProfile,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const CloseButton(),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ProfileView(
+                  profile: profile,
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 20),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ProfileScreen(profile: profile)),
+    );
+  }
+}
+
+/// The profile as a screen of its own, on a phone.
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key, required this.profile});
+
+  final SocialProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.myProfile)),
+      body: GlassBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: ProfileView(profile: profile),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The user's own profile: how they show to friends and teams.
+class ProfileView extends StatefulWidget {
+  const ProfileView({
+    super.key,
+    required this.profile,
+    this.padding = const EdgeInsets.fromLTRB(0, 12, 0, 24),
+  });
+
+  final SocialProfile profile;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  late final _displayName = TextEditingController(
+    text: widget.profile.displayName,
+  );
+  late final _status = TextEditingController(
+    text: widget.profile.statusMessage,
+  );
+  late var _presence = widget.profile.presence;
+
+  @override
+  void dispose() {
+    _displayName.dispose();
+    _status.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final profile = widget.profile;
+    return ListView(
+      padding: widget.padding,
+      children: [
+        Center(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              PresenceAvatar(
+                name: _displayName.text.isEmpty
+                    ? profile.nick
+                    : _displayName.text,
+                seed: profile.nick,
+                presence: _presence,
+                size: 104,
+              ),
+              Positioned(
+                left: -6,
+                bottom: -2,
+                child: GlassIconButton(
+                  key: const ValueKey('profile-avatar-edit'),
+                  size: 38,
+                  iconSize: 18,
+                  tint: brandColor,
+                  icon: Icons.photo_camera_rounded,
+                  onPressed: () => showSocialComingSoon(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '@${profile.nick}',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: glassMuted),
+        ),
+        const SizedBox(height: 12),
+        GlassSection(
+          radius: 14,
+          title: l10n.editProfile,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                spacing: 14,
+                children: [
+                  TextField(
+                    key: const ValueKey('profile-display-name'),
+                    controller: _displayName,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: l10n.displayName,
+                      prefixIcon: const Icon(Icons.badge_outlined),
+                    ),
+                  ),
+                  TextField(
+                    key: const ValueKey('profile-status'),
+                    controller: _status,
+                    maxLength: 80,
+                    decoration: InputDecoration(
+                      labelText: l10n.statusMessage,
+                      prefixIcon: const Icon(Icons.chat_bubble_outline_rounded),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        GlassSection(
+          radius: 14,
+          title: l10n.presenceTitle,
+          children: [
+            for (final presence in const [
+              Presence.online,
+              Presence.busy,
+              Presence.offline,
+            ])
+              ListTile(
+                key: ValueKey('presence-${presence.name}'),
+                leading: Icon(Icons.circle, color: presence.color),
+                title: Text(presence.label(l10n)),
+                trailing: _presence == presence
+                    ? const Icon(Icons.check_rounded, color: glassAccent)
+                    : null,
+                onTap: () => setState(() => _presence = presence),
+              ),
+          ],
+        ),
+        GlassSection(
+          radius: 14,
+          title: l10n.account,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.qr_code_2_rounded),
+              title: Text(l10n.shareProfile),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => showSocialComingSoon(context),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: GlassButton(
+            radius: 12,
+            key: const ValueKey('profile-save'),
+            tint: brandColor,
+            icon: Icons.check_rounded,
+            label: l10n.saveProfile,
+            onPressed: () => showSocialComingSoon(context),
+          ),
+        ),
+      ],
+    );
+  }
+}

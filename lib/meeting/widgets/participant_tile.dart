@@ -21,7 +21,7 @@ class MeetingParticipantTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(isMain ? 24 : 16);
+    final radius = BorderRadius.circular(isMain ? 12 : 16);
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -161,11 +161,16 @@ class MemberAvatar extends StatelessWidget {
     required this.name,
     required this.seed,
     required this.size,
+    this.fitTile = true,
   });
 
   final String name;
   final String seed;
   final double size;
+
+  /// Keeps the avatar to half the space it is given, as in a small video
+  /// tile; off, it is always [size].
+  final bool fitTile;
 
   static const _colors = [
     Color(0xFF5C6BC0),
@@ -198,7 +203,9 @@ class MemberAvatar extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Never larger than a small tile allows.
-        final diameter = math.min(size, constraints.biggest.shortestSide * 0.5);
+        final diameter = fitTile
+            ? math.min(size, constraints.biggest.shortestSide * 0.5)
+            : size;
         return Container(
           width: diameter,
           height: diameter,

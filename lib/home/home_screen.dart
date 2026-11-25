@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:v_meeting/app/orientation.dart';
 import 'package:v_meeting/home/glass_nav_bar.dart';
 import 'package:v_meeting/home/home_tab.dart';
-import 'package:v_meeting/home/social_tab.dart';
+import 'package:v_meeting/social/social_tab.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/settings/settings_view.dart';
 import 'package:v_meeting/widgets/glass.dart';

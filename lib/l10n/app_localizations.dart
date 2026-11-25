@@ -1771,6 +1771,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account'**
   String get account;
+
+  /// No description provided for @socialSignedOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friends and teams live here'**
+  String get socialSignedOutTitle;
+
+  /// No description provided for @socialSignedOutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to add friends, build teams and meet them with a single tap.'**
+  String get socialSignedOutBody;
+
+  /// No description provided for @socialPreviewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview: the people and teams here are examples.'**
+  String get socialPreviewNote;
+
+  /// No description provided for @friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friends;
+
+  /// No description provided for @teams.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams'**
+  String get teams;
+
+  /// No description provided for @friendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests ({count})'**
+  String friendRequests(int count);
+
+  /// No description provided for @presenceOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get presenceOnline;
+
+  /// No description provided for @presenceBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy'**
+  String get presenceBusy;
+
+  /// No description provided for @presenceInMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'In a meeting'**
+  String get presenceInMeeting;
+
+  /// No description provided for @presenceOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get presenceOffline;
+
+  /// No description provided for @lastSeenMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String lastSeenMinutes(int count);
+
+  /// No description provided for @lastSeenHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} h ago'**
+  String lastSeenHours(int count);
+
+  /// No description provided for @lastSeenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} d ago'**
+  String lastSeenDays(int count);
+
+  /// No description provided for @callFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get callFriend;
+
+  /// No description provided for @addFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get addFriend;
+
+  /// No description provided for @acceptRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get acceptRequest;
+
+  /// No description provided for @declineRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get declineRequest;
+
+  /// No description provided for @onlineCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} online'**
+  String onlineCount(int count);
+
+  /// No description provided for @createTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Create team'**
+  String get createTeam;
+
+  /// No description provided for @teamMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members'**
+  String teamMembers(int count);
+
+  /// No description provided for @teamLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting in progress'**
+  String get teamLive;
+
+  /// No description provided for @joinTeamMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get joinTeamMeeting;
+
+  /// No description provided for @startTeamMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get startTeamMeeting;
+
+  /// No description provided for @teamRoleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get teamRoleOwner;
+
+  /// No description provided for @teamRoleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get teamRoleAdmin;
+
+  /// No description provided for @myProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'My profile'**
+  String get myProfile;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get displayName;
+
+  /// No description provided for @statusMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Status message'**
+  String get statusMessage;
+
+  /// No description provided for @shareProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share profile'**
+  String get shareProfile;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfile;
+
+  /// No description provided for @saveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveProfile;
+
+  /// No description provided for @presenceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get presenceTitle;
+
+  /// No description provided for @videoCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Video call'**
+  String get videoCall;
+
+  /// No description provided for @chooseConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a conversation'**
+  String get chooseConversation;
+
+  /// No description provided for @chooseConversationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a friend or a team on the left to open your conversation here.'**
+  String get chooseConversationHint;
+
+  /// No description provided for @windowMinimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize'**
+  String get windowMinimize;
+
+  /// No description provided for @windowMaximize.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximize'**
+  String get windowMaximize;
+
+  /// No description provided for @windowRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get windowRestore;
 }
 
 class _AppLocalizationsDelegate

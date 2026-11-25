@@ -983,4 +983,133 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get account => 'Account';
+
+  @override
+  String get socialSignedOutTitle => 'Your friends and teams live here';
+
+  @override
+  String get socialSignedOutBody =>
+      'Log in to add friends, build teams and meet them with a single tap.';
+
+  @override
+  String get socialPreviewNote =>
+      'Preview: the people and teams here are examples.';
+
+  @override
+  String get friends => 'Friends';
+
+  @override
+  String get teams => 'Teams';
+
+  @override
+  String friendRequests(int count) {
+    return 'Requests ($count)';
+  }
+
+  @override
+  String get presenceOnline => 'Online';
+
+  @override
+  String get presenceBusy => 'Busy';
+
+  @override
+  String get presenceInMeeting => 'In a meeting';
+
+  @override
+  String get presenceOffline => 'Offline';
+
+  @override
+  String lastSeenMinutes(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String lastSeenHours(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String lastSeenDays(int count) {
+    return '$count d ago';
+  }
+
+  @override
+  String get callFriend => 'Call';
+
+  @override
+  String get addFriend => 'Add friend';
+
+  @override
+  String get acceptRequest => 'Accept';
+
+  @override
+  String get declineRequest => 'Decline';
+
+  @override
+  String onlineCount(int count) {
+    return '$count online';
+  }
+
+  @override
+  String get createTeam => 'Create team';
+
+  @override
+  String teamMembers(int count) {
+    return '$count members';
+  }
+
+  @override
+  String get teamLive => 'Meeting in progress';
+
+  @override
+  String get joinTeamMeeting => 'Join';
+
+  @override
+  String get startTeamMeeting => 'Start';
+
+  @override
+  String get teamRoleOwner => 'Owner';
+
+  @override
+  String get teamRoleAdmin => 'Admin';
+
+  @override
+  String get myProfile => 'My profile';
+
+  @override
+  String get displayName => 'Display name';
+
+  @override
+  String get statusMessage => 'Status message';
+
+  @override
+  String get shareProfile => 'Share profile';
+
+  @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get saveProfile => 'Save';
+
+  @override
+  String get presenceTitle => 'Status';
+
+  @override
+  String get videoCall => 'Video call';
+
+  @override
+  String get chooseConversation => 'Choose a conversation';
+
+  @override
+  String get chooseConversationHint =>
+      'Pick a friend or a team on the left to open your conversation here.';
+
+  @override
+  String get windowMinimize => 'Minimize';
+
+  @override
+  String get windowMaximize => 'Maximize';
+
+  @override
+  String get windowRestore => 'Restore';
 }

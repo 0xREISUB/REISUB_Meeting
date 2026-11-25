@@ -1,0 +1,56 @@
+import 'package:flutter/material.dart';
+import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/meeting/widgets/participant_tile.dart';
+import 'package:v_meeting/social/social_models.dart';
+
+/// Someone's avatar with a dot for whether they can be reached.
+class PresenceAvatar extends StatelessWidget {
+  const PresenceAvatar({
+    super.key,
+    required this.name,
+    required this.seed,
+    required this.presence,
+    this.size = 44,
+  });
+
+  final String name;
+  final String seed;
+  final Presence presence;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final dot = size * 0.3;
+    return SizedBox.square(
+      dimension: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          MemberAvatar(name: name, seed: seed, size: size, fitTile: false),
+          Positioned(
+            right: -1,
+            bottom: -1,
+            child: Container(
+              width: dot,
+              height: dot,
+              decoration: BoxDecoration(
+                color: presence.color,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF1C1A22), width: 2),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tells that an action of the social preview is not there yet.
+void showSocialComingSoon(BuildContext context) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.comingSoon)),
+    );
+}

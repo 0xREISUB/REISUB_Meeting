@@ -8,7 +8,7 @@ import 'package:v_meeting/app/http.dart';
 import 'package:v_meeting/auth/login_screen.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/home/home_tab.dart';
-import 'package:v_meeting/home/social_tab.dart';
+import 'package:v_meeting/social/social_tab.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/settings/about_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
@@ -105,7 +105,10 @@ void main() {
     await tester.tap(find.byIcon(Icons.people_alt_outlined));
     await tester.pumpAndSettle();
     expect(find.byType(SocialTab), findsOneWidget);
-    expect(find.byKey(const ValueKey('social-coming-soon')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('social-signed-out-body')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('tabs can be swiped', (tester) async {

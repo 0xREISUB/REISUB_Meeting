@@ -280,10 +280,16 @@ Future<T?> showGlassDialog<T>({
 /// A titled group of rows on one pane of glass, as in the settings, with
 /// a faint line between the rows.
 class GlassSection extends StatelessWidget {
-  const GlassSection({super.key, required this.title, required this.children});
+  const GlassSection({
+    super.key,
+    required this.title,
+    required this.children,
+    this.radius = 22,
+  });
 
   final String title;
   final List<Widget> children;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
@@ -304,7 +310,7 @@ class GlassSection extends StatelessWidget {
             ),
           ),
           GlassSurface(
-            radius: 22,
+            radius: radius,
             shadow: false,
             child: Material(
               type: MaterialType.transparency,
@@ -340,6 +346,7 @@ class GlassButton extends StatefulWidget {
     this.tint,
     this.height = 58,
     this.fontSize = 17,
+    this.radius,
   });
 
   final IconData icon;
@@ -348,6 +355,9 @@ class GlassButton extends StatefulWidget {
   final Color? tint;
   final double height;
   final double fontSize;
+
+  /// The corners' radius; a pill when null.
+  final double? radius;
 
   @override
   State<GlassButton> createState() => _GlassButtonState();
@@ -378,7 +388,7 @@ class _GlassButtonState extends State<GlassButton> {
           child: SizedBox(
             height: widget.height,
             child: GlassSurface(
-              radius: widget.height / 2,
+              radius: widget.radius ?? widget.height / 2,
               tint: enabled ? widget.tint : null,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -440,7 +450,7 @@ class GlassSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const radius = 24.0;
+    const radius = 14.0;
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(radius)),
       child: BackdropFilter(
@@ -461,6 +471,164 @@ class GlassSheet extends StatelessWidget {
             ),
             child: Material(type: MaterialType.transparency, child: child),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The tinted drop of glass behind the chosen tab or segment.
+class GlassBead extends StatelessWidget {
+  const GlassBead({super.key, required this.accent, this.radius = 28});
+
+  final Color accent;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      foregroundPainter: GlassEdgePainter(radius: radius),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              accent.withValues(alpha: 0.42),
+              accent.withValues(alpha: 0.16),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(color: accent.withValues(alpha: 0.35), blurRadius: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A row of choices on glass, with a tinted bead that flows to the chosen
+/// one, as in the bottom bar.
+class GlassSegmented extends StatelessWidget {
+  const GlassSegmented({
+    super.key,
+    required this.labels,
+    required this.selectedIndex,
+    required this.onSelected,
+    this.badges = const {},
+  });
+
+  final List<String> labels;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  /// A count to show beside a choice, by its index.
+  final Map<int, int> badges;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: GlassSurface(
+        radius: 14,
+        shadow: false,
+        padding: const EdgeInsets.all(4),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final slot = constraints.maxWidth / labels.length;
+            return Stack(
+              children: [
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 420),
+                  curve: Curves.easeOutBack,
+                  left: slot * selectedIndex,
+                  top: 0,
+                  bottom: 0,
+                  width: slot,
+                  child: const GlassBead(accent: brandColor, radius: 10),
+                ),
+                Row(
+                  children: [
+                    for (var i = 0; i < labels.length; i++)
+                      Expanded(
+                        child: Semantics(
+                          button: true,
+                          selected: i == selectedIndex,
+                          child: InkWell(
+                            key: ValueKey('segment-$i'),
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => onSelected(i),
+                            child: Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: AnimatedDefaultTextStyle(
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                            color: i == selectedIndex
+                                                ? Colors.white
+                                                : glassMuted,
+                                            fontWeight: i == selectedIndex
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                          ),
+                                      child: Text(
+                                        labels[i],
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                  if ((badges[i] ?? 0) > 0) ...[
+                                    const SizedBox(width: 6),
+                                    GlassCountBadge(count: badges[i]!),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// A small red count, for things waiting for an answer.
+class GlassCountBadge extends StatelessWidget {
+  const GlassCountBadge({super.key, required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: Colors.redAccent,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
