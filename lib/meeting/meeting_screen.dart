@@ -29,6 +29,7 @@ import 'package:v_meeting/meeting/widgets/screen_source_picker.dart';
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/media_privacy.dart';
 import 'package:v_meeting/widgets/glass.dart';
+import 'package:v_meeting/meeting/widgets/meeting_dialog.dart';
 
 /// The in-meeting screen. Meeting logic lives in [MeetingSession]; this widget
 /// lays out the video, controls and overlays and shows dialogs and sheets.
@@ -263,7 +264,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   @override
   Future<bool> confirmUnmute() async {
     if (!mounted) return false;
-    final accepted = await showGlassDialog<bool>(
+    final accepted = await showMeetingDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_l10n.unmuteRequestTitle),
@@ -332,7 +333,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     }
     final lastOwner = _session.isLastOwner;
     _exitDialogOpen = true;
-    final action = await showGlassDialog<String>(
+    final action = await showMeetingDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_l10n.leaveMeeting),
@@ -420,7 +421,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   void _openAudioVideoSettings() {
-    showGlassDialog<void>(
+    showMeetingDialog<void>(
       context: context,
       builder: (_) =>
           AudioVideoSettingsDialog(onDeviceTest: _openMeetingDeviceTest),
@@ -428,7 +429,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   void _openMeetingSettings() {
-    showGlassDialog<void>(
+    showMeetingDialog<void>(
       context: context,
       builder: (_) => MeetingSettingsDialog(
         listenable: _session,

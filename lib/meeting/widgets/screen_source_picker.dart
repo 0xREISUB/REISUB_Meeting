@@ -7,6 +7,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_platform.dart';
 import 'package:v_meeting/widgets/glass.dart';
+import 'package:v_meeting/meeting/widgets/meeting_dialog.dart';
 
 const _surface = Color(0xE01C1A22);
 const _card = glassFill;
@@ -28,7 +29,7 @@ class ScreenSourcePicker extends StatefulWidget {
     BuildContext context, {
     required rtc.DesktopCapturer capturer,
     required SystemAudioSupport audioSupport,
-  }) => showGlassDialog<ScreenShareChoice>(
+  }) => showMeetingDialog<ScreenShareChoice>(
     context: context,
     builder: (_) =>
         ScreenSourcePicker(capturer: capturer, audioSupport: audioSupport),
@@ -157,7 +158,7 @@ class _ScreenSourcePickerState extends State<ScreenSourcePicker> {
     return Dialog(
       backgroundColor: _surface,
       insetPadding: const EdgeInsets.all(24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: 820,
@@ -396,7 +397,7 @@ class _SourceTileState extends State<_SourceTile> {
     return Material(
       color: selected ? _accent.withValues(alpha: 0.18) : _card,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         side: BorderSide(
           color: selected ? _accent : Colors.transparent,
           width: 2,
@@ -479,7 +480,7 @@ class _AudioOption extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: _card,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(10),
       child: SwitchListTile(
         key: const ValueKey('screen-picker-audio'),
         value: value,

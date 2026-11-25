@@ -4,6 +4,7 @@ import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/meeting/widgets/permissions_member_list.dart';
 import 'package:v_meeting/meeting/widgets/permissions_member_detail.dart';
 import 'package:v_meeting/widgets/glass.dart';
+import 'package:v_meeting/meeting/widgets/meeting_dialog.dart';
 
 /// How a permission looks in the permissions window.
 extension MeetingPermissionText on MeetingPermission {
@@ -69,7 +70,7 @@ Future<void> showPermissionsDialog(
       onTransferOwnership: onTransferOwnership,
     ),
   );
-  return showGlassDialog<void>(
+  return showMeetingDialog<void>(
     context: context,
     builder: (context) => narrow
         ? Dialog.fullscreen(backgroundColor: _dialogColor, child: dialog)
@@ -77,7 +78,7 @@ Future<void> showPermissionsDialog(
             backgroundColor: _dialogColor,
             clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: SizedBox(width: 820, height: 560, child: dialog),
           ),
@@ -168,7 +169,7 @@ class _PermissionsDialogState extends State<PermissionsDialog> {
 
   Future<void> _transfer(MemberEntry member) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showGlassDialog<bool>(
+    final confirmed = await showMeetingDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.transferOwnershipTitle),

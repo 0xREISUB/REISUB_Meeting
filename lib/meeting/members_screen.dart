@@ -3,6 +3,7 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/widgets/glass.dart';
+import 'package:v_meeting/meeting/widgets/meeting_dialog.dart';
 
 typedef MicrophoneModerationCallback =
     Future<void> Function(MemberEntry member, bool locked, bool requestUnmute);
@@ -55,7 +56,7 @@ class _MembersScreenState extends State<MembersScreen> {
 
   Future<bool> _confirmRemove(MemberEntry member) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showGlassDialog<bool>(
+    final confirmed = await showMeetingDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.removeMemberTitle(member.name)),

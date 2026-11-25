@@ -125,7 +125,7 @@ class _MeetingChatSheetState extends State<MeetingChatSheet> {
                           filled: true,
                           fillColor: glassFill,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -211,10 +211,10 @@ class ChatBubble extends StatelessWidget {
           color: isMe ? brandColor.withValues(alpha: 0.75) : glassFill,
           border: Border.all(color: glassStroke),
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 16),
+            topLeft: const Radius.circular(12),
+            topRight: const Radius.circular(12),
+            bottomLeft: Radius.circular(isMe ? 12 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 12),
           ),
         ),
         child: Text(

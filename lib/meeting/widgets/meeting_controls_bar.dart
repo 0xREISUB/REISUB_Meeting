@@ -123,6 +123,10 @@ class MeetingControlsBar extends StatelessWidget {
           ),
           PopupMenuButton<String>(
             tooltip: l10n.moreOptions,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: const BorderSide(color: glassStroke),
+            ),
             icon: const Icon(
               Icons.more_horiz_rounded,
               color: Colors.white,
