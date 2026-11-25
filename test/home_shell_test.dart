@@ -111,6 +111,48 @@ void main() {
     );
   });
 
+  testWidgets('tabs stay built, so sliding to one builds nothing', (
+    tester,
+  ) async {
+    await showHome(tester);
+    // Settings is built ahead of time, before it is ever shown.
+    final settings = find.byType(SettingsView, skipOffstage: false);
+    expect(settings, findsOneWidget);
+    final state = tester.state(settings);
+
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(SettingsView), const Offset(0, -300));
+    await tester.pumpAndSettle();
+    final scrolled = tester
+        .state<ScrollableState>(
+          find
+              .descendant(of: settings, matching: find.byType(Scrollable))
+              .first,
+        )
+        .position
+        .pixels;
+    expect(scrolled, greaterThan(0));
+
+    // Away to social and back: the same page, where it was left.
+    await tester.tap(find.byIcon(Icons.people_alt_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+    expect(tester.state(settings), same(state));
+    expect(
+      tester
+          .state<ScrollableState>(
+            find
+                .descendant(of: settings, matching: find.byType(Scrollable))
+                .first,
+          )
+          .position
+          .pixels,
+      scrolled,
+    );
+  });
+
   testWidgets('tabs can be swiped', (tester) async {
     await showHome(tester);
     final tabs = find.byKey(const ValueKey('home-tabs'));

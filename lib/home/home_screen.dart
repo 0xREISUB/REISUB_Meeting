@@ -34,6 +34,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
+  /// The social overview refreshes often while its tab shows.
+  bool _socialShown = false;
+
+  void _shown(int tab) {
+    setState(() => _tab = tab);
+    final social = tab == HomeScreen.socialTab;
+    if (social == _socialShown) return;
+    _socialShown = social;
+    final overview = ref.read(socialOverviewProvider.notifier);
+    social ? overview.show() : overview.hide();
+  }
+
   void _select(int tab) {
     if (tab == _tab) return;
     setState(() => _tab = tab);
@@ -57,40 +69,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: PageView(
             key: const ValueKey('home-tabs'),
             controller: _pages,
-            onPageChanged: (tab) => setState(() => _tab = tab),
+            // Builds the pages beside the one shown ahead of time; with Home
+            // in the middle, all of them. Kept alive too, so sliding to a
+            // tab never builds it in the middle of the slide.
+            allowImplicitScrolling: true,
+            onPageChanged: _shown,
             children: const [
-              SocialTab(),
-              HomeTab(),
-              SafeArea(bottom: false, child: SettingsView(showTitle: true)),
+              _KeptAlive(child: SocialTab()),
+              _KeptAlive(child: HomeTab()),
+              _KeptAlive(
+                child: SafeArea(
+                  bottom: false,
+                  child: SettingsView(showTitle: true),
+                ),
+              ),
             ],
           ),
         ),
         // The pages run under the floating bar, so it blurs them, and
         // only beside it they show through. Their scrolling ends with room
         // for the bar, so nothing stays hidden under it.
-        bottomNavigationBar: GlassNavBar(
-          key: const ValueKey('home-navigation'),
-          selectedIndex: _tab,
-          onSelected: _select,
-          items: [
-            GlassNavItem(
-              icon: Icons.people_alt_outlined,
-              selectedIcon: Icons.people_alt_rounded,
-              label: l10n.social,
-            ),
-            GlassNavItem(
-              icon: Icons.home_outlined,
-              selectedIcon: Icons.home_rounded,
-              label: l10n.homeTab,
-            ),
-            GlassNavItem(
-              icon: Icons.settings_outlined,
-              selectedIcon: Icons.settings_rounded,
-              label: l10n.settings,
-            ),
-          ],
+        // Its own layer: its bead's slide repaints the bar alone.
+        bottomNavigationBar: RepaintBoundary(
+          child: GlassNavBar(
+            key: const ValueKey('home-navigation'),
+            selectedIndex: _tab,
+            onSelected: _select,
+            items: [
+              GlassNavItem(
+                icon: Icons.people_alt_outlined,
+                selectedIcon: Icons.people_alt_rounded,
+                label: l10n.social,
+              ),
+              GlassNavItem(
+                icon: Icons.home_outlined,
+                selectedIcon: Icons.home_rounded,
+                label: l10n.homeTab,
+              ),
+              GlassNavItem(
+                icon: Icons.settings_outlined,
+                selectedIcon: Icons.settings_rounded,
+                label: l10n.settings,
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+}
+
+/// Keeps a tab built while another shows.
+class _KeptAlive extends StatefulWidget {
+  const _KeptAlive({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_KeptAlive> createState() => _KeptAliveState();
+}
+
+class _KeptAliveState extends State<_KeptAlive>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

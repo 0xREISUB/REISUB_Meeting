@@ -31,21 +31,6 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
   /// The conversation open in the right pane, on a computer.
   ChatTarget? _open;
 
-  late final SocialOverviewController _overview;
-
-  @override
-  void initState() {
-    super.initState();
-    // Refresh often while the tab shows.
-    _overview = ref.read(socialOverviewProvider.notifier)..show();
-  }
-
-  @override
-  void dispose() {
-    _overview.hide();
-    super.dispose();
-  }
-
   void _openChat(ChatTarget target, bool wide) {
     if (wide) {
       setState(() => _open = target);
