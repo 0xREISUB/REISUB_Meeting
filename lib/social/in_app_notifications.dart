@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
 import 'package:v_meeting/social/notifications.dart';
+import 'package:v_meeting/social/realtime.dart';
 import 'package:v_meeting/social/social_actions.dart';
 import 'package:v_meeting/social/social_models.dart';
 import 'package:v_meeting/social/user_avatar.dart';
@@ -28,6 +29,8 @@ class InAppNotifications extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = ref.watch(notificationsProvider);
+    // Keeps the realtime connection up for the whole app.
+    ref.listen(realtimeProvider, (_, _) {});
     final media = MediaQuery.of(context);
     final wide = media.size.width >= _wideWidth;
     return Stack(

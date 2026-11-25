@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
+import 'package:v_meeting/social/realtime.dart';
 import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_models.dart';
 
@@ -90,7 +91,10 @@ class NotificationsController extends Notifier<List<SocialNotification>> {
         if (_inFront) check();
       },
     );
-    _poll = Timer.periodic(interval, (_) => check());
+    // Only while the realtime connection is down; it brings them at once.
+    _poll = Timer.periodic(interval, (_) {
+      if (!ref.read(realtimeProvider)) check();
+    });
     Future.microtask(check);
     return const [];
   }
@@ -116,24 +120,49 @@ class NotificationsController extends Notifier<List<SocialNotification>> {
       final api = ref.read(socialApiProvider);
       final answer = await api.notifications(after: _after);
       final first = _after == null;
-      _after = answer.latestId;
+      _after = answer.latestId > (_after ?? 0) ? answer.latestId : _after;
       if (first || answer.messages.isEmpty) return;
-      // Badges and open chats catch up.
-      ref.read(socialOverviewProvider.notifier).refresh();
-      final visibility = ref.read(chatVisibilityProvider);
-      for (final notification in answer.messages) {
-        final conversation = conversationProvider(notification.target);
-        if (ref.exists(conversation)) {
-          ref.read(conversation.notifier).refresh();
-        }
-        if (!visibility.shows(notification.target.id)) _announce(notification);
-      }
+      deliver(answer.messages);
     } on MeetingApiException catch (error) {
       if (error.sessionExpired) ref.read(signedInProvider.notifier).refresh();
     } catch (_) {
       // The next check tries again.
     } finally {
       _asking = false;
+    }
+  }
+
+  /// Messages already handled, so one that comes both over the realtime
+  /// connection and in a catch-up is announced once.
+  final _handled = <int>{};
+
+  /// Takes new messages, from a check or the realtime connection: open
+  /// chats show them, badges catch up, and those of chats not on screen,
+  /// and not the user's own, are announced.
+  void deliver(List<SocialNotification> messages) {
+    final fresh = [
+      for (final notification in messages)
+        if (_handled.add(notification.message.id)) notification,
+    ];
+    if (_handled.length > 500) {
+      _handled.removeAll(_handled.take(_handled.length - 200).toList());
+    }
+    if (fresh.isEmpty) return;
+    for (final notification in fresh) {
+      final id = notification.message.id;
+      if (id > (_after ?? 0) && _after != null) _after = id;
+    }
+    ref.read(socialOverviewProvider.notifier).refresh();
+    final visibility = ref.read(chatVisibilityProvider);
+    for (final notification in fresh) {
+      final conversation = conversationProvider(notification.target);
+      if (ref.exists(conversation)) {
+        ref.read(conversation.notifier).receive(notification.message);
+      }
+      if (!notification.message.mine &&
+          !visibility.shows(notification.target.id)) {
+        _announce(notification);
+      }
     }
   }
 

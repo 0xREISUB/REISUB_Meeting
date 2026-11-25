@@ -30,6 +30,7 @@ dependencies:
   window_manager: ^0.5.1
   file_picker: ^13.4.1
   image: ^4.13.1
+  web_socket_channel: ^3.0.3
 
 dev_dependencies:
   flutter_test:

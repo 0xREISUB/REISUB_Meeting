@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
+import 'package:v_meeting/social/realtime.dart';
 import 'package:v_meeting/social/social_models.dart';
 
 /// The server's social API: the profile, friends, teams and their chats.
@@ -187,11 +188,23 @@ class SocialOverviewController extends AsyncNotifier<SocialOverview?> {
     return ref.read(socialApiProvider).overview();
   }
 
+  /// With the realtime connection up, changes arrive as they happen; this
+  /// reads it again only now and then, in case one was missed.
+  static const realtimeInterval = Duration(seconds: 60);
+  DateTime _lastRead = DateTime.now();
+
   void _schedule() {
     _timer?.cancel();
     _timer = Timer.periodic(
       _viewers > 0 ? visibleInterval : backgroundInterval,
-      (_) => refresh(),
+      (_) {
+        final connected = ref.read(realtimeProvider);
+        if (connected &&
+            DateTime.now().difference(_lastRead) < realtimeInterval) {
+          return;
+        }
+        refresh();
+      },
     );
   }
 
@@ -214,6 +227,7 @@ class SocialOverviewController extends AsyncNotifier<SocialOverview?> {
   Future<void> refresh() async {
     if (!(ref.read(signedInProvider).value ?? false)) return;
     try {
+      _lastRead = DateTime.now();
       final overview = await ref.read(socialApiProvider).overview();
       state = AsyncData(overview);
     } on MeetingApiException catch (error) {
@@ -239,7 +253,10 @@ class ConversationController extends AsyncNotifier<List<SocialMessage>> {
 
   @override
   Future<List<SocialMessage>> build() async {
-    final timer = Timer.periodic(interval, (_) => _fetchNewer());
+    // Only while the realtime connection is down; it brings them at once.
+    final timer = Timer.periodic(interval, (_) {
+      if (!ref.read(realtimeProvider)) _fetchNewer();
+    });
     ref.onDispose(timer.cancel);
     return ref.read(socialApiProvider).messages(target);
   }
@@ -275,4 +292,7 @@ class ConversationController extends AsyncNotifier<List<SocialMessage>> {
 
   /// Picks up a message the server just added, such as a call invitation.
   Future<void> refresh() => _fetchNewer();
+
+  /// Shows a message that came over the realtime connection.
+  void receive(SocialMessage message) => _add([message]);
 }
