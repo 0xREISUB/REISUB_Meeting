@@ -3,6 +3,7 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/meeting/widgets/permissions_member_list.dart';
 import 'package:v_meeting/meeting/widgets/permissions_member_detail.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// How a permission looks in the permissions window.
 extension MeetingPermissionText on MeetingPermission {
@@ -37,7 +38,8 @@ extension MeetingPermissionText on MeetingPermission {
   };
 }
 
-const _dialogColor = Color(0xFF1C1C1E);
+/// Smoked glass; the page behind is blurred by [showGlassDialog].
+const _dialogColor = Color(0xE01C1A22);
 
 /// Gives or takes back one permission; throws the server's error.
 typedef PermissionChange =
@@ -67,7 +69,7 @@ Future<void> showPermissionsDialog(
       onTransferOwnership: onTransferOwnership,
     ),
   );
-  return showDialog<void>(
+  return showGlassDialog<void>(
     context: context,
     builder: (context) => narrow
         ? Dialog.fullscreen(backgroundColor: _dialogColor, child: dialog)
@@ -166,7 +168,7 @@ class _PermissionsDialogState extends State<PermissionsDialog> {
 
   Future<void> _transfer(MemberEntry member) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGlassDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.transferOwnershipTitle),

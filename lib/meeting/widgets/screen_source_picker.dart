@@ -2,13 +2,15 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:v_meeting/app/theme.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_platform.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
-const _surface = Color(0xFF1C1C1E);
-const _card = Color(0xFF2C2C2E);
-const _accent = Color(0xFF8A5CFF);
+const _surface = Color(0xE01C1A22);
+const _card = glassFill;
+const _accent = brandColor;
 
 /// Lets a desktop user choose a screen or window to share, and whether to
 /// include computer audio. Styled like the rest of the meeting UI.
@@ -26,7 +28,7 @@ class ScreenSourcePicker extends StatefulWidget {
     BuildContext context, {
     required rtc.DesktopCapturer capturer,
     required SystemAudioSupport audioSupport,
-  }) => showDialog<ScreenShareChoice>(
+  }) => showGlassDialog<ScreenShareChoice>(
     context: context,
     builder: (_) =>
         ScreenSourcePicker(capturer: capturer, audioSupport: audioSupport),

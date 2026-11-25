@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/widgets/meeting_waiting.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The floating bar with microphone, camera, people, chat, screen-share,
 /// more-options and leave buttons.
@@ -64,12 +65,10 @@ class MeetingControlsBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2E).withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(40),
-      ),
+    return GlassSurface(
+      radius: 40,
+      tint: glassSmoke,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         spacing: 16,
@@ -124,7 +123,6 @@ class MeetingControlsBar extends StatelessWidget {
           ),
           PopupMenuButton<String>(
             tooltip: l10n.moreOptions,
-            color: const Color(0xFF2C2C2E),
             icon: const Icon(
               Icons.more_horiz_rounded,
               color: Colors.white,
@@ -206,7 +204,8 @@ class MeetingControlsBar extends StatelessWidget {
             onPressed: onLeave,
             tooltip: l10n.leaveMeeting,
             style: IconButton.styleFrom(
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+              side: const BorderSide(color: Color(0x40FFFFFF)),
               foregroundColor: Colors.white,
             ),
             icon: const Icon(Icons.call_end_rounded),
@@ -217,7 +216,7 @@ class MeetingControlsBar extends StatelessWidget {
   }
 }
 
-/// A round toggle: dark grey when on, red when off.
+/// A round toggle: clear glass when on, red when off.
 class ControlButton extends StatelessWidget {
   const ControlButton({
     super.key,
@@ -234,13 +233,13 @@ class ControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = isActive ? const Color(0xFF3A3A3C) : Colors.redAccent;
+    // A drop of glass within the bar's glass; red glass when off.
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(30),
+      customBorder: const CircleBorder(),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+        decoration: glassDrop(tint: isActive ? null : Colors.redAccent),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -255,7 +254,7 @@ class ControlButton extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.redAccent,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF3A3A3C)),
+                    border: Border.all(color: glassBadgeRim),
                   ),
                 ),
               ),

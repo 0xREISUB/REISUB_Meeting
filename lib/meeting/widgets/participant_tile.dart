@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:livekit_client/livekit_client.dart' hide ConnectionState;
 import 'package:v_meeting/meeting/meeting_member.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 class MeetingParticipantTile extends StatelessWidget {
   final MemberEntry member;
@@ -109,9 +110,15 @@ class _NameLabel extends StatelessWidget {
         horizontal: large ? 10 : 8,
         vertical: large ? 6 : 4,
       ),
+      // Glass without blur: there is one on every tile, over video.
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [glassShade, glassShade.withValues(alpha: 0.7)],
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: glassStroke),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -328,7 +335,7 @@ class _VideoLoading extends StatelessWidget {
               dimension: compact ? 20 : 28,
               child: const CircularProgressIndicator(
                 strokeWidth: 2.5,
-                color: Color(0xFFB69BFF),
+                color: glassAccent,
               ),
             ),
             if (!compact || slow) ...[

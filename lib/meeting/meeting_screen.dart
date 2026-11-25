@@ -28,6 +28,7 @@ import 'package:v_meeting/settings/meeting_preferences.dart';
 import 'package:v_meeting/meeting/widgets/screen_source_picker.dart';
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/media_privacy.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The in-meeting screen. Meeting logic lives in [MeetingSession]; this widget
 /// lays out the video, controls and overlays and shows dialogs and sheets.
@@ -195,18 +196,16 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1C1C1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      builder: (context) => SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.55,
-        child: ListenableBuilder(
-          listenable: _session,
-          builder: (context, _) => WaitingListSheet(
-            waiting: _session.waiting,
-            onAnswer: _session.answerWaiting,
+      backgroundColor: Colors.transparent,
+      builder: (context) => GlassSheet(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.55,
+          child: ListenableBuilder(
+            listenable: _session,
+            builder: (context, _) => WaitingListSheet(
+              waiting: _session.waiting,
+              onAnswer: _session.answerWaiting,
+            ),
           ),
         ),
       ),
@@ -264,7 +263,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   @override
   Future<bool> confirmUnmute() async {
     if (!mounted) return false;
-    final accepted = await showDialog<bool>(
+    final accepted = await showGlassDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_l10n.unmuteRequestTitle),
@@ -333,7 +332,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     }
     final lastOwner = _session.isLastOwner;
     _exitDialogOpen = true;
-    final action = await showDialog<String>(
+    final action = await showGlassDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_l10n.leaveMeeting),
@@ -373,20 +372,18 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1C1C1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      builder: (context) => SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.65,
-        child: ListenableBuilder(
-          listenable: _session.room,
-          builder: (context, _) => MembersScreen(
-            members: _session.members(localName: _l10n.you),
-            viewerPermissions: _session.permissions,
-            onMicrophoneChange: _session.moderateMicrophone,
-            onRemove: _session.removeMember,
+      backgroundColor: Colors.transparent,
+      builder: (context) => GlassSheet(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.65,
+          child: ListenableBuilder(
+            listenable: _session.room,
+            builder: (context, _) => MembersScreen(
+              members: _session.members(localName: _l10n.you),
+              viewerPermissions: _session.permissions,
+              onMicrophoneChange: _session.moderateMicrophone,
+              onRemove: _session.removeMember,
+            ),
           ),
         ),
       ),
@@ -423,7 +420,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   void _openAudioVideoSettings() {
-    showDialog<void>(
+    showGlassDialog<void>(
       context: context,
       builder: (_) =>
           AudioVideoSettingsDialog(onDeviceTest: _openMeetingDeviceTest),
@@ -431,7 +428,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   }
 
   void _openMeetingSettings() {
-    showDialog<void>(
+    showGlassDialog<void>(
       context: context,
       builder: (_) => MeetingSettingsDialog(
         listenable: _session,

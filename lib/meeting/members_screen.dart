@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 typedef MicrophoneModerationCallback =
     Future<void> Function(MemberEntry member, bool locked, bool requestUnmute);
@@ -54,7 +55,7 @@ class _MembersScreenState extends State<MembersScreen> {
 
   Future<bool> _confirmRemove(MemberEntry member) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGlassDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.removeMemberTitle(member.name)),
@@ -262,7 +263,7 @@ class _MembersScreenState extends State<MembersScreen> {
                           PopupMenuButton<_MemberAction>(
                             key: ValueKey('moderate-${member.identity}'),
                             tooltip: l10n.participantActions,
-                            color: const Color(0xFF2C2C2E),
+                            color: glassFill,
                             icon: const Icon(
                               Icons.more_vert_rounded,
                               color: Colors.white70,

@@ -27,7 +27,11 @@ void main() {
       final paint = tester.widget<CustomPaint>(
         find.descendant(
           of: find.byType(MeetingCountdown),
-          matching: find.byType(CustomPaint),
+          // The pie, not the glass rim around it.
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is CustomPaint && widget.painter is CountdownPiePainter,
+          ),
         ),
       );
       return (paint.painter! as CountdownPiePainter).fraction;

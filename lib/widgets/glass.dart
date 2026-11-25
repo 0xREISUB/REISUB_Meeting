@@ -19,7 +19,7 @@ const glassShade = Color(0x8C16141C);
 const glassMuted = Color(0xB3FFFFFF);
 
 /// The brand purple, lightened for text and icons on glass.
-final glassAccent = Color.lerp(brandColor, Colors.white, 0.55)!;
+const glassAccent = Color(0xFFC4AFFF);
 
 /// Blur, then lift the colours a little, as glass does.
 ImageFilter glassFilter({double sigma = 24}) => ImageFilter.compose(
@@ -400,6 +400,66 @@ class _GlassButtonState extends State<GlassButton> {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A small round drop of glass inside a larger pane, which already blurs:
+/// clear, or coloured by [tint].
+BoxDecoration glassDrop({Color? tint}) => BoxDecoration(
+  shape: BoxShape.circle,
+  gradient: LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: tint == null
+        ? const [Color(0x29FFFFFF), Color(0x0FFFFFFF)]
+        : [tint.withValues(alpha: 0.95), tint.withValues(alpha: 0.70)],
+  ),
+  border: Border.all(
+    color: tint == null ? glassStroke : const Color(0x40FFFFFF),
+  ),
+);
+
+/// The colour behind small badges sitting on a glass drop.
+const glassBadgeRim = Color(0xFF2A2830);
+
+/// Smoked glass, the tint for panes over video: light shows through it
+/// but white icons on it stay clear over a bright picture.
+const glassSmoke = Color(0xFF1C1A22);
+
+/// A bottom sheet of smoked glass. Its route should have a transparent
+/// background, so the meeting shows blurred through it.
+class GlassSheet extends StatelessWidget {
+  const GlassSheet({super.key, required this.child, this.height});
+
+  final Widget child;
+  final double? height;
+
+  @override
+  Widget build(BuildContext context) {
+    const radius = 24.0;
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(radius)),
+      child: BackdropFilter(
+        filter: glassFilter(sigma: 30),
+        child: CustomPaint(
+          foregroundPainter: const GlassEdgePainter(radius: radius),
+          child: Container(
+            height: height,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  glassSmoke.withValues(alpha: 0.78),
+                  glassSmoke.withValues(alpha: 0.88),
+                ],
+              ),
+            ),
+            child: Material(type: MaterialType.transparency, child: child),
           ),
         ),
       ),

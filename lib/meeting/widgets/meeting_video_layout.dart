@@ -6,6 +6,7 @@ import 'package:v_meeting/meeting/widgets/floating_members.dart';
 import 'package:v_meeting/meeting/widgets/meeting_tap_listener.dart';
 import 'package:v_meeting/meeting/widgets/meeting_main_video.dart';
 import 'package:v_meeting/meeting/widgets/participant_gallery.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 class MeetingVideoLayout extends StatefulWidget {
   final List<MemberEntry> members;
@@ -391,30 +392,34 @@ class _PageDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return GlassSurface(
       key: const ValueKey('meeting-page-dots'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var page = 0; page < count; page++)
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => onSelected(page),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: page == current ? 20 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: page == current
-                      ? const Color(0xFFB69BFF)
-                      : Colors.white24,
-                  borderRadius: BorderRadius.circular(4),
+      blur: false,
+      shadow: false,
+      radius: 12,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var page = 0; page < count; page++)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onSelected(page),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: page == current ? 20 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: page == current ? glassAccent : Colors.white38,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

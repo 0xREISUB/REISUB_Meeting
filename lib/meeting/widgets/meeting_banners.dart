@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// Connection status at the top of the meeting, with an optional rejoin action.
 class MeetingConnectionBanner extends StatelessWidget {
@@ -21,28 +22,31 @@ class MeetingConnectionBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
-      child: Material(
-        color: disconnected ? Colors.red.shade800 : const Color(0xEE2C2C2E),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white),
-              ),
-              if (onRejoin != null)
-                TextButton(
-                  onPressed: onRejoin,
-                  child: Text(
-                    AppLocalizations.of(context)!.rejoinMeeting,
-                    style: const TextStyle(color: Colors.white),
-                  ),
+      child: GlassSurface(
+        radius: 14,
+        tint: disconnected ? Colors.red.shade700 : glassSmoke,
+        child: Material(
+          type: MaterialType.transparency,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
                 ),
-            ],
+                if (onRejoin != null)
+                  TextButton(
+                    onPressed: onRejoin,
+                    child: Text(
+                      AppLocalizations.of(context)!.rejoinMeeting,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -186,80 +190,86 @@ class _RoomCodeBannerState extends State<RoomCodeBanner> {
       _Copied.roomCode => l10n.roomCodeCopied,
       _Copied.inviteLink => l10n.inviteLinkCopied,
     };
-    return Material(
-      color: const Color(0xFF2C2C2E),
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-        child: Row(
-          children: [
-            const Icon(Icons.meeting_room_rounded, color: Color(0xFFB69BFF)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.roomId,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    widget.roomId,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
+    return GlassSurface(
+      radius: 18,
+      tint: glassSmoke,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+          child: Row(
+            children: [
+              const Icon(Icons.meeting_room_rounded, color: glassAccent),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.roomId,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                  if (copiedText != null) ...[
                     const SizedBox(height: 2),
-                    Row(
-                      key: const ValueKey('room-code-copied'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          size: 14,
-                          color: Colors.greenAccent,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            copiedText,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.greenAccent,
-                              fontSize: 12,
+                    Text(
+                      widget.roomId,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    if (copiedText != null) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        key: const ValueKey('room-code-copied'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 14,
+                            color: Colors.greenAccent,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              copiedText,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.greenAccent,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Text(
-              l10n.secondsRemaining(_secondsLeft),
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
-            ),
-            if (widget.inviteLink != null) ...[
-              const SizedBox(width: 8),
-              FilledButton.tonalIcon(
-                key: const ValueKey('room-invite'),
-                onPressed: _creatingLink ? null : _copyInviteLink,
-                icon: const Icon(Icons.link_rounded, size: 18),
-                label: Text(l10n.invite),
+              Text(
+                l10n.secondsRemaining(_secondsLeft),
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              if (widget.inviteLink != null) ...[
+                const SizedBox(width: 8),
+                FilledButton.tonalIcon(
+                  key: const ValueKey('room-invite'),
+                  onPressed: _creatingLink ? null : _copyInviteLink,
+                  icon: const Icon(Icons.link_rounded, size: 18),
+                  label: Text(l10n.invite),
+                ),
+              ],
+              IconButton(
+                tooltip: l10n.close,
+                onPressed: widget.onClose,
+                icon: const Icon(Icons.close_rounded, color: Colors.white70),
               ),
             ],
-            IconButton(
-              tooltip: l10n.close,
-              onPressed: widget.onClose,
-              icon: const Icon(Icons.close_rounded, color: Colors.white70),
-            ),
-          ],
+          ),
         ),
       ),
     );

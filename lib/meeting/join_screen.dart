@@ -70,7 +70,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     }
     final l10n = AppLocalizations.of(context)!;
     final host = Uri.parse(inviteServer).host;
-    final switchServer = await showDialog<bool>(
+    final switchServer = await showGlassDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.inviteServerTitle),

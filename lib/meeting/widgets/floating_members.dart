@@ -7,6 +7,7 @@ import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/meeting/widgets/participant_tile.dart';
 import 'package:v_meeting/meeting/widgets/meeting_tap_listener.dart';
 import 'package:v_meeting/meeting/widgets/members_panel.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The participants panel floating over the main video on wide screens. It
 /// starts in the bottom-right corner, can be dragged to any corner, and
@@ -288,8 +289,8 @@ class _FloatingMembersState extends State<FloatingMembers> {
                       shape: BoxShape.circle,
                       color: _inDismissZone
                           ? Colors.redAccent.withValues(alpha: 0.9)
-                          : Colors.black.withValues(alpha: 0.5),
-                      border: Border.all(color: Colors.white38),
+                          : glassShade,
+                      border: Border.all(color: glassStroke),
                     ),
                     child: const Icon(Icons.close_rounded, color: Colors.white),
                   ),
@@ -382,11 +383,14 @@ class PipRestoreTab extends StatelessWidget {
             child: Container(
               width: 20,
               height: 64,
-              decoration: const BoxDecoration(
-                color: Color(0xCC2C2C2E),
-                borderRadius: BorderRadius.horizontal(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [glassShade, glassShade.withValues(alpha: 0.7)],
+                ),
+                borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(12),
                 ),
+                border: Border.all(color: glassStroke),
               ),
               child: const Icon(
                 Icons.chevron_left_rounded,

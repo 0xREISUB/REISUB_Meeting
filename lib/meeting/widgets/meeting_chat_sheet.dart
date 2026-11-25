@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_chat.dart';
+import 'package:v_meeting/app/theme.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 class MeetingChatSheet extends StatefulWidget {
   const MeetingChatSheet({super.key, required this.controller});
@@ -70,12 +72,8 @@ class _MeetingChatSheetState extends State<MeetingChatSheet> {
     final sheetHeight = (media.size.height * 0.65).clamp(0.0, maxSheetHeight);
     return Padding(
       padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
-      child: Container(
+      child: GlassSheet(
         height: sheetHeight,
-        decoration: const BoxDecoration(
-          color: Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
         child: Column(
           children: [
             const SizedBox(height: 12),
@@ -125,7 +123,7 @@ class _MeetingChatSheetState extends State<MeetingChatSheet> {
                           hintText: l10n.messageHint,
                           hintStyle: const TextStyle(color: Colors.white38),
                           filled: true,
-                          fillColor: const Color(0xFF2C2C2E),
+                          fillColor: glassFill,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
                             borderSide: BorderSide.none,
@@ -210,7 +208,8 @@ class ChatBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isMe ? const Color(0xFF8A5CFF) : const Color(0xFF2C2C2E),
+          color: isMe ? brandColor.withValues(alpha: 0.75) : glassFill,
+          border: Border.all(color: glassStroke),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),

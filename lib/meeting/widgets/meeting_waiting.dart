@@ -3,6 +3,7 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// Lets a waiting person in or turns them away; throws the server's error.
 typedef WaitingAnswer =
@@ -28,13 +29,10 @@ class WaitingRoomButton extends StatelessWidget {
       child: InkWell(
         key: const ValueKey('waiting-room-button'),
         onTap: onTap,
-        borderRadius: BorderRadius.circular(30),
+        customBorder: const CircleBorder(),
         child: Container(
           padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
-            color: Color(0xFF3A3A3C),
-            shape: BoxShape.circle,
-          ),
+          decoration: glassDrop(),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -45,7 +43,7 @@ class WaitingRoomButton extends StatelessWidget {
                 right: -6,
                 child: Container(
                   decoration: const BoxDecoration(
-                    color: Color(0xFF3A3A3C),
+                    color: glassBadgeRim,
                     shape: BoxShape.circle,
                   ),
                   padding: const EdgeInsets.all(1),
@@ -67,7 +65,7 @@ class WaitingRoomButton extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.redAccent,
                       borderRadius: BorderRadius.circular(9),
-                      border: Border.all(color: const Color(0xFF3A3A3C)),
+                      border: Border.all(color: glassBadgeRim),
                     ),
                     child: Text(
                       count > 99 ? '99+' : '$count',
@@ -267,19 +265,9 @@ class ArrivalNotice extends StatelessWidget {
       key: ValueKey('arrival-${person.requestId}'),
       direction: DismissDirection.up,
       onDismissed: (_) => onDismiss(),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: const Color(0xF22C2C2E),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white12),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x66000000),
-              blurRadius: 18,
-              offset: Offset(0, 6),
-            ),
-          ],
-        ),
+      child: GlassSurface(
+        radius: 18,
+        tint: glassSmoke,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
           child: Row(

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The time left before a time-limited meeting ends, in its last ten
 /// minutes: a red pie that shrinks from full to nothing, and minutes and
@@ -31,14 +32,12 @@ class MeetingCountdown extends StatelessWidget {
     return Semantics(
       label: AppLocalizations.of(context)!.meetingTimeLeft(text),
       excludeSemantics: true,
-      child: Container(
+      child: GlassSurface(
         key: const ValueKey('meeting-countdown'),
+        radius: 20,
+        tint: glassSmoke,
+        shadow: false,
         padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
-        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -99,20 +98,10 @@ class MeetingTimeNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return GlassSurface(
       key: const ValueKey('meeting-time-notice'),
-      decoration: BoxDecoration(
-        color: const Color(0xF22C2C2E),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.6)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x66000000),
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
+      radius: 18,
+      tint: glassSmoke,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(

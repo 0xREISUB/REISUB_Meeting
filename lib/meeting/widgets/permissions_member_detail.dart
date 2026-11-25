@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
@@ -201,7 +202,7 @@ class _PermissionTile extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       secondary: Icon(permission.icon, color: danger ? color : Colors.white70),
       activeThumbColor: Colors.white,
-      activeTrackColor: danger ? Colors.redAccent : const Color(0xFF8A5CFF),
+      activeTrackColor: danger ? Colors.redAccent : brandColor,
       title: Text(
         permission.title(l10n),
         style: TextStyle(color: color, fontWeight: FontWeight.w500),

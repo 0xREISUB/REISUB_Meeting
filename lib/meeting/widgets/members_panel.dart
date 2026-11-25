@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/meeting/widgets/participant_tile.dart';
 import 'package:v_meeting/meeting/widgets/floating_members.dart';
+import 'package:v_meeting/widgets/glass.dart';
 
 /// The floating panel's content: a title with the head count and a button
 /// to collapse it, then up to five previews, the last one standing in for
@@ -69,100 +70,121 @@ class MembersPanel extends StatelessWidget {
     } else {
       previews = others.take(overflow ? slots - 1 : slots).toList();
     }
-    return Container(
-      key: const ValueKey('meeting-sidebar'),
-      // The border is inside the width, as Container adds it to padding.
-      width: tileWidth + (_padding + _border) * 2,
-      padding: const EdgeInsets.all(_padding),
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xE6151517),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white12, width: _border),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x80000000),
+            color: Color(0x59000000),
             blurRadius: 24,
+            spreadRadius: -4,
             offset: Offset(0, 8),
           ),
         ],
       ),
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        alignment: Alignment.topCenter,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              height: _headerHeight,
-              child: Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: glassFilter(),
+          child: Container(
+            key: const ValueKey('meeting-sidebar'),
+            // The border is inside the width, as Container adds it to padding.
+            width: tileWidth + (_padding + _border) * 2,
+            padding: const EdgeInsets.all(_padding),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  glassSmoke.withValues(alpha: 0.62),
+                  glassSmoke.withValues(alpha: 0.40),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: glassStroke, width: _border),
+            ),
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(width: 6),
-                  const Icon(
-                    Icons.group_rounded,
-                    size: 14,
-                    color: Colors.white60,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${members.length}',
-                    key: const ValueKey('meeting-sidebar-count'),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  SizedBox(
+                    height: _headerHeight,
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.group_rounded,
+                          size: 14,
+                          color: Colors.white60,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${members.length}',
+                          key: const ValueKey('meeting-sidebar-count'),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          key: const ValueKey('meeting-island-collapse'),
+                          tooltip: collapsed
+                              ? l10n.expandParticipants
+                              : l10n.collapseParticipants,
+                          onPressed: () => onCollapsedChanged(!collapsed),
+                          iconSize: 15,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 22,
+                            height: 22,
+                          ),
+                          color: Colors.white70,
+                          icon: Icon(
+                            collapsed
+                                ? Icons.open_in_full_rounded
+                                : Icons.close_fullscreen_rounded,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const Spacer(),
-                  IconButton(
-                    key: const ValueKey('meeting-island-collapse'),
-                    tooltip: collapsed
-                        ? l10n.expandParticipants
-                        : l10n.collapseParticipants,
-                    onPressed: () => onCollapsedChanged(!collapsed),
-                    iconSize: 15,
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(
-                      width: 22,
-                      height: 22,
+                  for (final member in previews) ...[
+                    const SizedBox(height: _gap),
+                    SizedBox(
+                      width: tileWidth,
+                      height: tileWidth * 9 / 16,
+                      child: MeetingParticipantTile(
+                        key: ValueKey('preview-${member.id}'),
+                        member: member,
+                      ),
                     ),
-                    color: Colors.white70,
-                    icon: Icon(
-                      collapsed
-                          ? Icons.open_in_full_rounded
-                          : Icons.close_fullscreen_rounded,
+                  ],
+                  if (overflow) ...[
+                    const SizedBox(height: _gap),
+                    SizedBox(
+                      width: tileWidth,
+                      height: tileWidth * 9 / 16,
+                      child: _MoreParticipants(
+                        key: const ValueKey('meeting-sidebar-more'),
+                        people: others.skip(previews.length).toList(),
+                        label: l10n.moreParticipants(
+                          others.length - previews.length,
+                        ),
+                        onTap: onShowAll,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
-            for (final member in previews) ...[
-              const SizedBox(height: _gap),
-              SizedBox(
-                width: tileWidth,
-                height: tileWidth * 9 / 16,
-                child: MeetingParticipantTile(
-                  key: ValueKey('preview-${member.id}'),
-                  member: member,
-                ),
-              ),
-            ],
-            if (overflow) ...[
-              const SizedBox(height: _gap),
-              SizedBox(
-                width: tileWidth,
-                height: tileWidth * 9 / 16,
-                child: _MoreParticipants(
-                  key: const ValueKey('meeting-sidebar-more'),
-                  people: others.skip(previews.length).toList(),
-                  label: l10n.moreParticipants(others.length - previews.length),
-                  onTap: onShowAll,
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -187,10 +209,10 @@ class _MoreParticipants extends StatelessWidget {
   Widget build(BuildContext context) {
     final faces = people.take(3).toList();
     return Material(
-      color: const Color(0xFF1C1C1E),
+      color: glassFill,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Colors.white12),
+        side: const BorderSide(color: glassStroke),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -209,7 +231,7 @@ class _MoreParticipants extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(2),
                         decoration: const BoxDecoration(
-                          color: Color(0xFF1C1C1E),
+                          color: glassBadgeRim,
                           shape: BoxShape.circle,
                         ),
                         child: MemberAvatar(
