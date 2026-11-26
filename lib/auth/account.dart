@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/meeting/meeting_api.dart';
 
 /// Whether the user is logged in. Logging in is optional: without an account
 /// the app uses a guest session.
@@ -20,7 +21,15 @@ class SignedInController extends AsyncNotifier<bool> {
   /// Call after a successful login has stored the token.
   void markSignedIn() => state = const AsyncData(true);
 
+  /// Signs this device out, on the server too: its session ends there, and
+  /// with it this device's push notifications. The user's other devices
+  /// stay signed in.
   Future<void> signOut() async {
+    try {
+      await ref.read(meetingApiProvider).send('POST', '/logout');
+    } catch (_) {
+      // Unreachable, or already over; signed out here all the same.
+    }
     await ServerConfig.clearToken();
     state = const AsyncData(false);
   }

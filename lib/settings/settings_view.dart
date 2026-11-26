@@ -9,6 +9,7 @@ import 'package:v_meeting/auth/server_config.dart';
 import 'package:v_meeting/auth/server_policy.dart';
 import 'package:v_meeting/app/invite.dart';
 import 'package:v_meeting/auth/login_screen.dart';
+import 'package:v_meeting/desktop/desktop_background.dart';
 import 'package:v_meeting/settings/about_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
 import 'package:v_meeting/settings/server_terms_screen.dart';
@@ -146,6 +147,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final desktop = desktopBackgroundSupported
+        ? ref.watch(desktopSettingsProvider).value
+        : null;
     final preferences =
         ref.watch(meetingPreferencesProvider).value ??
         const MeetingPreferences();
@@ -387,6 +391,35 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () => _open(const LanguageScreen()),
             ),
+
+            // On a computer: whether closing the window keeps the app
+            // running, for notifications, and whether it starts at login.
+            if (desktopBackgroundSupported) ...[
+              SwitchListTile(
+                key: const ValueKey('settings-run-in-background'),
+                secondary: const Icon(Icons.notifications_active_outlined),
+                title: Text(l10n.runInBackground),
+                subtitle: Text(l10n.runInBackgroundHint),
+                value: desktop?.runInBackground ?? true,
+                onChanged: desktop == null
+                    ? null
+                    : (on) => ref
+                          .read(desktopSettingsProvider.notifier)
+                          .setRunInBackground(on),
+              ),
+              SwitchListTile(
+                key: const ValueKey('settings-start-at-login'),
+                secondary: const Icon(Icons.login_rounded),
+                title: Text(l10n.startAtLogin),
+                subtitle: Text(l10n.startAtLoginHint),
+                value: desktop?.startAtLogin ?? false,
+                onChanged: desktop == null
+                    ? null
+                    : (on) => ref
+                          .read(desktopSettingsProvider.notifier)
+                          .setStartAtLogin(on),
+              ),
+            ],
 
             ListTile(
               key: const ValueKey('settings-server-terms'),

@@ -275,6 +275,42 @@ class ChatTarget {
   const ChatTarget.friend(Friend this.friend) : team = null;
   const ChatTarget.team(Team this.team) : friend = null;
 
+  /// A conversation known only by where it is, as a notification names it:
+  /// [kind] "team" or "friend", the team's or friend's [id], and its
+  /// [title]. Only the ids matter: the overview fills in the rest when it
+  /// is opened.
+  factory ChatTarget.of({
+    required String kind,
+    required String id,
+    required String title,
+    String avatarUrl = '',
+  }) => kind == 'team'
+      ? ChatTarget.team(
+          Team(
+            id: id,
+            name: title,
+            color: Colors.deepPurpleAccent,
+            memberCount: 0,
+            onlineCount: 0,
+            role: TeamRole.member,
+          ),
+        )
+      : ChatTarget.friend(
+          Friend(
+            id: id,
+            displayName: title,
+            nick: title,
+            presence: Presence.offline,
+            avatarUrl: avatarUrl,
+          ),
+        );
+
+  /// "team" or "friend", as the server names them.
+  String get kind => friend != null ? 'friend' : 'team';
+
+  /// The friend's or team's id.
+  String get targetId => friend?.id ?? team!.id;
+
   final Friend? friend;
   final Team? team;
 
@@ -363,27 +399,12 @@ class SocialNotification {
     final targetId = '${json['target_id']}';
     final title = json['title'] as String? ?? '';
     final message = SocialMessage.fromJson(json);
-    // Only the ids matter: the overview fills in the rest when opened.
-    final target = json['kind'] == 'team'
-        ? ChatTarget.team(
-            Team(
-              id: targetId,
-              name: title,
-              color: Colors.deepPurpleAccent,
-              memberCount: 0,
-              onlineCount: 0,
-              role: TeamRole.member,
-            ),
-          )
-        : ChatTarget.friend(
-            Friend(
-              id: targetId,
-              displayName: title,
-              nick: title,
-              presence: Presence.offline,
-              avatarUrl: message.senderAvatarUrl,
-            ),
-          );
+    final target = ChatTarget.of(
+      kind: json['kind'] as String? ?? '',
+      id: targetId,
+      title: title,
+      avatarUrl: message.senderAvatarUrl,
+    );
     return SocialNotification(message: message, target: target, title: title);
   }
 

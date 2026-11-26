@@ -31,6 +31,13 @@ dependencies:
   file_picker: ^13.4.1
   image: ^4.13.1
   web_socket_channel: ^3.0.3
+  # 23.x compiles against Android SDK 37, which this Gradle setup does not take yet.
+  flutter_local_notifications: 22.3.3
+  firebase_core: ^5.2.0
+  firebase_messaging: ^17.1.0
+  dbus: ^0.8.1
+  # 0.6+ is a native rewrite (as window_manager 0.6), and 0.7+ needs Dart 3.13.
+  tray_manager: 0.5.3
 
 dev_dependencies:
   flutter_test:

@@ -1219,4 +1219,42 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get errorImageTooLarge => 'Bu resim çok büyük.';
+
+  @override
+  String get notificationNewMessage => 'Yeni mesaj';
+
+  @override
+  String notificationFromSender(String sender, String text) {
+    return '$sender: $text';
+  }
+
+  @override
+  String notificationCall(String sender) {
+    return '$sender seni toplantıya çağırıyor';
+  }
+
+  @override
+  String get notificationChannelMessages => 'Mesajlar';
+
+  @override
+  String get notificationOpen => 'Aç';
+
+  @override
+  String get trayOpen => 'REISUB Meeting\'i aç';
+
+  @override
+  String get trayQuit => 'Çık';
+
+  @override
+  String get runInBackground => 'Kapatınca arka planda çalış';
+
+  @override
+  String get runInBackgroundHint =>
+      'Mesajlar bildirim olarak gelmeye devam eder. Tamamen çıkmak için tepsi simgesini kullan.';
+
+  @override
+  String get startAtLogin => 'Oturum açılınca başlat';
+
+  @override
+  String get startAtLoginHint => 'Arka planda başlar, mesajlara hazır olur.';
 }

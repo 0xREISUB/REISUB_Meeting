@@ -71,6 +71,15 @@ Wayland, start the app with `REISUB_OPAQUE_WINDOW=1` to keep it opaque:
 REISUB_OPAQUE_WINDOW=1 reisub-meeting
 ```
 
+**Notifications.** While the app is not in front, new messages and calls
+show as the system's notifications, and on Linux the dock shows how many wait
+(Ubuntu's dock, Dash to Dock, Dash to Panel and Zorin's taskbar draw it). On a
+computer, closing the window keeps the app running in the background; bring it
+back from the dock, the menu or its tray icon, and quit from the tray icon.
+Both "Keep running when closed" and "Start when you sign in" are in Settings.
+GNOME shows tray icons only with the AppIndicator extension on. On Android,
+messages reach the phone even when the app is closed, through Firebase.
+
 ### Public server
 
 A public REISUB Meeting server is open to everyone until **8 December 2026**.
@@ -160,6 +169,15 @@ ekranındaki dişli düğmesinden seçilir). Wayland'de pencere takılırsa uygu
 REISUB_OPAQUE_WINDOW=1 reisub-meeting
 ```
 
+**Bildirimler.** Uygulama önde değilken yeni mesajlar ve çağrılar sistemin
+bildirimleri olarak gelir; Linux'ta dock simgesi kaç tane beklediğini gösterir
+(Ubuntu'nun dock'u, Dash to Dock, Dash to Panel ve Zorin görev çubuğu çizer).
+Bilgisayarda pencereyi kapatmak uygulamayı arka planda çalışır bırakır; dock'tan,
+menüden ya da tepsi simgesinden geri açılır, tamamen çıkmak tepsi simgesindendir.
+"Kapatınca arka planda çalış" ve "Oturum açılınca başlat" Ayarlar'dadır. GNOME
+tepsi simgelerini yalnızca AppIndicator eklentisi açıkken gösterir. Android'de
+mesajlar uygulama kapalıyken de Firebase üzerinden telefona ulaşır.
+
 ### Herkese açık sunucu
 
 REISUB Meeting sunucusu **8 Aralık 2026** tarihine kadar herkesin kullanımına
@@ -213,6 +231,17 @@ flutter run
 | Android | `flutter build apk --release` |
 | Web | `python3 tool/build_web.py` |
 | Linux `.deb` | `python3 tool/package_deb.py` after the Linux build / Linux derlemesinden sonra |
+
+The Linux build needs the tray library / Linux derlemesi tepsi kütüphanesini
+ister: `sudo apt install libayatana-appindicator3-dev`.
+
+Push notifications on Android need the Firebase project's
+`android/app/google-services.json`; without it the app builds and runs with
+push off. The server needs the project's service account key (see the
+server's README). / Android push bildirimleri Firebase projesinin
+`android/app/google-services.json` dosyasını ister; dosya yoksa uygulama
+derlenir ve push kapalı çalışır. Sunucu da projenin hizmet hesabı anahtarını
+ister (sunucunun README'sine bakın).
 
 ### Configuration / Yapılandırma
 

@@ -481,5 +481,16 @@
   "profilePhoto": "Profil fotoğrafı",
   "photoSaved": "Profil fotoğrafı güncellendi.",
   "errorInvalidImage": "Bu dosya bir resim olarak açılamadı.",
-  "errorImageTooLarge": "Bu resim çok büyük."
+  "errorImageTooLarge": "Bu resim çok büyük.",
+  "notificationNewMessage": "Yeni mesaj",
+  "notificationFromSender": "{sender}: {text}",
+  "notificationCall": "{sender} seni toplantıya çağırıyor",
+  "notificationChannelMessages": "Mesajlar",
+  "notificationOpen": "Aç",
+  "trayOpen": "REISUB Meeting'i aç",
+  "trayQuit": "Çık",
+  "runInBackground": "Kapatınca arka planda çalış",
+  "runInBackgroundHint": "Mesajlar bildirim olarak gelmeye devam eder. Tamamen çıkmak için tepsi simgesini kullan.",
+  "startAtLogin": "Oturum açılınca başlat",
+  "startAtLoginHint": "Arka planda başlar, mesajlara hazır olur."
 }

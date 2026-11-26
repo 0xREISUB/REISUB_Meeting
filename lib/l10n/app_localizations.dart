@@ -2221,6 +2221,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This picture is too large.'**
   String get errorImageTooLarge;
+
+  /// No description provided for @notificationNewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New message'**
+  String get notificationNewMessage;
+
+  /// No description provided for @notificationFromSender.
+  ///
+  /// In en, this message translates to:
+  /// **'{sender}: {text}'**
+  String notificationFromSender(String sender, String text);
+
+  /// No description provided for @notificationCall.
+  ///
+  /// In en, this message translates to:
+  /// **'{sender} is calling you to a meeting'**
+  String notificationCall(String sender);
+
+  /// No description provided for @notificationChannelMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get notificationChannelMessages;
+
+  /// No description provided for @notificationOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get notificationOpen;
+
+  /// No description provided for @trayOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open REISUB Meeting'**
+  String get trayOpen;
+
+  /// No description provided for @trayQuit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get trayQuit;
+
+  /// No description provided for @runInBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep running when closed'**
+  String get runInBackground;
+
+  /// No description provided for @runInBackgroundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages still arrive as notifications. Quit from the tray icon.'**
+  String get runInBackgroundHint;
+
+  /// No description provided for @startAtLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Start when you sign in'**
+  String get startAtLogin;
+
+  /// No description provided for @startAtLoginHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts in the background, ready for messages.'**
+  String get startAtLoginHint;
 }
 
 class _AppLocalizationsDelegate

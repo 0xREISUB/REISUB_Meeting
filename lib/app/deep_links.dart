@@ -25,10 +25,15 @@ class DeepLinks {
     return null;
   }
 
-  /// Calls [onInvite] for links that arrive while the app is running. Only
-  /// Android delivers these; desktop links start a new app window.
+  /// Calls [onInvite] for links that arrive while the app is running: on
+  /// Android, and on Linux, where a later start hands its link to the
+  /// running app.
   static void listen(void Function(InviteLink invite) onInvite) {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.linux)) {
+      return;
+    }
     _channel.setMethodCallHandler((call) async {
       if (call.method != 'onLink') return;
       final invite = _parse(call.arguments as String?);

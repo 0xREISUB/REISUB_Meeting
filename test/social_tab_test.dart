@@ -337,15 +337,20 @@ void main() {
   testWidgets('logging out takes the social tab back to the login card', (
     tester,
   ) async {
-    await openSocial(tester, signedIn: true);
+    final server = await openSocial(tester, signedIn: true);
     expect(find.byKey(const ValueKey('social-profile')), findsOneWidget);
     final container = ProviderScope.containerOf(
       tester.element(find.byType(SocialTab)),
     );
-    await container.read(signedInProvider.notifier).signOut();
+    final signingOut = container.read(signedInProvider.notifier).signOut();
+    await settle(tester);
+    await signingOut;
     await settle(tester);
     expect(find.byKey(const ValueKey('social-profile')), findsNothing);
     expect(find.byKey(const ValueKey('social-login')), findsOneWidget);
+    // This device's session ends on the server too; the user's other
+    // devices stay signed in.
+    expect(server.calls, contains('POST /logout'));
   });
 
   testWidgets('on a phone a conversation opens as its own screen', (

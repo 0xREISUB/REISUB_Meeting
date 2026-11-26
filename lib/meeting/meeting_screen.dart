@@ -49,6 +49,16 @@ class MeetingScreen extends ConsumerStatefulWidget {
   /// Whether a meeting is on screen; invite links wait until it ends.
   static bool get isOpen => _open > 0;
 
+  static final _leaveCallbacks = <void Function()>{};
+
+  /// Leaves every meeting on screen, as when the window closes to the
+  /// background: no camera or microphone stays on out of sight.
+  static void leaveAll() {
+    for (final leave in [..._leaveCallbacks]) {
+      leave();
+    }
+  }
+
   @override
   ConsumerState<MeetingScreen> createState() => _MeetingScreenState();
 }
@@ -77,6 +87,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     );
     WidgetsBinding.instance.addObserver(this);
     MeetingScreen._open++;
+    MeetingScreen._leaveCallbacks.add(_leaveNow);
     final platform = ref.read(meetingPlatformProvider);
     _display = MeetingDisplayMode(platform);
     _session = MeetingSession(
@@ -326,6 +337,8 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
     unawaited(_session.toggleMicrophone());
   }
 
+  void _leaveNow() => _session.leave(MeetingExitReason.left);
+
   Future<void> _requestLeaveMeeting() async {
     if (_session.endingRoom || _exitDialogOpen) return;
     // Only people who may end the meeting are asked whether to.
@@ -475,6 +488,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     MeetingScreen._open--;
+    MeetingScreen._leaveCallbacks.remove(_leaveNow);
     final platform = _session.platform;
     unawaited(platform.setKeepScreenOn(false));
     unawaited(platform.stopMeetingService());

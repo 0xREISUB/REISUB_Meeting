@@ -2,7 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/locale.dart';
 import 'package:v_meeting/auth/account.dart';
+import 'package:v_meeting/desktop/desktop_background.dart';
+import 'package:v_meeting/l10n/app_localizations.dart';
+import 'package:v_meeting/notifications/app_focus.dart';
+import 'package:v_meeting/notifications/notification_text.dart';
+import 'package:v_meeting/notifications/system_notifications.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/social/realtime.dart';
 import 'package:v_meeting/social/social_api.dart';
@@ -96,7 +102,35 @@ class NotificationsController extends Notifier<List<SocialNotification>> {
       if (!ref.read(realtimeProvider)) check();
     });
     Future.microtask(check);
+    unawaited(_startSystemNotifications());
     return const [];
+  }
+
+  /// The conversation of a tapped notification opens only once, though the
+  /// controller starts again after each sign-in.
+  static bool _launchHandled = false;
+
+  Future<void> _startSystemNotifications() async {
+    try {
+      final launched = await ref
+          .read(systemNotifierProvider)
+          .start(
+            l10n: lookupAppLocalizations(ref.read(localeProvider)),
+            onOpen: _openFromSystem,
+          );
+      if (launched != null && !_launchHandled) {
+        _launchHandled = true;
+        _openFromSystem(launched);
+      }
+    } catch (_) {
+      // No notification service here; messages show inside the app.
+    }
+  }
+
+  /// A system notification was tapped: its conversation opens, in front.
+  void _openFromSystem(ChatTarget target) {
+    ref.read(socialOpenRequestProvider.notifier).open(target);
+    if (desktopBackgroundSupported) unawaited(DesktopBackground.showWindow());
   }
 
   /// Stops asking, when logging out or when the app closes; each only once.
@@ -113,7 +147,8 @@ class NotificationsController extends Notifier<List<SocialNotification>> {
 
   /// Asks the server for new messages and announces them.
   Future<void> check() async {
-    if (!_inFront || _asking) return;
+    // A computer keeps going in the background, for notifications.
+    if ((!_inFront && !desktopBackgroundSupported) || _asking) return;
     if (!(ref.read(signedInProvider).value ?? false)) return;
     _asking = true;
     try {
@@ -154,13 +189,23 @@ class NotificationsController extends Notifier<List<SocialNotification>> {
     }
     ref.read(socialOverviewProvider.notifier).refresh();
     final visibility = ref.read(chatVisibilityProvider);
+    // Not looking at the app: the system's notifications say it.
+    final inFront = ref.read(appInFrontProvider);
+    final l10n = lookupAppLocalizations(ref.read(localeProvider));
     for (final notification in fresh) {
       final conversation = conversationProvider(notification.target);
       if (ref.exists(conversation)) {
         ref.read(conversation.notifier).receive(notification.message);
       }
-      if (!notification.message.mine &&
-          !visibility.shows(notification.target.id)) {
+      if (notification.message.mine) continue;
+      if (!inFront) {
+        unawaited(
+          ref
+              .read(systemNotifierProvider)
+              .show(SystemNotice.forMessage(notification, l10n))
+              .catchError((Object _) {}),
+        );
+      } else if (!visibility.shows(notification.target.id)) {
         _announce(notification);
       }
     }

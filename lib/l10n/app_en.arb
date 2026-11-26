@@ -642,5 +642,33 @@
   "profilePhoto": "Profile photo",
   "photoSaved": "Profile photo updated.",
   "errorInvalidImage": "This file could not be opened as a picture.",
-  "errorImageTooLarge": "This picture is too large."
+  "errorImageTooLarge": "This picture is too large.",
+  "notificationNewMessage": "New message",
+  "notificationFromSender": "{sender}: {text}",
+  "@notificationFromSender": {
+    "placeholders": {
+      "sender": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationCall": "{sender} is calling you to a meeting",
+  "@notificationCall": {
+    "placeholders": {
+      "sender": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationChannelMessages": "Messages",
+  "notificationOpen": "Open",
+  "trayOpen": "Open REISUB Meeting",
+  "trayQuit": "Quit",
+  "runInBackground": "Keep running when closed",
+  "runInBackgroundHint": "Messages still arrive as notifications. Quit from the tray icon.",
+  "startAtLogin": "Start when you sign in",
+  "startAtLoginHint": "Starts in the background, ready for messages."
 }

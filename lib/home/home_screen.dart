@@ -59,6 +59,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // One asked for before this showed, as when the app starts from a
+    // notification.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && ref.read(socialOpenRequestProvider) != null) {
+        _select(HomeScreen.socialTab);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     // Keeps the social overview refreshing in the background while the

@@ -10,6 +10,9 @@ import 'package:v_meeting/app/locale.dart';
 import 'package:v_meeting/app/rounded_window.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/host_screen.dart';
+import 'package:v_meeting/desktop/desktop_background.dart';
+import 'package:v_meeting/desktop/launcher_badge.dart';
+import 'package:v_meeting/notifications/push.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/join_screen.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
@@ -58,6 +61,11 @@ class _VMeetingAppState extends ConsumerState<VMeetingApp> {
 
   @override
   Widget build(BuildContext context) {
+    // While the app runs: the dock's count, the background on a computer,
+    // and this phone's push token on the server.
+    ref.watch(launcherCountProvider);
+    ref.watch(desktopBackgroundProvider);
+    ref.watch(pushRegistrationProvider);
     return MaterialApp(
       title: 'REISUB Meeting',
       navigatorKey: _navigatorKey,

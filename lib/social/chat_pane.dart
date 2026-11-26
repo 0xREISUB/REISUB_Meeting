@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
@@ -5,6 +6,7 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/social/notifications.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
 import 'package:v_meeting/social/social_actions.dart';
+import 'package:v_meeting/notifications/system_notifications.dart';
 import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_models.dart';
 import 'package:v_meeting/social/team_members_dialog.dart';
@@ -69,6 +71,8 @@ class _ChatPaneState extends ConsumerState<ChatPane> {
     final unread =
         widget.target.friend?.unread ?? widget.target.team?.unread ?? 0;
     _readTo = last;
+    // Read here: its notifications in the system's list go.
+    unawaited(ref.read(systemNotifierProvider).clear(widget.target));
     // Nothing unread when it opened, and nothing new since.
     if (unread == 0 && last == _openedAt) return;
     ref

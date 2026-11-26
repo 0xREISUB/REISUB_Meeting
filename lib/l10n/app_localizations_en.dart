@@ -1235,4 +1235,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorImageTooLarge => 'This picture is too large.';
+
+  @override
+  String get notificationNewMessage => 'New message';
+
+  @override
+  String notificationFromSender(String sender, String text) {
+    return '$sender: $text';
+  }
+
+  @override
+  String notificationCall(String sender) {
+    return '$sender is calling you to a meeting';
+  }
+
+  @override
+  String get notificationChannelMessages => 'Messages';
+
+  @override
+  String get notificationOpen => 'Open';
+
+  @override
+  String get trayOpen => 'Open REISUB Meeting';
+
+  @override
+  String get trayQuit => 'Quit';
+
+  @override
+  String get runInBackground => 'Keep running when closed';
+
+  @override
+  String get runInBackgroundHint =>
+      'Messages still arrive as notifications. Quit from the tray icon.';
+
+  @override
+  String get startAtLogin => 'Start when you sign in';
+
+  @override
+  String get startAtLoginHint =>
+      'Starts in the background, ready for messages.';
 }

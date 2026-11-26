@@ -80,14 +80,28 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // One asked for before this showed, as when the app starts from a
+    // notification.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = mounted ? ref.read(socialOpenRequestProvider) : null;
+      if (target != null) _openRequested(target);
+    });
+  }
+
+  void _openRequested(ChatTarget target) {
+    ref.read(socialOpenRequestProvider.notifier).clear();
+    final current = ref.read(socialOverviewProvider).value?.current(target);
+    setState(() => _section = target.team != null ? 1 : _friends);
+    _openChat(current ?? target, _wide);
+  }
+
+  @override
   Widget build(BuildContext context) {
     // A chat asked for from elsewhere, such as by a notification.
     ref.listen(socialOpenRequestProvider, (_, target) {
-      if (target == null) return;
-      ref.read(socialOpenRequestProvider.notifier).clear();
-      final current = ref.read(socialOverviewProvider).value?.current(target);
-      setState(() => _section = target.team != null ? 1 : _friends);
-      _openChat(current ?? target, _wide);
+      if (target != null) _openRequested(target);
     });
     final overview = ref.watch(socialOverviewProvider);
     final data = overview.value;
