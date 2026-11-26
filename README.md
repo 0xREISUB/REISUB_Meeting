@@ -16,6 +16,11 @@
   <a href="LICENSE">MIT License</a>
 </p>
 
+<p align="center">
+  <img src="images/desktop-social.png" alt="The social tab on a computer: friends, and a chat with Emma" height="400">
+  <img src="images/phone-tour.gif" alt="Sliding between the phone's tabs: home, social, teams and settings" height="400">
+</p>
+
 ## English
 
 REISUB Meeting connects you to a REISUB Meeting server for video calls,
@@ -304,17 +309,23 @@ keytool -list -v -keystore <keystore.jks> | grep SHA256
 
 ## Screenshots / Ekran görüntüleri
 
-| Home / Ana sayfa | Join / Toplantıya katıl |
+| A meeting | A team's meeting ringing |
 | --- | --- |
-| ![Home screen](images/homescreen.png) | ![Join screen](images/joinscreen.png) |
+| ![A meeting with eight people in the gallery view](images/desktop-meeting.png) | ![A call card with Decline and Join over the home screen](images/desktop-call.png) |
 
-| Language / Dil | Settings / Ayarlar |
+| Social with a chat | Home |
 | --- | --- |
-| ![Language screen](images/languagescreen.png) | ![Settings screen](images/settingsscreen.png) |
+| ![The social tab with friends, a request and a chat](images/desktop-social.png) | ![The home screen with Create New Room and Join Meeting](images/desktop-home.png) |
 
-| About / Hakkında |
-| --- |
-| ![About screen](images/aboutscreen.png) |
+<p align="center">
+  <img src="images/phone-home.png" alt="Home on a phone" width="260">
+  <img src="images/phone-social.png" alt="Social on a phone, with friends and teams switching at the bottom" width="260">
+</p>
+
+The screenshots are made by `SCREENSHOTS=1 flutter test test/screenshots`
+and the GIF from them by `python3 tool/make_readme_gif.py`. /
+Görseller `SCREENSHOTS=1 flutter test test/screenshots` ile, GIF de
+`python3 tool/make_readme_gif.py` ile üretilir.
 
 ## Contributing / Katkıda bulunma
 

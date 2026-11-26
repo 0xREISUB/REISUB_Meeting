@@ -54,3 +54,6 @@ app.*.map.json
 # Firebase settings for push notifications; kept out of the public
 # repository (see README, "Build from source").
 /android/app/google-services.json
+
+# Frames the README screenshot test renders for the GIF.
+/images/gif-frames/
