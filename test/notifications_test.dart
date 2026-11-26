@@ -122,7 +122,7 @@ void main() {
     expect(card(103), findsOneWidget);
   });
 
-  testWidgets('a meeting invitation can be joined from the notification', (
+  testWidgets('a meeting invitation rings as a call, not as a message', (
     tester,
   ) async {
     final server = await showApp(tester);
@@ -135,14 +135,9 @@ void main() {
       roomId: '777-888-999',
     );
     await poll(tester);
-    // The app runs in English here.
-    expect(find.text('Burak started a meeting'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('notification-join-101')));
-    await settle(tester);
-    expect(server.bodies['POST /rooms/join'], {
-      'room_id': '777-888-999',
-      'name': 'Alice',
-    });
+    // The call card shows it (see calls_test.dart); no message notice on
+    // top of it.
+    expect(card(101), findsNothing);
   });
 
   testWidgets('waiting messages show as badges and are read when opened', (

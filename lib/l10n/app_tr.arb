@@ -492,5 +492,18 @@
   "runInBackground": "Kapatınca arka planda çalış",
   "runInBackgroundHint": "Mesajlar bildirim olarak gelmeye devam eder. Tamamen çıkmak için tepsi simgesini kullan.",
   "startAtLogin": "Oturum açılınca başlat",
-  "startAtLoginHint": "Arka planda başlar, mesajlara hazır olur."
+  "startAtLoginHint": "Arka planda başlar, mesajlara hazır olur.",
+  "callIncoming": "seni arıyor",
+  "callTeamIncoming": "{caller} toplantıyı başlattı",
+  "callAnswer": "Katıl",
+  "callDecline": "Reddet",
+  "callChannel": "Aramalar",
+  "callMissedChannel": "Cevapsız aramalar",
+  "callMissed": "Cevapsız arama",
+  "callDeclinedBy": "{name} aramayı reddetti",
+  "callUnanswered": "Cevap veren olmadı",
+  "callFullScreenTitle": "Kilit ekranında arama",
+  "callFullScreenBody": "Telefon kilitliyken aramaların tam ekran çalması için REISUB Meeting'e tam ekran bildirim izni ver.",
+  "callFullScreenAllow": "İzin ver",
+  "callFullScreenLater": "Sonra"
 }

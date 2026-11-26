@@ -24,6 +24,11 @@ class FakePush implements PushService {
 
   @override
   Future<void> requestPermission() async => asked = true;
+
+  final pushes = StreamController<Map<String, dynamic>>.broadcast();
+
+  @override
+  Stream<Map<String, dynamic>> get messages => pushes.stream;
 }
 
 void main() {

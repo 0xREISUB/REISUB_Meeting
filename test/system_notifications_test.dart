@@ -39,6 +39,22 @@ class FakeSystemNotifier implements SystemNotifier {
   @override
   Future<void> clear(ChatTarget target) async => cleared.add(target.id);
 
+  /// Calls shown, by id, with what Join / Decline do.
+  final calls = <String, void Function(bool join)>{};
+
+  @override
+  Future<void> showCall({
+    required String id,
+    required String title,
+    required String body,
+    required String join,
+    required String decline,
+    required void Function(bool join) onAction,
+  }) async => calls[id] = onAction;
+
+  @override
+  Future<void> hideCall(String id) async => calls.remove(id);
+
   /// The user taps the notification.
   void tap(SystemNotice notice) =>
       _onOpen!(SystemNotice.targetOf(notice.payload)!);

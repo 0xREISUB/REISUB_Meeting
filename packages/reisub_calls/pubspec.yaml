@@ -1,0 +1,19 @@
+name: reisub_calls
+description: Incoming calls for REISUB Meeting on Android, rung through the system's call service (Telecom) with the phone's own ringtone.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: xyz.reisub.calls
+        pluginClass: ReisubCallsPlugin

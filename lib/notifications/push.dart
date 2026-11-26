@@ -9,7 +9,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:v_meeting/app/locale.dart';
+import 'package:reisub_calls/reisub_calls.dart';
 import 'package:v_meeting/auth/account.dart';
+import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/calls/call_controller.dart';
+import 'package:v_meeting/calls/call_ringer.dart';
+import 'package:v_meeting/calls/ringing_call.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/notifications/notification_text.dart';
@@ -26,6 +31,9 @@ abstract class PushService {
 
   /// Asks for permission to show notifications (Android 13+).
   Future<void> requestPermission();
+
+  /// Pushes that come while the app is in front: their data.
+  Stream<Map<String, dynamic>> get messages;
 }
 
 /// Whether Firebase started: only on Android, and only in builds with the
@@ -70,6 +78,10 @@ class FirebasePushService implements PushService {
   Future<void> requestPermission() async {
     await FirebaseMessaging.instance.requestPermission();
   }
+
+  @override
+  Stream<Map<String, dynamic>> get messages =>
+      FirebaseMessaging.onMessage.map((message) => message.data);
 }
 
 /// Keeps this device's push token known to the server while the user is
@@ -103,6 +115,23 @@ final pushRegistrationProvider = Provider<void>((ref) {
   }());
   final changes = push.tokenChanges.listen(register);
   ref.onDispose(changes.cancel);
+  // Pushes while the app is in front: calls ring as from the realtime
+  // connection (whichever comes first); messages show over that already.
+  final foreground = push.messages.listen((data) {
+    final calls = ref.read(callControllerProvider.notifier);
+    switch (data['type']) {
+      case 'call':
+        final call = RingingCall.fromPush(data);
+        if (call != null) calls.incoming(call);
+      case 'call_end':
+        calls.ended(
+          '${data['call_id']}',
+          missed: data['missed'] == '1',
+          info: endedCall(data),
+        );
+    }
+  });
+  ref.onDispose(foreground.cancel);
 });
 
 /// Shows a push that came while the app was not in front. It runs apart
@@ -113,7 +142,30 @@ Future<void> showPushInBackground(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   final l10n = lookupAppLocalizations(await _savedLocale());
-  final notice = SystemNotice.forPush(message.data, l10n);
+  final data = message.data;
+  // A call rings through the phone's call service, even with the app
+  // closed; its end stops it.
+  switch (data['type']) {
+    case 'call':
+      final call = RingingCall.fromPush(data);
+      if (call == null) return;
+      final server = await ServerConfig.readUrl() ?? '';
+      await ReisubCalls.show(
+        incomingCall(call, server),
+        callLabels(l10n, call),
+      );
+      return;
+    case 'call_end':
+      final call = endedCall(data);
+      await ReisubCalls.end(
+        call.id,
+        missed: data['missed'] == '1',
+        missedText: call.missedText(),
+        labels: callLabels(l10n, call),
+      );
+      return;
+  }
+  final notice = SystemNotice.forPush(data, l10n);
   if (notice == null) return;
   final plugin = FlutterLocalNotificationsPlugin();
   await initializeNotifications(plugin, l10n);

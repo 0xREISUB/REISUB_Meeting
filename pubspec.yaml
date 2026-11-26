@@ -38,6 +38,9 @@ dependencies:
   dbus: ^0.8.1
   # 0.6+ is a native rewrite (as window_manager 0.6), and 0.7+ needs Dart 3.13.
   tray_manager: 0.5.3
+  # Incoming calls on Android: rings through the system's call service.
+  reisub_calls:
+    path: packages/reisub_calls
 
 dev_dependencies:
   flutter_test:

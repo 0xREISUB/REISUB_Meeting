@@ -8,6 +8,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/account.dart';
 import 'package:v_meeting/auth/server_config.dart';
+import 'package:v_meeting/calls/call_controller.dart';
+import 'package:v_meeting/calls/ringing_call.dart';
 import 'package:v_meeting/social/notifications.dart';
 import 'package:v_meeting/social/social_api.dart';
 import 'package:v_meeting/social/social_models.dart';
@@ -179,6 +181,31 @@ class RealtimeController extends Notifier<bool> {
             SocialNotification.fromJson(Map<String, dynamic>.from(message)),
           ]);
         }
+      case 'call':
+        final call = RingingCall.fromJson(event['call']);
+        if (call != null) {
+          ref.read(callControllerProvider.notifier).incoming(call);
+        }
+      case 'call_end':
+        final info = event['call'];
+        if (info is Map) {
+          ref
+              .read(callControllerProvider.notifier)
+              .ended(
+                '${info['id']}',
+                missed: info['missed'] == true,
+                info: endedCall(info),
+              );
+        }
+      case 'call_declined':
+        final info = event['call'];
+        if (info is Map) {
+          ref
+              .read(callControllerProvider.notifier)
+              .declinedBy('${info['by'] ?? ''}');
+        }
+      case 'call_unanswered':
+        ref.read(callControllerProvider.notifier).unanswered();
       case 'social':
         _socialRefresh?.cancel();
         _socialRefresh = Timer(

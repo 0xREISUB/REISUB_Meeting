@@ -198,6 +198,8 @@ class NotificationsController extends Notifier<List<SocialNotification>> {
         ref.read(conversation.notifier).receive(notification.message);
       }
       if (notification.message.mine) continue;
+      // An invitation rings as a call (see CallController) instead.
+      if (notification.message.roomId != null) continue;
       if (!inFront) {
         unawaited(
           ref

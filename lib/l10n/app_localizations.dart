@@ -2287,6 +2287,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starts in the background, ready for messages.'**
   String get startAtLoginHint;
+
+  /// No description provided for @callIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'is calling you'**
+  String get callIncoming;
+
+  /// No description provided for @callTeamIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'{caller} started the meeting'**
+  String callTeamIncoming(String caller);
+
+  /// No description provided for @callAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get callAnswer;
+
+  /// No description provided for @callDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get callDecline;
+
+  /// No description provided for @callChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls'**
+  String get callChannel;
+
+  /// No description provided for @callMissedChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed calls'**
+  String get callMissedChannel;
+
+  /// No description provided for @callMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed call'**
+  String get callMissed;
+
+  /// No description provided for @callDeclinedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} declined the call'**
+  String callDeclinedBy(String name);
+
+  /// No description provided for @callUnanswered.
+  ///
+  /// In en, this message translates to:
+  /// **'No answer'**
+  String get callUnanswered;
+
+  /// No description provided for @callFullScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls on the lock screen'**
+  String get callFullScreenTitle;
+
+  /// No description provided for @callFullScreenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To ring full screen while the phone is locked, allow REISUB Meeting to show full screen notifications.'**
+  String get callFullScreenBody;
+
+  /// No description provided for @callFullScreenAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get callFullScreenAllow;
+
+  /// No description provided for @callFullScreenLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get callFullScreenLater;
 }
 
 class _AppLocalizationsDelegate

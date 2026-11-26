@@ -1,0 +1,32 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Ring as a call of this app, through the system's call service. -->
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
+    <!-- The call screen over the lock screen. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application>
+        <service
+            android:name="xyz.reisub.calls.CallConnectionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.ConnectionService" />
+            </intent-filter>
+        </service>
+        <activity
+            android:name="xyz.reisub.calls.IncomingCallActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:taskAffinity="xyz.reisub.calls.incoming"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+        <receiver
+            android:name="xyz.reisub.calls.CallActionReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

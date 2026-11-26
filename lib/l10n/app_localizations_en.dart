@@ -1274,4 +1274,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get startAtLoginHint =>
       'Starts in the background, ready for messages.';
+
+  @override
+  String get callIncoming => 'is calling you';
+
+  @override
+  String callTeamIncoming(String caller) {
+    return '$caller started the meeting';
+  }
+
+  @override
+  String get callAnswer => 'Join';
+
+  @override
+  String get callDecline => 'Decline';
+
+  @override
+  String get callChannel => 'Calls';
+
+  @override
+  String get callMissedChannel => 'Missed calls';
+
+  @override
+  String get callMissed => 'Missed call';
+
+  @override
+  String callDeclinedBy(String name) {
+    return '$name declined the call';
+  }
+
+  @override
+  String get callUnanswered => 'No answer';
+
+  @override
+  String get callFullScreenTitle => 'Calls on the lock screen';
+
+  @override
+  String get callFullScreenBody =>
+      'To ring full screen while the phone is locked, allow REISUB Meeting to show full screen notifications.';
+
+  @override
+  String get callFullScreenAllow => 'Allow';
+
+  @override
+  String get callFullScreenLater => 'Later';
 }

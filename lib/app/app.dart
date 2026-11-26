@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:v_meeting/app/orientation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:v_meeting/app/app_keys.dart';
 import 'package:v_meeting/app/app_startup.dart';
 import 'package:v_meeting/app/auto_hide_title_bar.dart';
 import 'package:v_meeting/app/window_controls.dart';
@@ -10,6 +11,8 @@ import 'package:v_meeting/app/locale.dart';
 import 'package:v_meeting/app/rounded_window.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/host_screen.dart';
+import 'package:v_meeting/calls/call_controller.dart';
+import 'package:v_meeting/calls/incoming_call_card.dart';
 import 'package:v_meeting/desktop/desktop_background.dart';
 import 'package:v_meeting/desktop/launcher_badge.dart';
 import 'package:v_meeting/notifications/push.dart';
@@ -28,9 +31,6 @@ class VMeetingApp extends ConsumerStatefulWidget {
 }
 
 class _VMeetingAppState extends ConsumerState<VMeetingApp> {
-  final _navigatorKey = GlobalKey<NavigatorState>();
-  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
-
   @override
   void initState() {
     super.initState();
@@ -39,17 +39,17 @@ class _VMeetingAppState extends ConsumerState<VMeetingApp> {
 
   /// An invite opened while the app is already running.
   void _openInvite(InviteLink invite) {
-    final context = _navigatorKey.currentContext;
+    final context = appNavigatorKey.currentContext;
     if (context == null) return;
     if (MeetingScreen.isOpen) {
-      _messengerKey.currentState?.showSnackBar(
+      appMessengerKey.currentState?.showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.inviteFinishMeetingFirst),
         ),
       );
       return;
     }
-    _navigatorKey.currentState?.push(
+    appNavigatorKey.currentState?.push(
       MaterialPageRoute<void>(
         builder: (_) => JoinScreen(
           initialRoomId: invite.roomId,
@@ -66,10 +66,11 @@ class _VMeetingAppState extends ConsumerState<VMeetingApp> {
     ref.watch(launcherCountProvider);
     ref.watch(desktopBackgroundProvider);
     ref.watch(pushRegistrationProvider);
+    ref.watch(callControllerProvider);
     return MaterialApp(
       title: 'REISUB Meeting',
-      navigatorKey: _navigatorKey,
-      scaffoldMessengerKey: _messengerKey,
+      navigatorKey: appNavigatorKey,
+      scaffoldMessengerKey: appMessengerKey,
       debugShowCheckedModeBanner: false,
       locale: ref.watch(localeProvider),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -79,10 +80,10 @@ class _VMeetingAppState extends ConsumerState<VMeetingApp> {
       // On a computer the app draws its own title bar, hidden until the
       // pointer rests at the top.
       builder: (context, child) {
-        // New messages show over every screen.
+        // New messages and ringing calls show over every screen.
         final app = InAppNotifications(
-          navigatorKey: _navigatorKey,
-          child: child!,
+          navigatorKey: appNavigatorKey,
+          child: IncomingCalls(child: child!),
         );
         if (!DesktopWindowControls.supported) return app;
         final framed = AutoHideTitleBar(

@@ -21,6 +21,20 @@ abstract class SystemNotifier {
 
   /// Takes down what was shown for a conversation, once it is read.
   Future<void> clear(ChatTarget target);
+
+  /// A ringing call, with Join and Decline (on a computer; phones ring
+  /// through the system's call service). [onAction] hears which, true for
+  /// Join; a plain tap brings the app to the front.
+  Future<void> showCall({
+    required String id,
+    required String title,
+    required String body,
+    required String join,
+    required String decline,
+    required void Function(bool join) onAction,
+  });
+
+  Future<void> hideCall(String id);
 }
 
 /// Whether this platform has system notifications here: Android and Linux,
@@ -51,6 +65,19 @@ class NoSystemNotifier implements SystemNotifier {
 
   @override
   Future<void> clear(ChatTarget target) async {}
+
+  @override
+  Future<void> showCall({
+    required String id,
+    required String title,
+    required String body,
+    required String join,
+    required String decline,
+    required void Function(bool join) onAction,
+  }) async {}
+
+  @override
+  Future<void> hideCall(String id) async {}
 }
 
 /// The Android notification channel for messages and calls.
@@ -65,6 +92,13 @@ class LocalSystemNotifier implements SystemNotifier {
   final FlutterLocalNotificationsPlugin _plugin;
   AppLocalizations? _l10n;
   final _shown = <String, Set<int>>{};
+  final _callActions = <String, void Function(bool join)>{};
+  void Function()? _bringToFront;
+
+  static const _callPrefix = 'call|';
+
+  static int _callNotificationId(String id) =>
+      0x4000000 + ((int.tryParse(id) ?? id.hashCode) & 0xffffff);
 
   @override
   Future<ChatTarget?> start({
@@ -75,7 +109,20 @@ class LocalSystemNotifier implements SystemNotifier {
     await initializeNotifications(
       _plugin,
       l10n,
-      onTap: (payload) {
+      onResponse: (response) {
+        final payload = response.payload ?? '';
+        if (payload.startsWith(_callPrefix)) {
+          final id = payload.substring(_callPrefix.length);
+          switch (response.actionId) {
+            case 'join':
+              _callActions.remove(id)?.call(true);
+            case 'decline':
+              _callActions.remove(id)?.call(false);
+            default:
+              _bringToFront?.call();
+          }
+          return;
+        }
         final target = SystemNotice.targetOf(payload);
         if (target != null) onOpen(target);
       },
@@ -93,6 +140,48 @@ class LocalSystemNotifier implements SystemNotifier {
     if (l10n == null) return;
     _shown.putIfAbsent(notice.target.id, () => {}).add(notice.id);
     await showNotice(_plugin, notice, l10n);
+  }
+
+  /// What a plain tap on a call does: bring the window back.
+  set onCallTapped(void Function()? value) => _bringToFront = value;
+
+  @override
+  Future<void> showCall({
+    required String id,
+    required String title,
+    required String body,
+    required String join,
+    required String decline,
+    required void Function(bool join) onAction,
+  }) async {
+    _callActions[id] = onAction;
+    await _plugin.show(
+      id: _callNotificationId(id),
+      title: title,
+      body: body,
+      payload: '$_callPrefix$id',
+      notificationDetails: NotificationDetails(
+        linux: LinuxNotificationDetails(
+          category: LinuxNotificationCategory.im,
+          urgency: LinuxNotificationUrgency.critical,
+          resident: true,
+          actions: [
+            LinuxNotificationAction(key: 'decline', label: decline),
+            LinuxNotificationAction(key: 'join', label: join),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Future<void> hideCall(String id) async {
+    _callActions.remove(id);
+    try {
+      await _plugin.cancel(id: _callNotificationId(id));
+    } catch (_) {
+      // Already gone.
+    }
   }
 
   @override
@@ -114,7 +203,7 @@ class LocalSystemNotifier implements SystemNotifier {
 Future<void> initializeNotifications(
   FlutterLocalNotificationsPlugin plugin,
   AppLocalizations l10n, {
-  void Function(String? payload)? onTap,
+  void Function(NotificationResponse response)? onResponse,
 }) async {
   await plugin.initialize(
     settings: InitializationSettings(
@@ -124,9 +213,7 @@ Future<void> initializeNotifications(
         defaultIcon: AssetsLinuxIcon('assets/branding/logo.png'),
       ),
     ),
-    onDidReceiveNotificationResponse: onTap == null
-        ? null
-        : (response) => onTap(response.payload),
+    onDidReceiveNotificationResponse: onResponse,
   );
   final android = plugin
       .resolvePlatformSpecificImplementation<

@@ -670,5 +670,32 @@
   "runInBackground": "Keep running when closed",
   "runInBackgroundHint": "Messages still arrive as notifications. Quit from the tray icon.",
   "startAtLogin": "Start when you sign in",
-  "startAtLoginHint": "Starts in the background, ready for messages."
+  "startAtLoginHint": "Starts in the background, ready for messages.",
+  "callIncoming": "is calling you",
+  "callTeamIncoming": "{caller} started the meeting",
+  "@callTeamIncoming": {
+    "placeholders": {
+      "caller": {
+        "type": "String"
+      }
+    }
+  },
+  "callAnswer": "Join",
+  "callDecline": "Decline",
+  "callChannel": "Calls",
+  "callMissedChannel": "Missed calls",
+  "callMissed": "Missed call",
+  "callDeclinedBy": "{name} declined the call",
+  "@callDeclinedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callUnanswered": "No answer",
+  "callFullScreenTitle": "Calls on the lock screen",
+  "callFullScreenBody": "To ring full screen while the phone is locked, allow REISUB Meeting to show full screen notifications.",
+  "callFullScreenAllow": "Allow",
+  "callFullScreenLater": "Later"
 }

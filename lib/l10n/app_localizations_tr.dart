@@ -1257,4 +1257,48 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get startAtLoginHint => 'Arka planda başlar, mesajlara hazır olur.';
+
+  @override
+  String get callIncoming => 'seni arıyor';
+
+  @override
+  String callTeamIncoming(String caller) {
+    return '$caller toplantıyı başlattı';
+  }
+
+  @override
+  String get callAnswer => 'Katıl';
+
+  @override
+  String get callDecline => 'Reddet';
+
+  @override
+  String get callChannel => 'Aramalar';
+
+  @override
+  String get callMissedChannel => 'Cevapsız aramalar';
+
+  @override
+  String get callMissed => 'Cevapsız arama';
+
+  @override
+  String callDeclinedBy(String name) {
+    return '$name aramayı reddetti';
+  }
+
+  @override
+  String get callUnanswered => 'Cevap veren olmadı';
+
+  @override
+  String get callFullScreenTitle => 'Kilit ekranında arama';
+
+  @override
+  String get callFullScreenBody =>
+      'Telefon kilitliyken aramaların tam ekran çalması için REISUB Meeting\'e tam ekran bildirim izni ver.';
+
+  @override
+  String get callFullScreenAllow => 'İzin ver';
+
+  @override
+  String get callFullScreenLater => 'Sonra';
 }
