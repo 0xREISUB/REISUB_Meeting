@@ -1,7 +1,9 @@
+import 'package:v_meeting/l10n/delegates.dart';
+
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -67,7 +69,7 @@ Future<Future<ScreenShareChoice?>> openPicker(
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('tr'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Builder(
         builder: (context) => TextButton(

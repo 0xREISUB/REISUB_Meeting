@@ -20,16 +20,13 @@ class ScreenShareService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
             val manager = getSystemService(NotificationManager::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                manager.createNotificationChannel(NotificationChannel(
+            manager.createNotificationChannel(NotificationChannel(
                     CHANNEL, intent?.getStringExtra("channelName") ?: "Screen sharing", NotificationManager.IMPORTANCE_LOW
                 ))
-            }
             val launch = PendingIntent.getActivity(this, 0,
                 Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(this, CHANNEL)
-                else @Suppress("DEPRECATION") Notification.Builder(this)
+            val builder = Notification.Builder(this, CHANNEL)
             val notification = builder.setSmallIcon(android.R.drawable.ic_menu_camera)
                 .setContentTitle(intent?.getStringExtra("title") ?: "Your screen is being shared")
                 .setContentText(intent?.getStringExtra("body") ?: "Return to the meeting to stop sharing.")

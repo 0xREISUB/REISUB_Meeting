@@ -194,7 +194,7 @@ class NotificationsController extends Notifier<List<SocialNotification>> {
     final l10n = lookupAppLocalizations(ref.read(localeProvider));
     for (final notification in fresh) {
       final conversation = conversationProvider(notification.target);
-      if (ref.exists(conversation)) {
+      if (ref.read(conversation.exists)) {
         ref.read(conversation.notifier).receive(notification.message);
       }
       if (notification.message.mine) continue;

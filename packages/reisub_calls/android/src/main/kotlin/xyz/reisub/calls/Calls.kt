@@ -132,7 +132,6 @@ object Calls {
     )
 
     private fun ringThroughTelecom(context: Context, call: IncomingCall): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
         return try {
             val telecom = context.getSystemService(TelecomManager::class.java)
             val handle = accountHandle(context)
@@ -201,17 +200,11 @@ object Calls {
             val v = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 context.getSystemService(VibratorManager::class.java).defaultVibrator
             } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                context.getSystemService(Vibrator::class.java)
             }
             vibrator = v
             val pattern = longArrayOf(0, 800, 800)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                v.vibrate(VibrationEffect.createWaveform(pattern, 0))
-            } else {
-                @Suppress("DEPRECATION")
-                v.vibrate(pattern, 0)
-            }
+            v.vibrate(VibrationEffect.createWaveform(pattern, 0))
         }
     }
 
@@ -304,7 +297,6 @@ object Calls {
     }
 
     private fun createChannels(context: Context, call: IncomingCall) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(NotificationManager::class.java)
         // The app plays the ringtone itself (so a volume key can stop it):
         // the channel stays silent.
@@ -351,12 +343,7 @@ object Calls {
         val fullScreen = activityIntent(context, call, null, 0)
         val answer = activityIntent(context, call, ACTION_ANSWER, 1)
         val decline = declineIntent(context, call)
-        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(context, CHANNEL)
-        } else {
-            @Suppress("DEPRECATION")
-            Notification.Builder(context).setPriority(Notification.PRIORITY_MAX)
-        }
+        val builder = Notification.Builder(context, CHANNEL)
         builder
             .setSmallIcon(smallIcon(context))
             .setContentTitle(call.title)
@@ -384,12 +371,7 @@ object Calls {
         val open = context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
             PendingIntent.getActivity(context, notificationId(call.id) + 3, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
-        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(context, MISSED_CHANNEL)
-        } else {
-            @Suppress("DEPRECATION")
-            Notification.Builder(context)
-        }
+        val builder = Notification.Builder(context, MISSED_CHANNEL)
         builder
             .setSmallIcon(smallIcon(context))
             .setContentTitle(merged.label("missed"))

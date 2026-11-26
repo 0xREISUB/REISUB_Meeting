@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/auth/auth_api.dart';
@@ -38,9 +38,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       await ref.read(authApiProvider).register(nick: nick, password: password);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.registerSuccess)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.registerSuccess)));
       Navigator.pop(context);
     } on AuthException catch (error) {
       if (mounted) {

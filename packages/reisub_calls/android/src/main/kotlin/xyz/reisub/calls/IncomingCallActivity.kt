@@ -24,15 +24,11 @@ class IncomingCallActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Over the lock screen from Android 8.1; on 8.0 the call shows as
+        // its notification there.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(
-                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
-            )
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         handle(intent)
@@ -127,7 +123,7 @@ class IncomingCallActivity : Activity() {
     private fun answer() {
         val id = callId ?: return
         val keyguard = getSystemService(KeyguardManager::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && keyguard.isKeyguardLocked) {
+        if (keyguard.isKeyguardLocked) {
             // The meeting opens once the phone is unlocked.
             keyguard.requestDismissKeyguard(
                 this,

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:v_meeting/l10n/delegates.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +21,7 @@ import 'package:v_meeting/settings/language_screen.dart';
 
 Widget localized(Widget child, String language) => MaterialApp(
   locale: Locale(language),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: appLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: child,
 );
@@ -154,34 +155,28 @@ void main() {
     },
   );
 
-  test(
-    'application and capture errors localize without translating server messages',
-    () {
-      final en = AppLocalizationsEn();
-      final tr = AppLocalizationsTr();
-      const error = MeetingApiException.localized(AppError.invalidRoomData);
-      expect(localizeError(error, en), en.invalidRoomData);
-      expect(localizeError(error, tr), tr.invalidRoomData);
-      const serverMessage = MeetingApiException('Server-provided message');
-      expect(localizeError(serverMessage, en), serverMessage.message);
-      expect(localizeError(serverMessage, tr), serverMessage.message);
-      expect(
-        mediaCaptureError(TrackCreateException(), camera: false, l10n: en),
-        contains('microphone'),
-      );
-      expect(
-        mediaCaptureError(TrackCreateException(), camera: true, l10n: tr),
-        contains('Kamera'),
-      );
-      expect(
-        localizeError(
-          PlatformException(code: 'WindowsAudioRestartRequired'),
-          en,
-        ),
-        en.windowsAudioRestartRequired,
-      );
-    },
-  );
+  test('application and capture errors localize without translating server messages', () {
+    final en = AppLocalizationsEn();
+    final tr = AppLocalizationsTr();
+    const error = MeetingApiException.localized(AppError.invalidRoomData);
+    expect(localizeError(error, en), en.invalidRoomData);
+    expect(localizeError(error, tr), tr.invalidRoomData);
+    const serverMessage = MeetingApiException('Server-provided message');
+    expect(localizeError(serverMessage, en), serverMessage.message);
+    expect(localizeError(serverMessage, tr), serverMessage.message);
+    expect(
+      mediaCaptureError(TrackCreateException(), camera: false, l10n: en),
+      contains('microphone'),
+    );
+    expect(
+      mediaCaptureError(TrackCreateException(), camera: true, l10n: tr),
+      contains('Kamera'),
+    );
+    expect(
+      localizeError(PlatformException(code: 'WindowsAudioRestartRequired'), en),
+      en.windowsAudioRestartRequired,
+    );
+  });
 
   testWidgets('participant moderation errors follow the selected language', (
     tester,

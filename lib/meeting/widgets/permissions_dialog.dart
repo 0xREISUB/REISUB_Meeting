@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/meeting/widgets/permissions_member_list.dart';
@@ -43,12 +43,11 @@ extension MeetingPermissionText on MeetingPermission {
 const _dialogColor = Color(0xE01C1A22);
 
 /// Gives or takes back one permission; throws the server's error.
-typedef PermissionChange =
-    Future<void> Function(
-      MemberEntry member,
-      MeetingPermission permission,
-      bool on,
-    );
+typedef PermissionChange = Future<void> Function(
+  MemberEntry member,
+  MeetingPermission permission,
+  bool on,
+);
 
 /// Opens the permissions window from the meeting's menu. [members] is read
 /// again whenever [listenable] changes, so the window follows the meeting.

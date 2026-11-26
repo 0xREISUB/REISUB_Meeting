@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/social/chat_pane.dart';
@@ -123,12 +123,30 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
         _wide = wide;
         final list = _list(context, data, wide);
         if (!wide) {
+          // On a phone friends and teams switch at the bottom, just above
+          // the navigation bar, within the thumb's reach.
           return SafeArea(
             bottom: false,
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 560),
-                child: list,
+                child: Stack(
+                  children: [
+                    Positioned.fill(child: list),
+                    Positioned(
+                      left: 24,
+                      right: 24,
+                      bottom:
+                          MediaQuery.paddingOf(context).bottom + _switcherGap,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: _switcher(context, data, floating: true),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -182,6 +200,31 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
     );
   }
 
+  /// How far the phone's switcher floats above the navigation bar.
+  static const _switcherGap = 10.0;
+
+  /// Friends or teams, with what waits in each.
+  Widget _switcher(
+    BuildContext context,
+    SocialOverview overview, {
+    bool floating = false,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    return GlassSegmented(
+      key: const ValueKey('social-switcher'),
+      labels: [l10n.friends, l10n.teams],
+      selectedIndex: _section,
+      floating: floating,
+      badges: {
+        _friends:
+            overview.requests.length +
+            overview.friends.fold<int>(0, (sum, f) => sum + f.unread),
+        1: overview.teams.fold<int>(0, (sum, team) => sum + team.unread),
+      },
+      onSelected: (section) => setState(() => _section = section),
+    );
+  }
+
   /// The profile, then friends or teams.
   Widget _list(BuildContext context, SocialOverview overview, bool wide) {
     final l10n = AppLocalizations.of(context)!;
@@ -191,7 +234,10 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
         wide ? 20 : 16,
         12,
         16,
-        24 + MediaQuery.paddingOf(context).bottom,
+        24 +
+            MediaQuery.paddingOf(context).bottom +
+            // Room to scroll the last one clear of the switcher.
+            (wide ? 0 : GlassSegmented.height + _switcherGap),
       ),
       children: [
         Row(
@@ -201,9 +247,8 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
                 padding: const EdgeInsets.only(left: 4),
                 child: Text(
                   l10n.social,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.headlineMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -222,18 +267,7 @@ class _SocialHomeState extends ConsumerState<SocialHome> {
         const SizedBox(height: 16),
         _ProfileCard(profile: overview.profile),
         const SizedBox(height: 16),
-        GlassSegmented(
-          labels: [l10n.friends, l10n.teams],
-          selectedIndex: _section,
-          badges: {
-            _friends:
-                overview.requests.length +
-                overview.friends.fold<int>(0, (sum, f) => sum + f.unread),
-            1: overview.teams.fold<int>(0, (sum, team) => sum + team.unread),
-          },
-          onSelected: (section) => setState(() => _section = section),
-        ),
-        const SizedBox(height: 16),
+        if (wide) ...[_switcher(context, overview), const SizedBox(height: 16)],
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
           transitionBuilder: (child, animation) => FadeTransition(

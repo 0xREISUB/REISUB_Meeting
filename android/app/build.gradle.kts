@@ -47,7 +47,8 @@ if (gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = tr
     throw GradleException("Android release signing requires REISUB_ANDROID_KEYSTORE, REISUB_ANDROID_STORE_PASSWORD, REISUB_ANDROID_KEY_ALIAS and REISUB_ANDROID_KEY_PASSWORD in the environment or in .env (see .env.example)")
 }
 
-android {
+// AGP 9.3 deprecates the generated android { } accessor.
+extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
     namespace = "xyz.reisub.meeting"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
@@ -64,7 +65,10 @@ android {
         applicationId = "xyz.reisub.meeting"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Android 8.0: notification channels, the system's call service and
+        // the newer vibration and window APIs everywhere, with no fallbacks
+        // to deprecated ones.
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

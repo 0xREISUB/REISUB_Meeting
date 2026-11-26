@@ -206,31 +206,27 @@ void main() {
     },
   );
 
-  test(
-    'unmuting reroutes an existing publication and resolves the current default',
-    () async {
-      final routed = <String>[];
-      var defaultId = 'built-in';
-      final participant = _Participant()..workingMicrophone = defaultId;
-      final media = MeetingMedia(
+  test('unmuting reroutes an existing publication and resolves the current default', () async {
+    final routed = <String>[];
+    var defaultId = 'built-in';
+    final participant = _Participant()..workingMicrophone = defaultId;
+    final media = MeetingMedia(
+      isWindows: true,
+      enumerateDevices: () async => throw StateError('unexpected enumeration'),
+      microphoneInput: MicrophoneInput(
         isWindows: true,
-        enumerateDevices: () async =>
-            throw StateError('unexpected enumeration'),
-        microphoneInput: MicrophoneInput(
-          isWindows: true,
-          defaultDeviceId: () async => defaultId,
-          selectInput: (id) async => routed.add(id),
-        ),
-      );
-      await media.setMicrophoneEnabled(participant, true);
-      await media.setMicrophoneEnabled(participant, false);
-      defaultId = 'headset';
-      participant.workingMicrophone = defaultId;
-      await media.setMicrophoneEnabled(participant, true);
-      expect(routed, ['built-in', 'headset']);
-      expect(participant.microphoneEnabledValues, [true, false, true]);
-    },
-  );
+        defaultDeviceId: () async => defaultId,
+        selectInput: (id) async => routed.add(id),
+      ),
+    );
+    await media.setMicrophoneEnabled(participant, true);
+    await media.setMicrophoneEnabled(participant, false);
+    defaultId = 'headset';
+    participant.workingMicrophone = defaultId;
+    await media.setMicrophoneEnabled(participant, true);
+    expect(routed, ['built-in', 'headset']);
+    expect(participant.microphoneEnabledValues, [true, false, true]);
+  });
 
   test('a saved microphone is used instead of the Windows default', () async {
     final routed = <String>[];
@@ -275,36 +271,33 @@ void main() {
     },
   );
 
-  test(
-    'native capture errors retry audio inputs, skipping the failed system default',
-    () async {
-      final routed = <String>[];
-      final participant = _Participant()
-        ..workingMicrophone = 'usb'
-        ..microphoneErrors.add(
-          PlatformException(code: 'getUserMedia', message: 'NotReadableError'),
-        );
-      final media = MeetingMedia(
-        isWindows: true,
-        microphoneInput: MicrophoneInput(
-          isWindows: true,
-          defaultDeviceId: () async => 'broken-default',
-          selectInput: (id) async => routed.add(id),
-        ),
-        enumerateDevices: () async => [
-          device('audioinput', 'broken-default'),
-          device('audiooutput', 'speaker'),
-          device('audioinput', 'usb'),
-        ],
+  test('native capture errors retry audio inputs, skipping the failed system default', () async {
+    final routed = <String>[];
+    final participant = _Participant()
+      ..workingMicrophone = 'usb'
+      ..microphoneErrors.add(
+        PlatformException(code: 'getUserMedia', message: 'NotReadableError'),
       );
-      await media.setMicrophoneEnabled(participant, true);
-      expect(participant.microphones.map((options) => options?.deviceId), [
-        'broken-default',
-        'usb',
-      ]);
-      expect(routed, ['usb']);
-    },
-  );
+    final media = MeetingMedia(
+      isWindows: true,
+      microphoneInput: MicrophoneInput(
+        isWindows: true,
+        defaultDeviceId: () async => 'broken-default',
+        selectInput: (id) async => routed.add(id),
+      ),
+      enumerateDevices: () async => [
+        device('audioinput', 'broken-default'),
+        device('audiooutput', 'speaker'),
+        device('audioinput', 'usb'),
+      ],
+    );
+    await media.setMicrophoneEnabled(participant, true);
+    expect(participant.microphones.map((options) => options?.deviceId), [
+      'broken-default',
+      'usb',
+    ]);
+    expect(routed, ['usb']);
+  });
 
   test(
     'permission and publish failures never open a different microphone',

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/widgets/meeting_countdown.dart';
@@ -130,9 +130,8 @@ class MeetingNoticeStack extends StatelessWidget {
               _DropIn(
                 key: ValueKey('time-$minutes'),
                 child: MeetingTimeNotice(
-                  text: AppLocalizations.of(
-                    context,
-                  )!.minutesLeftNotice(minutes),
+                  text: AppLocalizations.of(context)!
+                      .minutesLeftNotice(minutes),
                 ),
               ),
             for (final person in notices.arrivals.reversed.take(maxArrivals))

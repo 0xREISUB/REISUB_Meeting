@@ -1,5 +1,6 @@
+import 'package:v_meeting/l10n/delegates.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,7 +65,7 @@ Widget app(Widget home, Dio dio, {InviteLink? invite}) => ProviderScope(
   ],
   child: MaterialApp(
     locale: const Locale('tr'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: home,
   ),

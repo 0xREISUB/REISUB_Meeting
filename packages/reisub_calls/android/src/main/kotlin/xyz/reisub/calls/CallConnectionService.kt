@@ -1,19 +1,16 @@
 package xyz.reisub.calls
 
-import android.os.Build
 import android.telecom.Connection
 import android.telecom.ConnectionRequest
 import android.telecom.ConnectionService
 import android.telecom.DisconnectCause
 import android.telecom.PhoneAccountHandle
-import android.annotation.TargetApi
 
 /**
  * The system's call service asks here for the calls this app rings
  * ("self-managed"): it then keeps ringing to the phone's rules, and a
  * volume key silences it (onSilence).
  */
-@TargetApi(Build.VERSION_CODES.O)
 class CallConnectionService : ConnectionService() {
     override fun onCreateIncomingConnection(
         account: PhoneAccountHandle?,
@@ -43,7 +40,6 @@ class CallConnectionService : ConnectionService() {
     }
 }
 
-@TargetApi(Build.VERSION_CODES.O)
 class CallConnection(
     private val context: android.content.Context,
     private val id: String,

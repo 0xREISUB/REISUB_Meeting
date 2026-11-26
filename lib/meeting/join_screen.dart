@@ -1,5 +1,5 @@
 import 'package:v_meeting/l10n/localized_error.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/invite.dart';
@@ -290,9 +290,8 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                                 autofocus: widget.initialRoomId != null,
                                 textInputAction: TextInputAction.next,
                                 onSubmitted: (_) {
-                                  FocusScope.of(
-                                    context,
-                                  ).requestFocus(_roomFocusNode);
+                                  FocusScope.of(context)
+                                      .requestFocus(_roomFocusNode);
                                 },
                                 onChanged: (val) {
                                   if (_isNameError && val.trim().isNotEmpty) {

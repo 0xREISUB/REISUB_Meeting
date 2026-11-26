@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/app/theme.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:v_meeting/l10n/app_localizations.dart';

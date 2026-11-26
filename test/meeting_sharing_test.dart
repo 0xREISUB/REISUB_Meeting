@@ -1,7 +1,9 @@
+import 'package:v_meeting/l10n/delegates.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_sharing.dart';
@@ -25,7 +27,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('tr'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: AudioVideoSettingsDialog(

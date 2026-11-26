@@ -1,8 +1,10 @@
+import 'package:v_meeting/l10n/delegates.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
@@ -255,7 +257,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('tr'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: DeviceTestScreen(camera: false),
       ),
@@ -290,7 +292,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('tr'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: DeviceTestScreen(camera: false, controller: controller),
       ),

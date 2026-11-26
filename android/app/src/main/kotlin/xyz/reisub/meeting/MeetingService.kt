@@ -26,17 +26,14 @@ class MeetingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
             val manager = getSystemService(NotificationManager::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                manager.createNotificationChannel(NotificationChannel(
+            manager.createNotificationChannel(NotificationChannel(
                     CHANNEL, intent?.getStringExtra("channelName") ?: "Meeting",
                     NotificationManager.IMPORTANCE_LOW
                 ))
-            }
             val launch = PendingIntent.getActivity(this, 0,
                 Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(this, CHANNEL)
-                else @Suppress("DEPRECATION") Notification.Builder(this)
+            val builder = Notification.Builder(this, CHANNEL)
             val notification = builder.setSmallIcon(android.R.drawable.ic_btn_speak_now)
                 .setContentTitle(intent?.getStringExtra("title") ?: "Meeting in progress")
                 .setContentText(intent?.getStringExtra("body") ?: "Tap to return to the meeting.")

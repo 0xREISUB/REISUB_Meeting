@@ -1,5 +1,6 @@
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:livekit_client/livekit_client.dart';
+
 import 'microphone_input.dart';
 
 /// A local-only capture test. The microphone peers exchange media within this
@@ -27,9 +28,8 @@ class DeviceTestSession {
           await (getUserMedia ?? rtc.navigator.mediaDevices.getUserMedia)({
             'audio': camera
                 ? false
-                : AudioCaptureOptions(
-                    deviceId: resolvedDeviceId,
-                  ).toMediaConstraintsMap(),
+                : AudioCaptureOptions(deviceId: resolvedDeviceId)
+                      .toMediaConstraintsMap(),
             'video': camera
                 ? CameraCaptureOptions(
                     deviceId: deviceId,

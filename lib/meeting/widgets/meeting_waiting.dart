@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
@@ -6,8 +6,10 @@ import 'package:v_meeting/meeting/widgets/meeting_participant.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
 /// Lets a waiting person in or turns them away; throws the server's error.
-typedef WaitingAnswer =
-    Future<void> Function(WaitingPerson person, {required bool admit});
+typedef WaitingAnswer = Future<void> Function(
+  WaitingPerson person, {
+  required bool admit,
+});
 
 /// The dock button for the waiting room: people with a small clock, and
 /// how many are waiting.

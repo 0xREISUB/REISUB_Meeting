@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:v_meeting/l10n/delegates.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/app/orientation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/app/app_keys.dart';
@@ -73,7 +74,7 @@ class _VMeetingAppState extends ConsumerState<VMeetingApp> {
       scaffoldMessengerKey: appMessengerKey,
       debugShowCheckedModeBanner: false,
       locale: ref.watch(localeProvider),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: buildAppTheme(),
       navigatorObservers: [appRouteObserver],

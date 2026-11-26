@@ -14,6 +14,10 @@ analyzer:
     - windows/**
     - linux/**
     - web/**
+    # Written by Flutter's gen-l10n on every build; it still names the
+    # Material and Cupertino delegates deprecated since Flutter 3.47. The
+    # app uses its own list instead (lib/l10n/delegates.dart).
+    - lib/l10n/app_localizations*.dart
 include: package:flutter_lints/flutter.yaml
 
 linter:

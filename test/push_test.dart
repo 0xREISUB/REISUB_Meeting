@@ -57,6 +57,7 @@ void main() {
     expect(server.bodies['PUT /me/push-device'], {
       'token': 'fcm-1',
       'platform': 'android',
+      'kind': 'token',
     });
 
     // Firebase gave the phone a new token: the server hears it.
@@ -65,6 +66,7 @@ void main() {
     expect(server.bodies['PUT /me/push-device'], {
       'token': 'fcm-2',
       'platform': 'android',
+      'kind': 'token',
     });
     await push.changes.close();
   });

@@ -12,13 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The Flutter the app is built and released with. Newer ones deprecate
-      # package:flutter/material.dart (moved to material_ui), which the
-      # analysis would fail on; moving to it is a change of its own.
+      # The Flutter the app is built and released with; a newer one can
+      # deprecate what the code uses, and the analysis fails on that.
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.47.7
+          flutter-version: 3.50.1
           cache: true
 
       - name: Install dependencies

@@ -61,10 +61,14 @@ final pushServiceProvider = Provider<PushService?>(
   (ref) => _firebaseReady ? FirebasePushService() : null,
 );
 
-/// Uses the registration token the server sends to with FCM's HTTP v1
-/// "token" target. Firebase now also offers register()/onRegistered, which
-/// give an installation id for a newer kind of sending; the server does not
-/// send that way, so the token API stays until it does.
+/// The app's FCM registration token, which the server sends to.
+///
+/// firebase_messaging 17.1 deprecates getToken and onTokenRefresh for
+/// register() and onRegistered, which give a Firebase Installation ID (FID).
+/// On a phone that had a token (Android, Play services 26.45, Firebase
+/// Messaging 26.0.2, November 2026) register() never completed and no FID
+/// came, so push stopped. The token API still works and is kept until the
+/// new one does; the server already sends to FIDs ("kind":"fid").
 class FirebasePushService implements PushService {
   @override
   // ignore: deprecated_member_use
@@ -98,7 +102,7 @@ final pushRegistrationProvider = Provider<void>((ref) {
       await api.send(
         'PUT',
         '/me/push-device',
-        data: {'token': token, 'platform': 'android'},
+        data: {'token': token, 'platform': 'android', 'kind': 'token'},
       );
     } catch (_) {
       // Tried again with the next start or token change.

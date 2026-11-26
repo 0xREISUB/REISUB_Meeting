@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+
 import 'app_localizations.dart';
 
 enum AppError {

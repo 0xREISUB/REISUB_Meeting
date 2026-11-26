@@ -422,9 +422,8 @@ class MeetingApi {
   static Future<String>? _guestCreation;
 
   Future<String> _createGuestSession(String serverUrl) {
-    return _guestCreation ??= _requestGuestSession(
-      serverUrl,
-    ).whenComplete(() => _guestCreation = null);
+    return _guestCreation ??= _requestGuestSession(serverUrl)
+        .whenComplete(() => _guestCreation = null);
   }
 
   /// POST /guest creates an anonymous user. Servers without it require an

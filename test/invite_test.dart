@@ -1,10 +1,11 @@
+import 'package:v_meeting/l10n/delegates.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:v_meeting/app/app.dart';
 import 'package:v_meeting/app/deep_links.dart';
 import 'package:v_meeting/auth/server_config.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,7 +19,7 @@ import 'package:v_meeting/meeting/widgets/meeting_banners.dart';
 Widget localized(Widget child) => ProviderScope(
   child: MaterialApp(
     locale: const Locale('tr'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
   ),

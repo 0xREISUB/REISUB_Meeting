@@ -1,12 +1,15 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/widgets/glass.dart';
 import 'package:v_meeting/meeting/widgets/meeting_dialog.dart';
 
-typedef MicrophoneModerationCallback =
-    Future<void> Function(MemberEntry member, bool locked, bool requestUnmute);
+typedef MicrophoneModerationCallback = Future<void> Function(
+  MemberEntry member,
+  bool locked,
+  bool requestUnmute,
+);
 typedef MemberCallback = Future<void> Function(MemberEntry member);
 
 enum _MemberAction { lock, unlock, requestUnmute, remove }

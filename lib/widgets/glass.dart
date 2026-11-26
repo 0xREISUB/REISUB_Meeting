@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/app/theme.dart';
 
 // The app's liquid glass: frosted surfaces the page shows through, blurred
@@ -527,22 +527,31 @@ class GlassSegmented extends StatelessWidget {
     required this.selectedIndex,
     required this.onSelected,
     this.badges = const {},
+    this.floating = false,
   });
 
   final List<String> labels;
+
+  /// Over content, as at the bottom of a phone's screen: frosted, with a
+  /// shadow, as the navigation bar.
+  final bool floating;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
 
   /// A count to show beside a choice, by its index.
   final Map<int, int> badges;
 
+  static const height = 48.0;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 48,
+      height: height,
       child: GlassSurface(
-        radius: 14,
-        shadow: false,
+        radius: floating ? 24 : 14,
+        blur: floating,
+        sigma: 18,
+        shadow: floating,
         padding: const EdgeInsets.all(4),
         child: LayoutBuilder(
           builder: (context, constraints) {

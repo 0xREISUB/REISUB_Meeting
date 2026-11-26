@@ -1,5 +1,6 @@
+import 'package:v_meeting/l10n/delegates.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -219,7 +220,7 @@ Future<FakeSocialServer> openSocial(
       overrides: [dioProvider.overrideWithValue(server.dio())],
       child: MaterialApp(
         locale: const Locale('tr'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const HomeScreen(),
       ),
@@ -351,6 +352,38 @@ void main() {
     // This device's session ends on the server too; the user's other
     // devices stay signed in.
     expect(server.calls, contains('POST /logout'));
+  });
+
+  testWidgets('on a phone friends and teams switch at the bottom', (
+    tester,
+  ) async {
+    await openSocial(tester, signedIn: true, size: const Size(390, 844));
+    final switcher = find.byKey(const ValueKey('social-switcher'));
+    // Just above the navigation bar, within the thumb's reach.
+    final top = tester.getTopLeft(switcher).dy;
+    final bar = tester
+        .getTopLeft(find.byKey(const ValueKey('home-navigation')))
+        .dy;
+    expect(top, greaterThan(844 * 0.75));
+    expect(tester.getBottomLeft(switcher).dy, lessThanOrEqualTo(bar));
+    // It still switches.
+    await tester.tap(
+      find.descendant(of: switcher, matching: find.text('Takımlar')),
+    );
+    await settle(tester);
+    expect(find.byKey(const ValueKey('teams')), findsOneWidget);
+  });
+
+  testWidgets('on a computer the switcher stays at the top of the list', (
+    tester,
+  ) async {
+    await openSocial(tester, signedIn: true, size: const Size(1280, 800));
+    final switcher = find.byKey(const ValueKey('social-switcher'));
+    // Above the friends, under the profile.
+    expect(
+      tester.getBottomLeft(switcher).dy,
+      lessThan(tester.getTopLeft(find.byKey(const ValueKey('friends'))).dy),
+    );
   });
 
   testWidgets('on a phone a conversation opens as its own screen', (

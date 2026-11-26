@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/social/presence_avatar.dart';
@@ -178,9 +178,8 @@ class _TeamMembersState extends ConsumerState<_TeamMembers> {
                       '${widget.team.name} · ${l10n.teamMembersTitle}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: Theme.of(context).textTheme.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
                   const CloseButton(),

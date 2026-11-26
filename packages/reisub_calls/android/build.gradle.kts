@@ -11,7 +11,8 @@ kotlin {
     }
 }
 
-android {
+// AGP 9.3 deprecates the generated android { } accessor.
+extensions.configure<com.android.build.api.dsl.LibraryExtension> {
     namespace = "xyz.reisub.calls"
     compileSdk = 36
 
@@ -21,6 +22,6 @@ android {
     }
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
     }
 }

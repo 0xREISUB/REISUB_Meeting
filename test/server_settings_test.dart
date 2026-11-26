@@ -1,5 +1,6 @@
+import 'package:v_meeting/l10n/delegates.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,7 +18,7 @@ Widget app(Widget child, {Dio? dio}) => ProviderScope(
   child: MaterialApp(
     key: UniqueKey(),
     locale: const Locale('tr'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: child,
   ),

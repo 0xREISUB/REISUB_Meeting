@@ -1,5 +1,5 @@
 import 'package:v_meeting/l10n/localized_error.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/server_policy.dart';
 import 'package:v_meeting/app/theme.dart';

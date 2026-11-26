@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/auth/auth_api.dart';
 import 'package:v_meeting/auth/account.dart';
@@ -13,8 +13,10 @@ import 'package:v_meeting/desktop/desktop_background.dart';
 import 'package:v_meeting/settings/about_screen.dart';
 import 'package:v_meeting/settings/language_screen.dart';
 import 'package:v_meeting/settings/server_terms_screen.dart';
+
 import 'device_test_screen.dart';
 import 'meeting_preferences.dart';
+
 import 'package:v_meeting/widgets/glass.dart';
 
 /// The settings list, shown in the settings tab and in [SettingsScreen]:
@@ -170,9 +172,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
             child: Text(
               l10n.settings,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         GlassSection(

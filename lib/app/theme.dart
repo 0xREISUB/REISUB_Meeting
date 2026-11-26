@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Brand accent used by primary actions across the app.
 const brandColor = Colors.deepPurpleAccent;

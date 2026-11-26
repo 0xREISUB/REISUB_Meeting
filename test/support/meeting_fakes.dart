@@ -1,11 +1,14 @@
 /// Fakes and helpers shared by the meeting screen tests.
 library;
 
+import 'package:v_meeting/l10n/delegates.dart';
+
 import 'dart:collection';
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
@@ -259,7 +262,7 @@ const fourth = MemberEntry(
 
 Widget localized(Widget child) => MaterialApp(
   locale: const Locale('tr'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: appLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: child,
 );

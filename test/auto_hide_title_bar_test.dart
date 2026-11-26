@@ -1,5 +1,6 @@
+import 'package:v_meeting/l10n/delegates.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:v_meeting/app/auto_hide_title_bar.dart';
 import 'package:v_meeting/app/window_controls.dart';
@@ -37,7 +38,7 @@ Future<(FakeWindow, TestGesture)> showApp(WidgetTester tester) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('tr'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) =>
           AutoHideTitleBar(controls: window, child: child!),

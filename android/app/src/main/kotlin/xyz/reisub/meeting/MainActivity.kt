@@ -3,11 +3,10 @@ package xyz.reisub.meeting
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.view.View
 import android.view.WindowManager
-import android.view.WindowInsets
-import android.view.WindowInsetsController
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -49,8 +48,7 @@ class MainActivity : FlutterActivity() {
                             .putExtra("channelName", call.argument<String>("channelName"))
                             .putExtra("title", call.argument<String>("title"))
                             .putExtra("body", call.argument<String>("body"))
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
-                        else startService(intent)
+                        startForegroundService(intent)
                     } catch (error: Exception) {
                         ScreenShareService.onReady = null
                         result.error("screen_share_service", error.message, null)
@@ -64,8 +62,7 @@ class MainActivity : FlutterActivity() {
                             .putExtra("channelName", call.argument<String>("channelName"))
                             .putExtra("title", call.argument<String>("title"))
                             .putExtra("body", call.argument<String>("body"))
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
-                        else startService(intent)
+                        startForegroundService(intent)
                         result.success(null)
                     } catch (error: Exception) {
                         result.error("meeting_service", error.message, null)
@@ -125,29 +122,15 @@ class MainActivity : FlutterActivity() {
         if (hasFocus && meetingFullscreen) applyMeetingFullscreen()
     }
 
-    @Suppress("DEPRECATION")
+    /** Hides the system bars for a meeting, on every Android version. */
     private fun applyMeetingFullscreen() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.let { controller ->
-                if (meetingFullscreen) {
-                    controller.systemBarsBehavior =
-                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                    controller.hide(WindowInsets.Type.systemBars())
-                } else {
-                    controller.show(WindowInsets.Type.systemBars())
-                }
-            }
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        if (meetingFullscreen) {
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
         } else {
-            window.decorView.systemUiVisibility = if (meetingFullscreen) {
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                    View.SYSTEM_UI_FLAG_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            } else {
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            }
+            controller.show(WindowInsetsCompat.Type.systemBars())
         }
     }
 }

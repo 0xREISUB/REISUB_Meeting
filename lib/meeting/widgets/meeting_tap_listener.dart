@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Carries two-finger pinches detected above the page view to the main
 /// video, which owns the zoom.

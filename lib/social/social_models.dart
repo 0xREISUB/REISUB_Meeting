@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 
 /// Whether someone can be reached right now, as their friends see it.

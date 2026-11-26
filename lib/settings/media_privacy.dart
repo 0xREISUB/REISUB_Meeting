@@ -8,11 +8,10 @@ bool get isWindowsDesktop =>
 Future<bool> openMediaPrivacy({required bool camera}) async {
   try {
     if (isWindowsDesktop) {
-      return await const MethodChannel(
-            'reisub_meeting/privacy',
-          ).invokeMethod<bool>(
-            camera ? 'openCameraSettings' : 'openMicrophoneSettings',
-          ) ??
+      return await const MethodChannel('reisub_meeting/privacy')
+              .invokeMethod<bool>(
+                camera ? 'openCameraSettings' : 'openMicrophoneSettings',
+              ) ??
           false;
     }
     if (!kIsWeb &&

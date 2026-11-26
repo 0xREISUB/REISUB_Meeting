@@ -21,14 +21,12 @@ class MicrophoneInput {
 
   static Future<String?> _windowsDefaultDeviceId() async {
     try {
-      return await const MethodChannel(
-        'reisub_meeting/audio',
-      ).invokeMethod<String>('getDefaultMicrophoneId');
+      return await const MethodChannel('reisub_meeting/audio')
+          .invokeMethod<String>('getDefaultMicrophoneId');
     } on MissingPluginException {
       throw PlatformException(
         code: 'WindowsAudioRestartRequired',
-        message:
-            'Rebuild the application and restart it to update the Windows audio component.',
+        message: 'Rebuild the application and restart it to update the Windows audio component.',
       );
     }
   }

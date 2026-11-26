@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
 /// The meeting's windows are less round than the rest of the app.
