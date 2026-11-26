@@ -125,6 +125,18 @@ install(CODE "
 install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
   DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" COMPONENT Runtime)
 
+# Desktop notifications name the app by version.json's "app_name", which
+# Flutter fills with the package's name (v_meeting): the app's own name
+# instead.
+install(CODE "
+  set(version_file \"${INSTALL_BUNDLE_DATA_DIR}/${FLUTTER_ASSET_DIR_NAME}/version.json\")
+  if(EXISTS \"\${version_file}\")
+    file(READ \"\${version_file}\" version_json)
+    string(REPLACE \"\\\"app_name\\\":\\\"v_meeting\\\"\" \"\\\"app_name\\\":\\\"REISUB Meeting\\\"\" version_json \"\${version_json}\")
+    file(WRITE \"\${version_file}\" \"\${version_json}\")
+  endif()
+  " COMPONENT Runtime)
+
 # Install the AOT library on non-Debug builds only.
 if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"

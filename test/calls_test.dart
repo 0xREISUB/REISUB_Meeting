@@ -210,7 +210,11 @@ void main() {
     );
     final phone = await showApp(tester, ringer: ringer);
     expect(phone.server.calls, contains('POST /calls/5/answer'));
-    expect(phone.server.calls, contains('POST /rooms/join'));
+    // With the profile's name, though the app had only just started.
+    expect(phone.server.bodies['POST /rooms/join'], {
+      'room_id': '123-456-789',
+      'name': 'Alice',
+    });
 
     // A call while it runs rings there, with no card in the app.
     phone.socket!.push(callEvent());

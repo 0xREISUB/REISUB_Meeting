@@ -216,9 +216,8 @@ class CallController extends Notifier<List<RingingCall>> {
     if (desktopBackgroundSupported) unawaited(DesktopBackground.showWindow());
     final navigator = appNavigatorKey.currentState;
     if (navigator == null || MeetingScreen.isOpen) return;
-    final name =
-        ref.read(socialOverviewProvider).value?.profile.displayName ?? '';
     try {
+      final name = await _meetingName();
       final result = await ref
           .read(meetingApiProvider)
           .joinRoom(roomId: roomId, name: name);
@@ -244,6 +243,16 @@ class CallController extends Notifier<List<RingingCall>> {
     } catch (error) {
       _say(localizeError(error, _l10n));
     }
+  }
+
+  /// The name to join with: the profile's. Answered from the lock screen
+  /// the app has only just started and may not have it yet, so it is
+  /// asked for then.
+  Future<String> _meetingName() async {
+    var profile = ref.read(socialOverviewProvider).value?.profile;
+    profile ??= (await ref.read(socialApiProvider).overview()).profile;
+    final name = profile.displayName.trim();
+    return name.isNotEmpty ? name : profile.nick;
   }
 
   /// The caller hears what became of a friend's call.
