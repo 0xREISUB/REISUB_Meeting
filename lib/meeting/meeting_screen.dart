@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_meeting/home/home_screen.dart';
 import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
+import 'package:v_meeting/social/realtime.dart' show realtimeConnectorProvider;
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_connection.dart';
 import 'package:v_meeting/meeting/meeting_display.dart';
@@ -85,6 +86,7 @@ class _MeetingScreenState extends ConsumerState<MeetingScreen>
       ui: this,
       credentials: widget.credentials,
       showEntryGate: !widget.skipJoiningScreen,
+      realtimeConnector: ref.read(realtimeConnectorProvider),
     )..addListener(_onSessionChanged);
     _scheduleControlsHide();
     WidgetsBinding.instance.addPostFrameCallback((_) {

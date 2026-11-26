@@ -2,14 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'meeting_api.dart';
+import 'room_realtime.dart';
 
-/// The room's shared state, polled from the server: the single screen
-/// share, and the waiting room with the people in it.
+/// The room's shared state, read from the server: the single screen share,
+/// and the waiting room with the people in it. It is read again when
+/// [realtime] says it changed; the poll runs every [pollInterval] while that
+/// connection is down and every [slowPoll] while it is up.
 class MeetingSharing extends ChangeNotifier {
-  MeetingSharing({required this.roomId, required this.api});
+  MeetingSharing({required this.roomId, required this.api, this.realtime})
+    : _pace = PollPace(realtime, tick: pollInterval, slow: slowPoll);
+
+  static const pollInterval = Duration(seconds: 2);
+  static const slowPoll = Duration(seconds: 15);
 
   final String roomId;
   final MeetingApi api;
+  final RoomRealtime? realtime;
+  final PollPace _pace;
+  StreamSubscription<RoomChange>? _changes;
   MeetingState state = const MeetingState();
   Object? error;
   bool loaded = false;
@@ -19,8 +29,16 @@ class MeetingSharing extends ChangeNotifier {
   Timer? _timer;
 
   void start() {
+    _pace.polled();
     unawaited(refresh());
-    _timer = Timer.periodic(const Duration(seconds: 2), (_) => refresh());
+    _timer = Timer.periodic(pollInterval, (_) {
+      if (_pace.due()) unawaited(refresh());
+    });
+    _changes = realtime?.changes.listen((change) {
+      if (change != RoomChange.state) return;
+      _pace.polled();
+      unawaited(refresh());
+    });
   }
 
   void _accept(MeetingState value) {
@@ -75,6 +93,7 @@ class MeetingSharing extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _timer?.cancel();
+    unawaited(_changes?.cancel());
     super.dispose();
   }
 }

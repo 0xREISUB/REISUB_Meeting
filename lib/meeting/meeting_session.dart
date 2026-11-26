@@ -17,6 +17,8 @@ import 'package:v_meeting/meeting/meeting_media.dart';
 import 'package:v_meeting/meeting/meeting_member.dart';
 import 'package:v_meeting/meeting/meeting_platform.dart';
 import 'package:v_meeting/meeting/meeting_sharing.dart';
+import 'package:v_meeting/meeting/room_realtime.dart';
+import 'package:v_meeting/social/realtime.dart' show RealtimeConnector;
 import 'package:v_meeting/settings/device_test_screen.dart';
 import 'package:v_meeting/settings/media_preferences.dart';
 import 'package:v_meeting/settings/meeting_preferences.dart';
@@ -70,6 +72,7 @@ class MeetingSession extends ChangeNotifier {
     required this._ui,
     RoomCredentials? credentials,
     bool showEntryGate = true,
+    RealtimeConnector? realtimeConnector,
     DateTime Function()? clock,
   }) : _credentials = credentials,
        _deadline = MeetingDeadline(clock: clock),
@@ -97,10 +100,17 @@ class MeetingSession extends ChangeNotifier {
     }
     final roomId = credentials?.roomId;
     if (roomId != null) {
-      sharing = MeetingSharing(roomId: roomId, api: api)
+      // Changes arrive over it the moment they happen; the polls only run
+      // slowly beside it.
+      final realtime = RoomRealtime(
+        roomId: roomId,
+        connector: realtimeConnector,
+      )..start();
+      this.realtime = realtime;
+      sharing = MeetingSharing(roomId: roomId, api: api, realtime: realtime)
         ..addListener(_onSharingChanged)
         ..start();
-      chat = MeetingChatController(roomId: roomId, api: api)
+      chat = MeetingChatController(roomId: roomId, api: api, realtime: realtime)
         ..addListener(notifyListeners)
         ..start();
     }
@@ -119,6 +129,7 @@ class MeetingSession extends ChangeNotifier {
   late final MeetingEntryGate entryGate;
   MeetingSharing? sharing;
   MeetingChatController? chat;
+  RoomRealtime? realtime;
   final media = MeetingMedia();
 
   RoomCredentials? _credentials;
@@ -1144,6 +1155,7 @@ class MeetingSession extends ChangeNotifier {
     chat
       ?..removeListener(notifyListeners)
       ..dispose();
+    realtime?.dispose();
     unawaited(room.dispose());
     super.dispose();
   }

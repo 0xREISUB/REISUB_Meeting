@@ -2,13 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
+import 'package:v_meeting/meeting/room_realtime.dart';
 
+/// The meeting's chat. Messages are read again when [realtime] says a new
+/// one came; the poll runs every [pollInterval] while that connection is
+/// down and every [slowPoll] while it is up.
 class MeetingChatController extends ChangeNotifier {
-  MeetingChatController({required this.roomId, MeetingApi? api})
-    : _api = api ?? MeetingApi();
+  MeetingChatController({required this.roomId, MeetingApi? api, this.realtime})
+    : _api = api ?? MeetingApi(),
+      _pace = PollPace(realtime, tick: pollInterval, slow: slowPoll);
+
+  static const pollInterval = Duration(seconds: 2);
+  static const slowPoll = Duration(seconds: 15);
 
   final String roomId;
   final MeetingApi _api;
+  final RoomRealtime? realtime;
+  final PollPace _pace;
+  StreamSubscription<RoomChange>? _changes;
   final List<MeetingChatMessage> messages = [];
   final Set<int> _knownMessageIds = {};
   final Map<int, MeetingChatMessage> _pendingSentMessages = {};
@@ -26,11 +37,16 @@ class MeetingChatController extends ChangeNotifier {
 
   void start() {
     if (_refreshTimer != null) return;
+    _pace.polled();
     unawaited(refreshMessages());
-    _refreshTimer = Timer.periodic(
-      const Duration(seconds: 2),
-      (_) => refreshMessages(),
-    );
+    _refreshTimer = Timer.periodic(pollInterval, (_) {
+      if (_pace.due()) unawaited(refreshMessages());
+    });
+    _changes = realtime?.changes.listen((change) {
+      if (change != RoomChange.chat) return;
+      _pace.polled();
+      unawaited(refreshMessages());
+    });
   }
 
   void setChatOpen(bool isOpen) {
@@ -128,6 +144,7 @@ class MeetingChatController extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _refreshTimer?.cancel();
+    unawaited(_changes?.cancel());
     super.dispose();
   }
 }

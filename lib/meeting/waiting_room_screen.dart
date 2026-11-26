@@ -6,12 +6,17 @@ import 'package:v_meeting/l10n/app_localizations.dart';
 import 'package:v_meeting/l10n/localized_error.dart';
 import 'package:v_meeting/meeting/meeting_api.dart';
 import 'package:v_meeting/meeting/meeting_screen.dart';
+import 'package:v_meeting/meeting/room_realtime.dart';
+import 'package:v_meeting/social/realtime.dart' show realtimeConnectorProvider;
 import 'package:v_meeting/app/theme.dart';
 import 'package:v_meeting/widgets/glass.dart';
 
 /// Shown while someone waits to be let into a meeting with a waiting room.
-/// It asks the server every [pollInterval]; once let in it opens the
-/// meeting, and once turned away it returns with a message.
+/// The server says over a realtime connection the moment the request is
+/// answered; it is also asked every [pollInterval] while that connection is
+/// down, and every [slowPoll] while it is up, which keeps the request
+/// alive. Once let in it opens the meeting, and once turned away it returns
+/// with a message.
 class WaitingRoomScreen extends ConsumerStatefulWidget {
   const WaitingRoomScreen({
     super.key,
@@ -24,24 +29,48 @@ class WaitingRoomScreen extends ConsumerStatefulWidget {
   final String requestId;
   final Duration pollInterval;
 
+  /// Well within the server's 30 s, after which an unasked request expires.
+  static const slowPoll = Duration(seconds: 10);
+
   @override
   ConsumerState<WaitingRoomScreen> createState() => _WaitingRoomScreenState();
 }
 
 class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
   Timer? _timer;
+  late final RoomRealtime _realtime;
+  late final PollPace _pace;
+  StreamSubscription<RoomChange>? _changes;
   bool _checking = false;
   bool _done = false;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(widget.pollInterval, (_) => _check());
+    _realtime = RoomRealtime(
+      roomId: widget.roomId,
+      connector: ref.read(realtimeConnectorProvider),
+    )..start();
+    _pace = PollPace(
+      _realtime,
+      tick: widget.pollInterval,
+      slow: WaitingRoomScreen.slowPoll,
+    )..polled();
+    _changes = _realtime.changes.listen((change) {
+      if (change != RoomChange.state) return;
+      _pace.polled();
+      _check();
+    });
+    _timer = Timer.periodic(widget.pollInterval, (_) {
+      if (_pace.due()) _check();
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _changes?.cancel();
+    _realtime.dispose();
     super.dispose();
   }
 

@@ -30,10 +30,11 @@ abstract class RealtimeSocket {
 typedef RealtimeConnector = Future<RealtimeSocket> Function(Uri uri);
 
 final realtimeConnectorProvider = Provider<RealtimeConnector>(
-  (ref) => _connectWebSocket,
+  (ref) => connectRealtime,
 );
 
-Future<RealtimeSocket> _connectWebSocket(Uri uri) async {
+/// Opens a real WebSocket to [uri].
+Future<RealtimeSocket> connectRealtime(Uri uri) async {
   // Tests reach no network; those about the connection bring a fake one.
   if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
     throw StateError('No realtime connection in tests');
@@ -227,7 +228,6 @@ class RealtimeController extends Notifier<bool> {
 
 /// The realtime address of a server: https://host:443 becomes
 /// wss://host:443/ws.
-@visibleForTesting
 Uri realtimeUri(String server) {
   final base = Uri.parse(server);
   return base.replace(
