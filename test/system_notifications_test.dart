@@ -155,34 +155,47 @@ void main() {
   group('what a notification says', () {
     final l10n = lookupAppLocalizations(const Locale('tr'));
 
-    test('a push names who and where, never the text', () {
-      final notice = SystemNotice.forPush({
+    test('a push shows who wrote, where and what', () {
+      Map<String, dynamic> push(
+        String kind,
+        String content, {
+        bool call = false,
+      }) => {
         'type': 'message',
-        'kind': 'friend',
-        'target_id': '2',
-        'title': 'Elif',
-        'sender': 'Elif',
+        'kind': kind,
+        'target_id': kind == 'team' ? '11' : '2',
+        'title': kind == 'team' ? 'Core' : 'Elif',
+        'sender': kind == 'team' ? 'Burak' : 'Elif',
         'message_id': '205',
-        'invite': '',
-      }, l10n)!;
+        'invite': call ? '1' : '',
+        'content': content,
+      };
+      final friend = SystemNotice.forPush(
+        push('friend', 'Akşam müsait misin?'),
+        l10n,
+      )!;
       expect(
-        (notice.id, notice.title, notice.body),
-        (205, 'Elif', 'Yeni mesaj'),
+        (friend.id, friend.title, friend.body),
+        (205, 'Elif', 'Akşam müsait misin?'),
       );
-      expect(notice.target.id, 'friend-2');
+      expect(friend.target.id, 'friend-2');
 
-      final team = SystemNotice.forPush({
-        'type': 'message',
-        'kind': 'team',
-        'target_id': '11',
-        'title': 'Core',
-        'sender': 'Burak',
-        'message_id': '206',
-        'invite': '1',
-      }, l10n)!;
-      expect(team.body, 'Burak seni toplantıya çağırıyor');
+      final team = SystemNotice.forPush(
+        push('team', '5 dakikaya oradayım'),
+        l10n,
+      )!;
+      expect((team.title, team.body), ('Core', 'Burak: 5 dakikaya oradayım'));
       expect(team.target.id, 'team-11');
 
+      // A call says so; a push without the text says there is one.
+      expect(
+        SystemNotice.forPush(push('team', '', call: true), l10n)!.body,
+        'Burak seni toplantıya çağırıyor',
+      );
+      expect(
+        SystemNotice.forPush(push('friend', ''), l10n)!.body,
+        'Yeni mesaj',
+      );
       expect(SystemNotice.forPush({'type': 'other'}, l10n), isNull);
     });
 

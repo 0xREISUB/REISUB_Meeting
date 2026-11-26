@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources the code names only as text, which the release build's
+     resource shrinking would otherwise remove: the notification icon is
+     passed to flutter_local_notifications by name. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification" />

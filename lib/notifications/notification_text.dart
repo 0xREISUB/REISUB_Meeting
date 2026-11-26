@@ -63,8 +63,8 @@ class SystemNotice {
     );
   }
 
-  /// For a push: it says who and where, never what was written (the text
-  /// does not pass through Google). Null if it is not a message push.
+  /// For a push: who wrote, where, and what. A push without the text says
+  /// "new message". Null if it is not a message push.
   static SystemNotice? forPush(
     Map<String, dynamic> data,
     AppLocalizations l10n,
@@ -77,13 +77,15 @@ class SystemNotice {
     }
     final title = '${data['title'] ?? ''}';
     final sender = '${data['sender'] ?? ''}';
+    final content = '${data['content'] ?? ''}'.trim();
+    final text = content.isEmpty ? l10n.notificationNewMessage : content;
     final String body;
     if (data['invite'] == '1') {
       body = l10n.notificationCall(sender);
     } else if (kind == 'team') {
-      body = l10n.notificationFromSender(sender, l10n.notificationNewMessage);
+      body = l10n.notificationFromSender(sender, text);
     } else {
-      body = l10n.notificationNewMessage;
+      body = text;
     }
     return SystemNotice(
       id: idFor(messageId),
